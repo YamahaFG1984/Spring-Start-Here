@@ -1,0 +1,252 @@
+<p class="eyebrow">第 13 章 · 第二部分 实现</p>
+<h1>在 Spring 应用中使用事务</h1>
+<p class="lede">转账要扣一边、加一边。如果中间崩了，钱就凭空消失了。事务的作用是：<strong>要么两步都成功，要么一步都不算数。</strong>Spring 把这件事简化成了一个注解——但注解背后的机制，正是第 6 章的 AOP。</p>
+
+<div class="note"><b>本章工程</b>
+<span class="path">ssh_ch13_ex1</span> 转账正常流程 · <span class="path">ssh_ch13_ex2</span> 转账过程中<strong>故意抛异常</strong>，验证回滚</div>
+
+<h2>13.1 为什么需要事务</h2>
+
+<figure>
+<svg viewBox="0 0 720 268" role="img" aria-label="没有事务与有事务时中途失败的对比">
+  <text x="16" y="22" font-size="11" class="mono" fill="var(--amber)">✗ 没有事务</text>
+  <rect x="16" y="32" width="688" height="94" rx="10" fill="var(--amber-soft)" stroke="var(--amber)" stroke-width="1.4"/>
+  <rect x="40" y="52" width="128" height="54" rx="7" fill="var(--surface)" stroke="var(--line-strong)"/>
+  <text x="104" y="72" font-size="10.5" text-anchor="middle" fill="var(--ink-2)">① 扣 Helen 100</text>
+  <text x="104" y="90" font-size="10.5" text-anchor="middle" class="mono" fill="var(--accent-ink)">1000 → 900 ✓</text>
+  <path d="M172 79 L212 79" stroke="var(--ink-3)" stroke-width="1.5" marker-end="url(#x1)"/>
+  <rect x="214" y="52" width="146" height="54" rx="7" fill="var(--surface)" stroke="var(--amber)" stroke-width="1.6"/>
+  <text x="287" y="72" font-size="10.5" text-anchor="middle" fill="var(--ink-2)">② 崩溃 / 断电</text>
+  <text x="287" y="90" font-size="10.5" text-anchor="middle" class="mono" fill="var(--amber)">RuntimeException</text>
+  <path d="M364 79 L404 79" stroke="var(--ink-3)" stroke-width="1.5" marker-end="url(#x1)"/>
+  <rect x="406" y="52" width="146" height="54" rx="7" fill="var(--surface)" stroke="var(--line-strong)" stroke-dasharray="4 3"/>
+  <text x="479" y="72" font-size="10.5" text-anchor="middle" fill="var(--ink-3)">③ 加 Peter 100</text>
+  <text x="479" y="90" font-size="10.5" text-anchor="middle" class="mono" fill="var(--ink-3)">从未执行</text>
+  <text x="628" y="74" font-size="11.5" font-weight="700" text-anchor="middle" fill="var(--amber)">100 元</text>
+  <text x="628" y="92" font-size="11.5" font-weight="700" text-anchor="middle" fill="var(--amber)">凭空消失</text>
+
+  <text x="16" y="164" font-size="11" class="mono" fill="var(--accent)">✓ 有事务（@Transactional）</text>
+  <rect x="16" y="174" width="688" height="82" rx="10" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/>
+  <rect x="40" y="192" width="512" height="46" rx="8" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/>
+  <text x="60" y="210" font-size="10" class="mono" fill="var(--accent-ink)">BEGIN</text>
+  <text x="120" y="210" font-size="10.5" fill="var(--ink-2)">① 扣 Helen 100（未落盘）　② 崩溃　③ 未执行</text>
+  <text x="60" y="230" font-size="10" class="mono" fill="var(--amber)">ROLLBACK</text>
+  <text x="140" y="230" font-size="10.5" fill="var(--ink-2)">→ 数据库把 ① 也撤销，回到最初状态</text>
+  <text x="628" y="208" font-size="11.5" font-weight="700" text-anchor="middle" fill="var(--accent-ink)">两人余额</text>
+  <text x="628" y="226" font-size="11.5" font-weight="700" text-anchor="middle" fill="var(--accent-ink)">都是 1000</text>
+  <defs><marker id="x1" markerWidth="8" markerHeight="8" refX="7" refY="3.6" orient="auto"><path d="M0 0 L8 3.6 L0 7.2 z" fill="var(--ink-3)"/></marker></defs>
+</svg>
+<figcaption><b>图 13-1</b>　事务保证的是<strong>原子性</strong>——一组操作作为一个不可分割的整体。这正是 <span class="path">ssh_ch13_ex1</span> 和 <span class="path">ex2</span> 要演示的：ex2 在两次转账操作后故意抛异常，你会看到数据库里余额<strong>没有变化</strong>。</figcaption>
+</figure>
+
+<h2>13.2 Spring 事务的工作机制</h2>
+
+<pre class="codehead"><b>ssh_ch13_ex1 · services/TransferService.java</b></pre>
+<pre><code class="language-java">@Service
+public class TransferService {
+
+    private final AccountRepository accountRepository;
+
+    public TransferService(AccountRepository accountRepository) { ... }
+
+    @Transactional                                        // ← 就这一个注解
+    public void transferMoney(long idSender, long idReceiver, BigDecimal amount) {
+        Account sender = accountRepository.findAccountById(idSender);
+        Account receiver = accountRepository.findAccountById(idReceiver);
+
+        BigDecimal senderNewAmount = sender.getAmount().subtract(amount);
+        BigDecimal receiverNewAmount = receiver.getAmount().add(amount);
+
+        accountRepository.changeAmount(idSender, senderNewAmount);
+        accountRepository.changeAmount(idReceiver, receiverNewAmount);
+    }
+}</code></pre>
+
+<p><span class="path">ssh_ch13_ex2</span> 与它<strong>只差最后一行</strong>：</p>
+
+<pre class="codehead"><b>ssh_ch13_ex2 · TransferService.java</b></pre>
+<pre><code class="language-java">        accountRepository.changeAmount(idSender, senderNewAmount);
+        accountRepository.changeAmount(idReceiver, receiverNewAmount);
+
+        throw new RuntimeException("Oh no! Something went wrong!");   // ← 触发回滚
+    }</code></pre>
+
+<figure>
+<svg viewBox="0 0 720 320" role="img" aria-label="@Transactional 的代理执行流程">
+  <rect x="16" y="16" width="120" height="44" rx="8" fill="var(--surface)" stroke="var(--line-strong)"/>
+  <text x="76" y="43" font-size="11" text-anchor="middle" fill="var(--ink)">Controller</text>
+  <path d="M138 38 L188 38" stroke="var(--accent)" stroke-width="1.8" marker-end="url(#y1)"/>
+
+  <rect x="190" y="14" width="330" height="292" rx="11" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.8"/>
+  <text x="355" y="36" font-size="11.5" font-weight="700" text-anchor="middle" fill="var(--accent-ink)">事务代理（第 6 章的 @Around 切面）</text>
+
+  <rect x="212" y="48" width="286" height="34" rx="7" fill="var(--surface)" stroke="var(--accent)"/>
+  <text x="355" y="70" font-size="10.5" text-anchor="middle" class="mono" fill="var(--ink-2)">① 从 DataSource 借连接，setAutoCommit(false)</text>
+
+  <rect x="212" y="92" width="286" height="34" rx="7" fill="var(--surface)" stroke="var(--accent)"/>
+  <text x="355" y="114" font-size="10.5" text-anchor="middle" class="mono" fill="var(--ink-2)">② 把连接绑定到当前线程</text>
+
+  <rect x="212" y="136" width="286" height="56" rx="7" fill="var(--surface-2)" stroke="var(--line-strong)" stroke-width="1.6"/>
+  <text x="355" y="157" font-size="11" font-weight="700" text-anchor="middle" fill="var(--ink)">③ 执行 transferMoney() 方法体</text>
+  <text x="355" y="177" font-size="9.5" text-anchor="middle" fill="var(--ink-3)">里面的 JdbcTemplate 会用同一条绑定的连接</text>
+
+  <path d="M300 196 L272 218" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#y1)"/>
+  <path d="M410 196 L438 218" stroke="var(--amber)" stroke-width="1.6" marker-end="url(#y2)"/>
+
+  <rect x="206" y="220" width="140" height="70" rx="8" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/>
+  <text x="276" y="242" font-size="10.5" text-anchor="middle" font-weight="700" fill="var(--accent-ink)">正常返回</text>
+  <text x="276" y="260" font-size="10.5" text-anchor="middle" class="mono" fill="var(--ink-2)">④ COMMIT</text>
+  <text x="276" y="278" font-size="9.5" text-anchor="middle" fill="var(--ink-3)">改动落盘</text>
+
+  <rect x="360" y="220" width="140" height="70" rx="8" fill="var(--amber-soft)" stroke="var(--amber)" stroke-width="1.6"/>
+  <text x="430" y="242" font-size="10.5" text-anchor="middle" font-weight="700" fill="var(--amber)">抛出运行时异常</text>
+  <text x="430" y="260" font-size="10.5" text-anchor="middle" class="mono" fill="var(--ink-2)">④ ROLLBACK</text>
+  <text x="430" y="278" font-size="9.5" text-anchor="middle" fill="var(--ink-3)">改动全部撤销</text>
+
+  <path d="M524 150 L580 150" stroke="var(--line-strong)" stroke-width="1.8" marker-end="url(#y3)"/>
+  <rect x="582" y="112" width="122" height="76" rx="9" fill="var(--surface)" stroke="var(--line-strong)" stroke-width="1.6"/>
+  <text x="643" y="136" font-size="11" text-anchor="middle" font-weight="700" fill="var(--ink)">你写的</text>
+  <text x="643" y="153" font-size="10.5" text-anchor="middle" class="mono" fill="var(--ink-2)">TransferService</text>
+  <text x="643" y="172" font-size="9.5" text-anchor="middle" fill="var(--ink-3)">对事务一无所知</text>
+  <defs>
+    <marker id="y1" markerWidth="8" markerHeight="8" refX="7" refY="3.6" orient="auto"><path d="M0 0 L8 3.6 L0 7.2 z" fill="var(--accent)"/></marker>
+    <marker id="y2" markerWidth="8" markerHeight="8" refX="7" refY="3.6" orient="auto"><path d="M0 0 L8 3.6 L0 7.2 z" fill="var(--amber)"/></marker>
+    <marker id="y3" markerWidth="8" markerHeight="8" refX="7" refY="3.6" orient="auto"><path d="M0 0 L8 3.6 L0 7.2 z" fill="var(--line-strong)"/></marker>
+  </defs>
+</svg>
+<figcaption><b>图 13-2</b>　把这张图和第 6 章的图 6-1 对照看——<strong>结构完全一样</strong>。<code>@Transactional</code> 就是 Spring 内置的一个 <code>@Around</code> 切面，切点是“方法或类上有 <code>@Transactional</code>”。理解了第 6 章，这里没有任何新东西。</figcaption>
+</figure>
+
+<h2>13.3 三个必须知道的坑</h2>
+
+<h3>坑一：默认只对运行时异常回滚</h3>
+
+<figure>
+<svg viewBox="0 0 720 210" role="img" aria-label="Spring 事务默认的回滚规则">
+  <rect x="250" y="14" width="220" height="38" rx="8" fill="var(--surface-2)" stroke="var(--line-strong)"/>
+  <text x="360" y="38" font-size="12" text-anchor="middle" fill="var(--ink)">方法里抛出了异常</text>
+  <path d="M360 52 L360 74" stroke="var(--line-strong)" stroke-width="1.5" marker-end="url(#z1)"/>
+  <rect x="230" y="74" width="260" height="38" rx="8" fill="var(--surface)" stroke="var(--line-strong)"/>
+  <text x="360" y="98" font-size="12" text-anchor="middle" fill="var(--ink)">是 RuntimeException 或 Error 吗？</text>
+
+  <path d="M230 93 L120 93 L120 138" stroke="var(--accent)" stroke-width="1.6" fill="none" marker-end="url(#z2)"/>
+  <text x="168" y="85" font-size="10.5" fill="var(--accent)">是</text>
+  <rect x="30" y="140" width="180" height="56" rx="8" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/>
+  <text x="120" y="162" font-size="11.5" font-weight="700" text-anchor="middle" fill="var(--accent-ink)">ROLLBACK</text>
+  <text x="120" y="182" font-size="10" text-anchor="middle" fill="var(--ink-2)">ssh_ch13_ex2 走这条路</text>
+
+  <path d="M490 93 L600 93 L600 138" stroke="var(--amber)" stroke-width="1.6" fill="none" marker-end="url(#z3)"/>
+  <text x="546" y="85" font-size="10.5" fill="var(--amber)">否（受检异常）</text>
+  <rect x="510" y="140" width="180" height="56" rx="8" fill="var(--amber-soft)" stroke="var(--amber)" stroke-width="1.6"/>
+  <text x="600" y="162" font-size="11.5" font-weight="700" text-anchor="middle" fill="var(--amber)">照常 COMMIT ！</text>
+  <text x="600" y="182" font-size="10" text-anchor="middle" fill="var(--ink-2)">异常抛出去了，数据却提交了</text>
+
+  <rect x="238" y="140" width="244" height="56" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-dasharray="4 3"/>
+  <text x="360" y="160" font-size="10.5" text-anchor="middle" fill="var(--ink-2)">要让受检异常也回滚：</text>
+  <text x="360" y="180" font-size="10" text-anchor="middle" class="mono" fill="var(--accent-ink)">@Transactional(rollbackFor = Exception.class)</text>
+  <defs>
+    <marker id="z1" markerWidth="7" markerHeight="7" refX="6" refY="3.2" orient="auto"><path d="M0 0 L7 3.2 L0 6.4 z" fill="var(--line-strong)"/></marker>
+    <marker id="z2" markerWidth="7" markerHeight="7" refX="6" refY="3.2" orient="auto"><path d="M0 0 L7 3.2 L0 6.4 z" fill="var(--accent)"/></marker>
+    <marker id="z3" markerWidth="7" markerHeight="7" refX="6" refY="3.2" orient="auto"><path d="M0 0 L7 3.2 L0 6.4 z" fill="var(--amber)"/></marker>
+  </defs>
+</svg>
+<figcaption><b>图 13-3</b>　<strong>这是 Spring 事务最容易踩的坑。</strong>抛 <code>IOException</code>、<code>SQLException</code> 这类受检异常时，事务<strong>不会</strong>回滚。这个默认行为源自 EJB 的历史约定，很多人第一次遇到都会以为是 bug。</figcaption>
+</figure>
+
+<h3>坑二：自调用不生效</h3>
+
+<pre><code class="language-java">@Service
+public class TransferService {
+
+    public void doTransfer(...) {
+        transferMoney(...);        // ✗ this.transferMoney() —— 没经过代理，事务不生效！
+    }
+
+    @Transactional
+    public void transferMoney(...) { ... }
+}</code></pre>
+
+<div class="warn"><b>原因和第 6 章一模一样</b>
+事务逻辑在<strong>代理对象</strong>上。<code>this.transferMoney()</code> 是目标对象内部的普通方法调用，压根没经过代理（回看图 13-2 最右边那个框）。<br>
+<strong>解法：</strong>把带 <code>@Transactional</code> 的方法移到另一个 bean 里，从外部调它。<br>
+<strong>同理，<code>private</code> 方法上的 <code>@Transactional</code> 永远不生效</strong>——代理只能拦截 public 方法。</div>
+
+<h3>坑三：异常被自己 catch 掉了</h3>
+
+<pre><code class="language-java">@Transactional
+public void transferMoney(...) {
+    try {
+        accountRepository.changeAmount(...);
+    } catch (Exception e) {
+        logger.error("出错了", e);      // ✗ 异常被吞了，代理什么都没看到 → 照常提交
+    }
+}</code></pre>
+
+<p>如果你确实想在 catch 里做点事又要回滚，可以手动标记：<code>TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();</code>——但更清爽的做法是<strong>把异常重新抛出去</strong>。</p>
+
+<h2>@Transactional 的常用属性</h2>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th>属性</th><th>作用</th><th>常用值</th></tr></thead>
+<tbody>
+<tr><td><code>rollbackFor</code></td><td>额外指定哪些异常触发回滚</td><td><code>Exception.class</code></td></tr>
+<tr><td><code>readOnly</code></td><td>只读事务，可让数据库/驱动做优化</td><td>查询方法上写 <code>true</code></td></tr>
+<tr><td><code>propagation</code></td><td>已有事务时怎么办</td><td><code>REQUIRED</code>（默认，加入）· <code>REQUIRES_NEW</code>（挂起旧的开新的）</td></tr>
+<tr><td><code>timeout</code></td><td>超时秒数，超了自动回滚</td><td>按业务定</td></tr>
+<tr><td><code>isolation</code></td><td>隔离级别</td><td>一般跟数据库默认</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="tip"><b>放在哪一层</b>
+<code>@Transactional</code> 应该标在 <strong>Service 层</strong>，因为业务上“一个事务”对应的是一个完整用例（转账），而不是一次数据库操作。标在 Repository 上，每个方法一个事务，转账的两步就分成了两个事务——完全失去意义。</div>
+
+<h2>与书中的差异</h2>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th>项</th><th>书中</th><th>仓库</th></tr></thead>
+<tbody>
+<tr><td>数据库</td><td>MySQL（需自行安装）</td><td><strong>H2 内存库</strong>，加 <code>spring-boot-h2console</code>，克隆即可跑</td></tr>
+<tr><td>Boot 版本</td><td>2.3.4.RELEASE</td><td>4.0.6</td></tr>
+<tr><td>starter</td><td><code>spring-boot-starter-web</code> + <code>-jdbc</code></td><td><code>-webmvc</code> + <code>-jdbc</code> + <code>-webmvc-test</code> + <code>-jdbc-test</code></td></tr>
+<tr><td>额外端点</td><td>只有 <code>/transfer</code></td><td>多了 <code>GET /accounts</code>，方便直接看余额验证回滚</td></tr>
+<tr><td>初始数据</td><td>手动 INSERT</td><td><span class="path">data.sql</span> 自动插入 Helen 和 Peter 各 1000</td></tr>
+<tr><td><code>@Transactional</code></td><td colspan="2" style="color:var(--ink-3)">用法完全相同，从 Spring 3 至今没变（只有包名从 <code>javax.transaction</code> 变成 <code>jakarta.transaction</code>，但本书用的是 Spring 自己的 <code>org.springframework.transaction.annotation.Transactional</code>，不受影响）</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2>动手练习</h2>
+<div class="lab">
+<h4>动手 · 亲眼看到回滚</h4>
+<pre><code class="language-bash"># ─── 先跑正常版本 ssh_ch13_ex1 ───
+curl http://localhost:8080/accounts
+# [{"id":1,"name":"Helen Down","amount":1000},{"id":2,"name":"Peter Read","amount":1000}]
+
+curl -X POST http://localhost:8080/transfer \
+     -H "Content-Type: application/json" \
+     -d '{"senderAccountId":1,"receiverAccountId":2,"amount":100}'
+
+curl http://localhost:8080/accounts
+# Helen 900，Peter 1100  ✓
+
+# ─── 再跑抛异常的版本 ssh_ch13_ex2（同样的请求）───
+curl -X POST http://localhost:8080/transfer ... # 会返回 500
+curl http://localhost:8080/accounts
+# 两人仍然都是 1000  ← 回滚生效</code></pre>
+<ol style="margin-bottom:0">
+<li><strong>关键实验：</strong>把 <span class="path">ssh_ch13_ex2</span> 的 <code>@Transactional</code> 注释掉，重跑一遍。这次 Helen 变成 900、Peter 变成 1100，<strong>钱转出去了但接口报错</strong>——这就是没有事务的后果。</li>
+<li>把 <code>throw new RuntimeException(...)</code> 换成一个受检异常（比如自定义 <code>class MyException extends Exception</code>，并给方法加 <code>throws</code>），观察<strong>事务不回滚</strong>，验证图 13-3。</li>
+<li>再给 <code>@Transactional</code> 加上 <code>rollbackFor = Exception.class</code>，回滚恢复。</li>
+</ol>
+</div>
+
+<h2>本章自测</h2>
+<details><summary><code>@Transactional</code> 为什么必须标在 public 方法上？</summary>
+<p>因为 Spring AOP 通过代理实现事务，而代理（无论是 JDK 动态代理还是 CGLIB 子类）都只能拦截 public 方法——private 方法不可重写，protected/包级方法 CGLIB 虽能拦截但 Spring 默认不处理。标在 private 方法上不会报错，只是<strong>静悄悄地不生效</strong>，这比报错更危险。</p></details>
+<details><summary>为什么默认只对非受检异常回滚？</summary>
+<p>历史约定，继承自 EJB 的默认行为。背后的假设是：受检异常代表“预期内、调用方应该处理的业务情况”（比如“余额不足”），既然是预期内的，事务可能仍应提交；非受检异常代表“意料之外的故障”，应该回滚。这个假设在现代代码里往往不成立，所以很多团队直接约定所有 <code>@Transactional</code> 都写 <code>rollbackFor = Exception.class</code>。</p></details>
+<details><summary>事务和第 6 章的 AOP 是什么关系？</summary>
+<p>事务<strong>就是</strong>用 AOP 实现的。<code>@EnableTransactionManagement</code>（Boot 自动开启）会注册一个事务拦截器，它本质上是一个 <code>@Around</code> 通知：前置逻辑开事务、调用 <code>proceed()</code>、正常返回则提交、抛非受检异常则回滚。所以 AOP 的所有限制（自调用失效、只拦 public 方法、目标必须是 bean）在事务上原样成立。</p></details>

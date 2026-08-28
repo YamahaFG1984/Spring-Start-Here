@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第 15 章 单元测试 · Spring Start Here 学习手册</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+/* ── 令牌：浅色（默认，未标记状态也走这里） ───────────────── */
+:root{
+  --paper:#f4f7f3; --surface:#ffffff; --surface-2:#e9eee8;
+  --ink:#141f1a; --ink-2:#3c4a44; --ink-3:#6a7771;
+  --line:#d8e0d9; --line-strong:#b9c6bd;
+  --accent:#1b6b47; --accent-ink:#0f4a30; --accent-soft:#e0eee6;
+  --amber:#8a5712; --amber-soft:#f6ecd9;
+  --steel:#385a75; --steel-soft:#e2eaf1;
+  --code-bg:#eef2ec; --code-ink:#1d2b24;
+  --hl-key:#0f4a30; --hl-str:#8a5712; --hl-num:#385a75; --hl-com:#7d8a83; --hl-ann:#6b3a8a; --hl-type:#1d4f6b;
+  --shadow:0 1px 2px rgba(20,31,26,.05), 0 8px 24px -16px rgba(20,31,26,.28);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0d1411; --surface:#141d19; --surface-2:#1c2721;
+    --ink:#dde5df; --ink-2:#a9b5ae; --ink-3:#7f8d86;
+    --line:#26332c; --line-strong:#38483f;
+    --accent:#62b98d; --accent-ink:#8ed3ae; --accent-soft:#15291f;
+    --amber:#d9a44a; --amber-soft:#241d10;
+    --steel:#8fb6d4; --steel-soft:#14212b;
+    --code-bg:#101a15; --code-ink:#cfdad3;
+    --hl-key:#8ed3ae; --hl-str:#d9a44a; --hl-num:#8fb6d4; --hl-com:#6d7d75; --hl-ann:#c4a0dd; --hl-type:#7fc4d8;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -18px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0d1411; --surface:#141d19; --surface-2:#1c2721;
+  --ink:#dde5df; --ink-2:#a9b5ae; --ink-3:#7f8d86;
+  --line:#26332c; --line-strong:#38483f;
+  --accent:#62b98d; --accent-ink:#8ed3ae; --accent-soft:#15291f;
+  --amber:#d9a44a; --amber-soft:#241d10;
+  --steel:#8fb6d4; --steel-soft:#14212b;
+  --code-bg:#101a15; --code-ink:#cfdad3;
+  --hl-key:#8ed3ae; --hl-str:#d9a44a; --hl-num:#8fb6d4; --hl-com:#6d7d75; --hl-ann:#c4a0dd; --hl-type:#7fc4d8;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -18px rgba(0,0,0,.8);
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:"Noto Sans SC","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+  font-size:16.5px; line-height:1.78; font-feature-settings:"tnum" 0;
+}
+
+/* ── 版式骨架 ─────────────────────────────────────── */
+.wrap{max-width:1200px; margin:0 auto; padding:0 26px;
+      display:grid; grid-template-columns:236px minmax(0,1fr); gap:52px; align-items:start}
+.rail{position:sticky; top:0; max-height:100vh; overflow-y:auto; padding:34px 0 40px}
+.main{min-width:0; padding:34px 0 96px; max-width:78ch}
+@media (max-width:900px){
+  .wrap{grid-template-columns:minmax(0,1fr); gap:0}
+  .rail{position:static; max-height:none; padding:26px 0 0; border-bottom:1px solid var(--line); margin-bottom:26px}
+  .main{padding-top:14px}
+}
+
+/* ── 侧栏 ─────────────────────────────────────────── */
+.rail-brand{display:block; text-decoration:none; color:inherit; margin-bottom:22px}
+.rail-brand b{display:block; font-family:"Newsreader","Noto Serif SC",Georgia,serif;
+  font-size:21px; font-weight:600; line-height:1.25; letter-spacing:-.01em}
+.rail-brand span{display:block; font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); margin-top:5px}
+.rail-group{font-family:"JetBrains Mono",ui-monospace,monospace; font-size:10px; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--ink-3); margin:20px 0 8px; padding-left:2px}
+.rail nav{display:flex; flex-direction:column; gap:1px}
+.rail a.ch{display:grid; grid-template-columns:22px 1fr; gap:8px; align-items:baseline;
+  text-decoration:none; color:var(--ink-2); padding:4px 8px 4px 2px; border-radius:5px; font-size:13.5px; line-height:1.45}
+.rail a.ch i{font-style:normal; font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:11px; color:var(--ink-3); font-variant-numeric:tabular-nums}
+.rail a.ch:hover{background:var(--surface-2); color:var(--ink)}
+.rail a.ch[aria-current="page"]{background:var(--accent-soft); color:var(--accent-ink); font-weight:500}
+.rail a.ch[aria-current="page"] i{color:var(--accent)}
+a:focus-visible,summary:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:3px}
+
+/* ── 标题层级 ─────────────────────────────────────── */
+.eyebrow{font-family:"JetBrains Mono",ui-monospace,monospace; font-size:11px; letter-spacing:.18em;
+  text-transform:uppercase; color:var(--accent); margin:0 0 10px}
+h1{font-family:"Newsreader","Noto Serif SC",Georgia,serif; font-weight:600; font-size:clamp(30px,4.4vw,42px);
+  line-height:1.18; letter-spacing:-.015em; margin:0 0 14px; text-wrap:balance}
+h2{font-family:"Newsreader","Noto Serif SC",Georgia,serif; font-weight:600; font-size:26px; line-height:1.3;
+  margin:56px 0 16px; padding-top:20px; border-top:1px solid var(--line); text-wrap:balance; letter-spacing:-.01em}
+h3{font-size:18.5px; font-weight:700; margin:34px 0 10px; line-height:1.45; text-wrap:balance}
+h4{font-size:15px; font-weight:700; margin:22px 0 8px; color:var(--ink-2)}
+.lede{font-size:18px; line-height:1.72; color:var(--ink-2); margin:0 0 8px}
+p{margin:0 0 14px}
+ul,ol{margin:0 0 16px; padding-left:1.35em}
+li{margin:0 0 7px}
+li>ul,li>ol{margin-top:7px}
+strong{font-weight:700; color:var(--ink)}
+em{font-style:normal; background:linear-gradient(transparent 62%, var(--accent-soft) 62%); padding:0 1px}
+a{color:var(--accent-ink); text-underline-offset:2.5px; text-decoration-thickness:1px}
+hr{border:0; border-top:1px solid var(--line); margin:38px 0}
+
+/* ── 代码 ─────────────────────────────────────────── */
+code,kbd,.path{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+:not(pre)>code{font-size:.865em; background:var(--code-bg); color:var(--code-ink);
+  padding:.12em .38em; border-radius:4px; border:1px solid var(--line)}
+.path{font-size:.83em; background:var(--surface-2); color:var(--ink-2);
+  padding:.12em .42em; border-radius:4px; border:1px solid var(--line); white-space:nowrap}
+pre{margin:0 0 18px; background:var(--code-bg); border:1px solid var(--line); border-radius:9px;
+  padding:15px 17px; overflow-x:auto; line-height:1.62; box-shadow:var(--shadow)}
+pre code{font-size:13.2px; color:var(--code-ink); background:none; border:0; padding:0; white-space:pre}
+.codehead{display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;
+  font-family:"JetBrains Mono",ui-monospace,monospace; font-size:11px; color:var(--ink-3);
+  letter-spacing:.05em; margin:0 0 6px; padding:0 2px}
+.codehead b{color:var(--ink-2); font-weight:500}
+.hljs-keyword,.hljs-built_in,.hljs-literal{color:var(--hl-key)}
+.hljs-string,.hljs-attr{color:var(--hl-str)}
+.hljs-number{color:var(--hl-num)}
+.hljs-comment{color:var(--hl-com); font-style:italic}
+.hljs-meta{color:var(--hl-ann); font-weight:500}
+.hljs-title,.hljs-title.class_,.hljs-title.function_,.hljs-type{color:var(--hl-type)}
+.hljs-tag,.hljs-name{color:var(--hl-key)}
+
+/* ── 图 ───────────────────────────────────────────── */
+figure{margin:26px 0 28px; background:var(--surface); border:1px solid var(--line);
+  border-radius:11px; padding:20px 18px 14px; box-shadow:var(--shadow); overflow-x:auto}
+figure svg{display:block; width:100%; height:auto; max-width:100%; min-width:0}
+figcaption{margin-top:12px; font-size:13px; line-height:1.62; color:var(--ink-3); border-top:1px solid var(--line); padding-top:10px}
+figcaption b{color:var(--ink-2); font-weight:600}
+svg text{font-family:"Noto Sans SC","PingFang SC",system-ui,sans-serif}
+svg .mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+
+/* ── 对照卡：书里旧版 vs 仓库新版 ──────────────────── */
+.cmp{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:22px 0 24px}
+@media (max-width:660px){.cmp{grid-template-columns:1fr}}
+.cmp>div{border-radius:10px; padding:14px 15px; border:1px solid var(--line); background:var(--surface)}
+.cmp .old{border-left:3px solid var(--steel); background:var(--steel-soft)}
+.cmp .new{border-left:3px solid var(--accent); background:var(--accent-soft)}
+.cmp h5{margin:0 0 8px; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:10.5px;
+  letter-spacing:.14em; text-transform:uppercase; font-weight:500}
+.cmp .old h5{color:var(--steel)} .cmp .new h5{color:var(--accent)}
+.cmp p:last-child,.cmp ul:last-child,.cmp pre:last-child{margin-bottom:0}
+.cmp pre{background:transparent; border:0; padding:0; box-shadow:none; font-size:12.5px}
+.cmp code{background:transparent; border:0; padding:0}
+.why{margin:-8px 0 24px; padding:11px 15px; border-radius:9px; background:var(--surface-2);
+  border:1px solid var(--line); font-size:14.5px; line-height:1.7; color:var(--ink-2)}
+.why b{color:var(--ink)}
+
+/* ── 提示块 ───────────────────────────────────────── */
+.note,.warn,.tip{border-radius:9px; padding:13px 16px; margin:20px 0; font-size:15px; line-height:1.72;
+  border:1px solid var(--line); border-left-width:3px; background:var(--surface)}
+.note{border-left-color:var(--steel); background:var(--steel-soft)}
+.warn{border-left-color:var(--amber); background:var(--amber-soft)}
+.tip{border-left-color:var(--accent); background:var(--accent-soft)}
+.note>:last-child,.warn>:last-child,.tip>:last-child{margin-bottom:0}
+.note b:first-child,.warn b:first-child,.tip b:first-child{font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:11px; letter-spacing:.14em; text-transform:uppercase; display:block; margin-bottom:5px}
+.note b:first-child{color:var(--steel)} .warn b:first-child{color:var(--amber)} .tip b:first-child{color:var(--accent)}
+
+/* ── 表 ───────────────────────────────────────────── */
+.tablewrap{overflow-x:auto; margin:20px 0 24px; border:1px solid var(--line); border-radius:10px; background:var(--surface)}
+table{border-collapse:collapse; width:100%; font-size:14px; min-width:520px}
+th,td{text-align:left; padding:9px 13px; border-bottom:1px solid var(--line); vertical-align:top; line-height:1.6}
+thead th{font-family:"JetBrains Mono",ui-monospace,monospace; font-size:10.5px; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--ink-3); font-weight:500; background:var(--surface-2); white-space:nowrap}
+tbody tr:last-child td{border-bottom:0}
+td code{font-size:.84em; white-space:normal; overflow-wrap:break-word}
+th:last-child,td:last-child{padding-right:16px}
+.num{font-variant-numeric:tabular-nums}
+
+/* ── 实验 / 自测 ──────────────────────────────────── */
+.lab{border:1px solid var(--line); border-radius:11px; padding:16px 18px; margin:24px 0; background:var(--surface)}
+.lab>h4{margin-top:0; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:11px;
+  letter-spacing:.16em; text-transform:uppercase; color:var(--accent)}
+details{border:1px solid var(--line); border-radius:9px; padding:11px 15px; margin:0 0 9px; background:var(--surface)}
+details[open]{background:var(--surface-2)}
+summary{cursor:pointer; font-weight:600; font-size:15px; list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"?"; font-family:"JetBrains Mono",ui-monospace,monospace; color:var(--accent);
+  margin-right:9px; font-weight:700}
+details>*:not(summary){margin-top:10px}
+details>p:last-child{margin-bottom:0}
+
+/* ── 章节页脚导航 ─────────────────────────────────── */
+.pager{display:flex; justify-content:space-between; gap:14px; margin-top:60px; padding-top:22px; border-top:1px solid var(--line)}
+.pager a{display:block; text-decoration:none; color:var(--ink-2); font-size:14px; max-width:47%}
+.pager a span{display:block; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:10px;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); margin-bottom:3px}
+.pager a:hover{color:var(--accent-ink)}
+.pager .next{text-align:right; margin-left:auto}
+
+/* ── 首页卡片 ─────────────────────────────────────── */
+.cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(232px,1fr)); gap:13px; margin:22px 0 28px}
+.card{display:block; text-decoration:none; color:inherit; background:var(--surface); border:1px solid var(--line);
+  border-radius:11px; padding:14px 15px; box-shadow:var(--shadow); transition:border-color .15s, transform .15s}
+.card:hover{border-color:var(--accent); transform:translateY(-2px)}
+.card i{font-style:normal; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:11px;
+  letter-spacing:.1em; color:var(--accent); display:block; margin-bottom:5px}
+.card b{display:block; font-size:15.5px; line-height:1.4; margin-bottom:5px}
+.card p{margin:0; font-size:13px; color:var(--ink-3); line-height:1.6}
+@media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
+
+</style>
+</head>
+<body>
+<div class="wrap"><aside class="rail"><a class="rail-brand" href="index.html"><b>Spring Start Here<br>学习手册</b><span>Spring Boot 4 · Spring 7 · Java 25</span></a><div class="rail-group">第一部分 · 基础</div><nav><a class="ch" href="ch01.html"><i>01</i><span>真实世界中的 Spring</span></a><a class="ch" href="ch02.html"><i>02</i><span>Spring 上下文：定义 bean</span></a><a class="ch" href="ch03.html"><i>03</i><span>Spring 上下文：装配 bean</span></a><a class="ch" href="ch04.html"><i>04</i><span>Spring 上下文：使用抽象</span></a><a class="ch" href="ch05.html"><i>05</i><span>Bean 作用域与生命周期</span></a><a class="ch" href="ch06.html"><i>06</i><span>用 Spring AOP 实现切面</span></a></nav><div class="rail-group">第二部分 · 实现</div><nav><a class="ch" href="ch07.html"><i>07</i><span>理解 Spring Boot 与 Spring MVC</span></a><a class="ch" href="ch08.html"><i>08</i><span>用 Boot + MVC 实现 Web 应用</span></a><a class="ch" href="ch09.html"><i>09</i><span>使用 Spring Web 作用域</span></a><a class="ch" href="ch10.html"><i>10</i><span>实现 REST 服务</span></a><a class="ch" href="ch11.html"><i>11</i><span>消费 REST 端点</span></a><a class="ch" href="ch12.html"><i>12</i><span>在 Spring 应用中使用数据源</span></a><a class="ch" href="ch13.html"><i>13</i><span>在 Spring 应用中使用事务</span></a><a class="ch" href="ch14.html"><i>14</i><span>用 Spring Data 实现持久化</span></a><a class="ch" href="ch15.html" aria-current="page"><i>15</i><span>单元测试</span></a><a class="ch" href="ch16.html"><i>16</i><span>Spring 集成测试</span></a></nav><div class="rail-group">总览</div><nav><a class="ch" href="index.html"><i>◆</i><span>目录与版本对照</span></a></nav></aside><main class="main">
+<p class="eyebrow">第 15 章 · 第二部分 实现</p>
+<h1>单元测试</h1>
+<p class="lede">本章有个反直觉的重点：<strong>单元测试里没有 Spring。</strong>不启动上下文，不注入 bean，就是普通 Java 对象加 Mockito。之所以放在这本书里，是因为只有前面 14 章的“依赖注入”做对了，这一章才写得出来。</p>
+
+<div class="note"><b>本章代码位置</b>
+第 2 版把测试拆成了两章，没有新建工程，测试类加在已有工程里：<br>
+<span class="path">ssh_ch14_ex1/src/test/java/.../TransferMoneyUnitTests.java</span> 手工 mock<br>
+<span class="path">ssh_ch14_ex1/src/test/java/.../TransferServiceWithAnnotationsUnitTests.java</span> 注解版<br>
+<span class="path">ssh_ch9_ex1/src/test/java/.../unit/LoginControllerUnitTests.java</span> 控制器单测</div>
+
+<h2>15.1 什么是“单元”</h2>
+
+<figure>
+<svg viewBox="0 0 720 236" role="img" aria-label="单元测试把被测类和它的依赖隔离开">
+  <rect x="16" y="16" width="336" height="204" rx="10" fill="var(--steel-soft)" stroke="var(--steel)" stroke-width="1.5"/>
+  <text x="36" y="40" font-size="11.5" font-weight="700" class="mono" fill="var(--steel)">生产运行时</text>
+  <rect x="42" y="56" width="284" height="42" rx="8" fill="var(--surface)" stroke="var(--line-strong)"/>
+  <text x="184" y="82" font-size="11.5" text-anchor="middle" class="mono" fill="var(--ink)">TransferService</text>
+  <path d="M184 100 L184 122" stroke="var(--line-strong)" stroke-width="1.5" marker-end="url(#ad1)"/>
+  <rect x="42" y="124" width="284" height="42" rx="8" fill="var(--surface)" stroke="var(--line-strong)"/>
+  <text x="184" y="150" font-size="11.5" text-anchor="middle" class="mono" fill="var(--ink)">AccountRepository（真实）</text>
+  <path d="M184 168 L184 186" stroke="var(--line-strong)" stroke-width="1.5" marker-end="url(#ad1)"/>
+  <rect x="102" y="188" width="164" height="24" rx="6" fill="var(--surface-2)" stroke="var(--line-strong)"/>
+  <text x="184" y="205" font-size="10.5" text-anchor="middle" fill="var(--ink-2)">数据库（慢、有状态）</text>
+
+  <rect x="368" y="16" width="336" height="204" rx="10" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.8"/>
+  <text x="388" y="40" font-size="11.5" font-weight="700" class="mono" fill="var(--accent-ink)">单元测试时</text>
+  <rect x="394" y="56" width="284" height="42" rx="8" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.8"/>
+  <text x="536" y="76" font-size="11.5" text-anchor="middle" class="mono" fill="var(--ink)">TransferService</text>
+  <text x="536" y="91" font-size="9" text-anchor="middle" fill="var(--accent)">← 被测单元，唯一真实的东西</text>
+  <path d="M536 100 L536 122" stroke="var(--accent)" stroke-width="1.5" marker-end="url(#ad2)"/>
+  <rect x="394" y="124" width="284" height="42" rx="8" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.8" stroke-dasharray="5 3"/>
+  <text x="536" y="144" font-size="11.5" text-anchor="middle" class="mono" fill="var(--accent-ink)">AccountRepository（mock）</text>
+  <text x="536" y="159" font-size="9" text-anchor="middle" fill="var(--ink-3)">你说它返回什么，它就返回什么</text>
+  <rect x="454" y="184" width="164" height="28" rx="6" fill="var(--surface)" stroke="var(--line)" stroke-dasharray="3 3"/>
+  <text x="536" y="202" font-size="10.5" text-anchor="middle" fill="var(--ink-3)">数据库不参与，测试毫秒级</text>
+  <defs>
+    <marker id="ad1" markerWidth="7" markerHeight="7" refX="6" refY="3.2" orient="auto"><path d="M0 0 L7 3.2 L0 6.4 z" fill="var(--line-strong)"/></marker>
+    <marker id="ad2" markerWidth="7" markerHeight="7" refX="6" refY="3.2" orient="auto"><path d="M0 0 L7 3.2 L0 6.4 z" fill="var(--accent)"/></marker>
+  </defs>
+</svg>
+<figcaption><b>图 15-1</b>　单元测试的定义：<strong>只让一个类是真的，其余全部换成可控的替身</strong>。测试失败时你立刻知道问题出在哪个类——因为别的类根本没在跑。</figcaption>
+</figure>
+
+<div class="tip"><b>为什么第 3 章要强调构造器注入</b>
+因为它让这一章成为可能。<code>new TransferService(mockRepository)</code> 一行就能装配好被测对象。<br>
+如果当初写的是字段注入（<code>@Autowired private AccountRepository repo;</code>），测试里就<strong>没有任何正常途径</strong>把 mock 塞进去，只能靠反射或者启动整个 Spring 上下文。<strong>可测试性是好设计的副产品，不是额外工作。</strong></div>
+
+<h2>15.2 手工版：看清全部机制</h2>
+
+<pre class="codehead"><b>ssh_ch14_ex1 · TransferMoneyUnitTests.java</b></pre>
+<pre><code class="language-java">public class TransferMoneyUnitTests {          // 注意：没有任何 Spring 注解
+
+    private AccountRepository accountRepository;
+    private TransferService transferService;
+
+    @BeforeEach
+    void setUp() {
+        accountRepository = mock(AccountRepository.class);        // ① 造替身
+        transferService = new TransferService(accountRepository); // ② 手工注入
+    }
+
+    @Test
+    @DisplayName("""
+            GIVEN a valid sender and receiver account
+            WHEN transferMoney is called
+            THEN the amounts are updated for both accounts
+            """)
+    public void transferMoneyHappyFlow() {
+        Account sender = new Account();
+        sender.setId(1L);
+        sender.setAmount(new BigDecimal("1000"));
+
+        Account receiver = new Account();
+        receiver.setId(2L);
+        receiver.setAmount(new BigDecimal("1000"));
+
+        given(accountRepository.findById(1L)).willReturn(Optional.of(sender));    // ③ 编排
+        given(accountRepository.findById(2L)).willReturn(Optional.of(receiver));
+
+        transferService.transferMoney(1L, 2L, new BigDecimal("100"));             // ④ 执行
+
+        verify(accountRepository).changeAmount(1L, new BigDecimal("900"));        // ⑤ 断言
+        verify(accountRepository).changeAmount(2L, new BigDecimal("1100"));
+    }
+}</code></pre>
+
+<figure>
+<svg viewBox="0 0 720 216" role="img" aria-label="GIVEN WHEN THEN 三段式测试结构">
+  <rect x="16" y="24" width="222" height="176" rx="10" fill="var(--surface)" stroke="var(--line-strong)"/>
+  <text x="36" y="50" font-size="12.5" font-weight="700" class="mono" fill="var(--steel)">GIVEN</text>
+  <text x="36" y="70" font-size="11" fill="var(--ink-2)">准备前置条件</text>
+  <rect x="36" y="82" width="182" height="100" rx="7" fill="var(--code-bg)" stroke="var(--line)"/>
+  <text x="48" y="102" font-size="9.5" class="mono" fill="var(--ink-2)">造测试数据对象</text>
+  <text x="48" y="122" font-size="9.5" class="mono" fill="var(--accent-ink)">given(repo.findById(1L))</text>
+  <text x="48" y="138" font-size="9.5" class="mono" fill="var(--accent-ink)">  .willReturn(…)</text>
+  <text x="48" y="162" font-size="9" fill="var(--ink-3)">告诉替身：被这样调用时</text>
+  <text x="48" y="176" font-size="9" fill="var(--ink-3)">就返回这个</text>
+
+  <path d="M242 112 L266 112" stroke="var(--line-strong)" stroke-width="1.6" marker-end="url(#ae1)"/>
+
+  <rect x="268" y="24" width="184" height="176" rx="10" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.8"/>
+  <text x="288" y="50" font-size="12.5" font-weight="700" class="mono" fill="var(--accent-ink)">WHEN</text>
+  <text x="288" y="70" font-size="11" fill="var(--ink-2)">执行被测行为</text>
+  <rect x="288" y="82" width="144" height="60" rx="7" fill="var(--surface)" stroke="var(--accent)"/>
+  <text x="300" y="104" font-size="9.5" class="mono" fill="var(--ink-2)">transferService</text>
+  <text x="300" y="120" font-size="9.5" class="mono" fill="var(--ink-2)">  .transferMoney(…)</text>
+  <text x="288" y="166" font-size="9.5" fill="var(--ink-3)">只有一行 —— 一个测试</text>
+  <text x="288" y="182" font-size="9.5" fill="var(--ink-3)">只验证一件事</text>
+
+  <path d="M456 112 L480 112" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#ae2)"/>
+
+  <rect x="482" y="24" width="222" height="176" rx="10" fill="var(--surface)" stroke="var(--line-strong)"/>
+  <text x="502" y="50" font-size="12.5" font-weight="700" class="mono" fill="var(--steel)">THEN</text>
+  <text x="502" y="70" font-size="11" fill="var(--ink-2)">断言结果</text>
+  <rect x="502" y="82" width="184" height="100" rx="7" fill="var(--code-bg)" stroke="var(--line)"/>
+  <text x="514" y="102" font-size="9.5" class="mono" fill="var(--accent-ink)">verify(repo)</text>
+  <text x="514" y="118" font-size="9.5" class="mono" fill="var(--accent-ink)">  .changeAmount(1L, 900)</text>
+  <text x="514" y="142" font-size="9" fill="var(--ink-3)">方法返回 void 时，只能</text>
+  <text x="514" y="156" font-size="9" fill="var(--ink-3)">验证「它有没有用正确的</text>
+  <text x="514" y="170" font-size="9" fill="var(--ink-3)">参数调用依赖」</text>
+  <defs>
+    <marker id="ae1" markerWidth="8" markerHeight="8" refX="7" refY="3.6" orient="auto"><path d="M0 0 L8 3.6 L0 7.2 z" fill="var(--line-strong)"/></marker>
+    <marker id="ae2" markerWidth="8" markerHeight="8" refX="7" refY="3.6" orient="auto"><path d="M0 0 L8 3.6 L0 7.2 z" fill="var(--accent)"/></marker>
+  </defs>
+</svg>
+<figcaption><b>图 15-2</b>　仓库里所有测试的 <code>@DisplayName</code> 都写成 GIVEN/WHEN/THEN 三行文本块——<strong>这是很好的习惯</strong>：测试报告直接就是一份可读的行为说明书。</figcaption>
+</figure>
+
+<h3>验证“没有发生”同样重要</h3>
+
+<pre class="codehead"><b>失败路径的测试</b></pre>
+<pre><code class="language-java">@Test
+@DisplayName("""
+        GIVEN a non-existent sender account
+        WHEN transferMoney is called
+        THEN AccountNotFoundException is thrown
+        """)
+public void transferMoneySenderNotFound() {
+    given(accountRepository.findById(1L)).willReturn(Optional.empty());
+
+    assertThrows(AccountNotFoundException.class,
+            () -&gt; transferService.transferMoney(1L, 2L, new BigDecimal("100")));
+
+    verify(accountRepository, never())                    // ← 关键：确认没有动过钱
+            .changeAmount(anyLong(), any(BigDecimal.class));
+}</code></pre>
+
+<div class="tip"><b><code>never()</code> 是这个测试的灵魂</b>
+只断言“抛了异常”是不够的——万一代码先扣了钱再抛异常呢？<code>verify(..., never())</code> 明确验证了<strong>失败时账户余额一分钱都没动</strong>。写测试时多问一句“不该发生什么”，往往能发现真正的 bug。</div>
+
+<h2>15.3 注解版：Mockito 替你装配</h2>
+
+<pre class="codehead"><b>ssh_ch14_ex1 · TransferServiceWithAnnotationsUnitTests.java</b></pre>
+<pre><code class="language-java">@ExtendWith(MockitoExtension.class)              // 启用 Mockito 的注解处理
+public class TransferServiceWithAnnotationsUnitTests {
+
+    @Mock
+    private AccountRepository accountRepository;      // 自动创建替身
+
+    @InjectMocks
+    private TransferService transferService;          // 自动 new 并把上面的 mock 注进去
+
+    // 不再需要 @BeforeEach —— 测试方法体和手工版完全一样
+}</code></pre>
+
+<div class="cmp">
+<div class="old"><h5>手工版</h5>
+<pre><code class="language-java">private AccountRepository accountRepository;
+private TransferService transferService;
+
+@BeforeEach
+void setUp() {
+  accountRepository =
+      mock(AccountRepository.class);
+  transferService =
+      new TransferService(accountRepository);
+}</code></pre>
+<p style="font-size:13px;margin:8px 0 0;color:var(--ink-2)">机制全部可见，适合第一次学。</p></div>
+<div class="new"><h5>注解版</h5>
+<pre><code class="language-java">@ExtendWith(MockitoExtension.class)
+class …Tests {
+
+  @Mock
+  private AccountRepository accountRepository;
+
+  @InjectMocks
+  private TransferService transferService;
+}</code></pre>
+<p style="font-size:13px;margin:8px 0 0;color:var(--ink-2)">依赖一多优势明显，日常首选。</p></div>
+</div>
+<div class="why"><b>两者完全等价。</b><code>@InjectMocks</code> 会按“构造器 → setter → 字段”的顺序尝试注入。<strong>注意：<code>@InjectMocks</code> 注入失败时不报错，只是留 null</strong>，然后你在测试里得到一个莫名其妙的 NPE。构造器注入的类不会有这个问题——这又是一条选择构造器注入的理由。</div>
+
+<h2>15.4 控制器也能纯单元测试</h2>
+
+<pre class="codehead"><b>ssh_ch9_ex1 · unit/LoginControllerUnitTests.java</b></pre>
+<pre><code class="language-java">@ExtendWith(MockitoExtension.class)
+public class LoginControllerUnitTests {
+
+    @Mock private Model model;                    // 连 Spring 的 Model 都是 mock
+    @Mock private LoginProcessor loginProcessor;
+    @InjectMocks private LoginController loginController;
+
+    @Test
+    @DisplayName("""
+        GIVEN  Valid credentials are provided
+        WHEN   The loginPost method is called
+        THEN   The user is redirected to the login page with a success message
+        """)
+    public void loginPostTestSuccess() {
+        given(loginProcessor.login()).willReturn(true);
+
+        String result = loginController.loginPost("natalie", "password", model);
+
+        assertEquals("login.html", result);
+        verify(model).addAttribute("message", "You are now logged in.");
+    }
+}</code></pre>
+
+<div class="warn"><b>注意它测的是什么，不测什么</b>
+它<strong>直接调用 Java 方法</strong>，没有 HTTP，没有 Spring 上下文。所以它能验证：分支逻辑对不对、往 Model 里放了什么、返回了哪个视图名。<br>
+它<strong>验证不了</strong>：<code>@PostMapping("/")</code> 这个路由映射对不对、<code>@RequestParam</code> 绑定行不行、JSON 序列化是否正常。<strong>那些是第 16 章 MockMvc 的职责。</strong></div>
+
+<h2>该测什么、不该测什么</h2>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th>适合单元测试</th><th>不适合，交给集成测试（第 16 章）</th></tr></thead>
+<tbody>
+<tr><td>业务规则、分支、边界条件</td><td>路由映射、参数绑定</td></tr>
+<tr><td>异常路径、"不该发生"的验证</td><td>JSON 序列化/反序列化</td></tr>
+<tr><td>计算逻辑（如金额加减）</td><td>SQL 是否正确、事务是否回滚</td></tr>
+<tr><td>与依赖的交互契约（调了什么、传了什么）</td><td>Spring 配置和 bean 装配是否正确</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="tip"><b>getter/setter 不用测</b>
+书里明确说了：<strong>不要为了覆盖率去测没有逻辑的代码</strong>。测试的价值在于捕获会出错的东西，给 <code>setName()</code> 写测试只会增加维护负担。</div>
+
+<h2>与书中的差异</h2>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th>项</th><th>书中（第 1 版第 15.2.1 节）</th><th>仓库（第 2 版第 15 章）</th></tr></thead>
+<tbody>
+<tr><td>章节结构</td><td>单元测试和集成测试同在第 15 章</td><td><strong>拆成第 15、16 两章</strong>（对应 commit <code>CH15</code>/<code>CH16</code>）</td></tr>
+<tr><td>工程</td><td>随书示例工程</td><td>不新建工程，测试类加到 <span class="path">ssh_ch14_ex1</span> 和 <span class="path">ssh_ch9_ex1</span></td></tr>
+<tr><td>Mockito API</td><td colspan="2" style="color:var(--ink-3)">相同：<code>mock()</code>、<code>@Mock</code>、<code>@InjectMocks</code>、<code>@ExtendWith(MockitoExtension.class)</code>、<code>given().willReturn()</code>、<code>verify()</code></td></tr>
+<tr><td><code>@DisplayName</code></td><td>短句</td><td>用 Java 文本块写多行 GIVEN/WHEN/THEN</td></tr>
+</tbody>
+</table>
+</div>
+<div class="why"><b>Mockito 的 API 非常稳定。</b>唯一要留意的是它有两套等价语法：<code>when(x).thenReturn(y)</code>（Mockito 原生风格）和 <code>given(x).willReturn(y)</code>（BDD 风格）。仓库两种都用了——第 15 章的测试用 BDD 风格，第 16 章的一些测试用 <code>when/thenReturn</code>。功能完全一样，挑一种在团队里统一即可。</div>
+
+<h2>动手练习</h2>
+<div class="lab">
+<h4>动手 · 跑测试并让它失败</h4>
+<pre><code class="language-bash">cd ssh_ch14_ex1
+./mvnw test -Dtest=TransferMoneyUnitTests
+./mvnw test -Dtest=TransferServiceWithAnnotationsUnitTests</code></pre>
+<ol style="margin-bottom:0">
+<li>把 <code>TransferService.transferMoney</code> 里的 <code>subtract</code> 改成 <code>add</code>，重跑测试——<strong>看它失败，并读懂失败信息</strong>。一个从不失败的测试等于没有测试。</li>
+<li>把失败路径测试里的 <code>verify(..., never())</code> 那两行注释掉，然后故意把 service 改成“先扣钱再检查 receiver 是否存在”。你会发现测试<strong>依然通过</strong>——这就是 <code>never()</code> 存在的意义。</li>
+<li>给 <code>transferMoney</code> 加一条“转账金额必须大于 0”的规则，然后<strong>先写测试再写实现</strong>，体会一次 TDD。</li>
+<li>对比 <span class="path">TransferMoneyUnitTests</span>（手工）和 <span class="path">TransferServiceWithAnnotationsUnitTests</span>（注解）：<strong>测试方法体一模一样</strong>，差别只在装配部分。</li>
+</ol>
+</div>
+
+<h2>本章自测</h2>
+<details><summary>为什么单元测试里完全不需要 Spring？</summary>
+<p>因为 Spring 的职责是“帮你把对象装配起来”。测试里对象由你手工装配（<code>new TransferService(mock)</code>），装配这件事就不需要框架了。<strong>好处非常实在：不启动上下文，一个测试从几秒变成几毫秒</strong>，几百个单元测试也能在一次保存后立刻跑完。</p></details>
+<details><summary><code>verify()</code> 和 <code>assertEquals()</code> 什么时候各用哪个？</summary>
+<p>方法<strong>有返回值</strong>时，用 <code>assertEquals</code> 断言返回值；方法<strong>返回 void</strong>、效果体现在“调用了依赖”上时，用 <code>verify</code> 断言交互。<code>transferMoney</code> 返回 void，钱的变化是通过调用 <code>repository.changeAmount()</code> 实现的，所以只能用 <code>verify</code>。</p></details>
+<details><summary>mock 会不会让测试变得“测了个寂寞”？</summary>
+<p>这是个真实风险。如果 mock 的行为和真实实现对不上（比如你假设 <code>findById</code> 返回 <code>Optional.of(...)</code>，但真实实现在某些情况返回 <code>empty</code>），单元测试全绿而生产照崩。<strong>所以单元测试不能替代集成测试</strong>——第 16 章的 <code>@SpringBootTest</code> 用真实装配跑一遍，两者是互补关系，不是二选一。</p></details>
+
+<div class="pager"><a class="prev" href="ch14.html"><span>上一章</span>14. 用 Spring Data 实现持久化</a><a class="next" href="ch16.html"><span>下一章</span>16. Spring 集成测试</a></div>
+</main></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/java.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/sql.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/properties.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+<script>
+(function(){ if(!window.hljs) return;
+  document.querySelectorAll('pre code[class^="language-"]').forEach(function(el){
+    try{ hljs.highlightElement(el); }catch(e){}
+  });
+})();
+</script>
+</body>
+</html>

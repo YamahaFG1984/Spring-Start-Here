@@ -1,0 +1,311 @@
+<p class="eyebrow">第 3 章 · 第一部分 基础</p>
+<h1>Spring 上下文：装配 bean</h1>
+<p class="lede">上一章把对象放进了池子，但它们互不相识。这一章解决“怎么让 A 拿到 B”——也就是依赖注入。方式有五种，看起来很多，其实只有两大类：<strong>在配置类里连线</strong>，和<strong>让 Spring 自己连线</strong>。</p>
+
+<div class="note"><b>本章工程</b>
+<span class="path">ssh_ch3_ex1</span> 没连线（反例）· <span class="path">ex2</span> 方法直接调用 · <span class="path">ex3</span> @Bean 方法参数 · <span class="path">ex4</span> @Autowired 字段 · <span class="path">ex5</span> @Autowired 构造器 · <span class="path">ex6</span> @Autowired setter · <span class="path">ex7</span> 循环依赖（会崩）· <span class="path">ex8</span> @Qualifier 在 @Bean 参数上 · <span class="path">ex9</span> @Qualifier 在构造器参数上</div>
+
+<h2>3.1 先看反例：不连线会怎样</h2>
+
+<pre class="codehead"><b>ssh_ch3_ex1 · ProjectConfig.java</b></pre>
+<pre><code class="language-java">@Bean
+public Parrot parrot() { Parrot p = new Parrot(); p.setName("Koko"); return p; }
+
+@Bean
+public Person person() { Person p = new Person(); p.setName("Ella"); return p; }
+// 注意：没有 p.setParrot(...)</code></pre>
+
+<pre><code class="language-java">Person's name: Ella
+Parrot's name: Koko
+Person's parrot: null   ← 两个 bean 都在上下文里，但彼此没有关系</code></pre>
+
+<p>“在同一个上下文里”不等于“互相引用”。关系必须显式建立。</p>
+
+<h2>3.2 在配置类里连线</h2>
+
+<h3>方式 A：直接调用 @Bean 方法</h3>
+
+<pre class="codehead"><b>ssh_ch3_ex2 · ProjectConfig.java</b></pre>
+<pre><code class="language-java">@Bean
+public Parrot parrot() { Parrot p = new Parrot(); p.setName("Koko"); return p; }
+
+@Bean
+public Person person() {
+    Person p = new Person();
+    p.setName("Ella");
+    p.setParrot(parrot());     // ← 直接调另一个 @Bean 方法
+    return p;
+}</code></pre>
+
+<p>这里有一个非常值得停下来想的问题：<code>parrot()</code> 被调用了两次（一次是容器创建 parrot bean，一次是 <code>person()</code> 里手动调），<strong>为什么上下文里只有一个 Parrot 实例？</strong></p>
+
+<figure>
+<svg viewBox="0 0 720 290" role="img" aria-label="@Configuration 类被 CGLIB 代理，拦截 @Bean 方法调用">
+  <rect x="24" y="20" width="300" height="248" rx="10" fill="var(--surface)" stroke="var(--line-strong)"/>
+  <text x="44" y="44" font-size="12" font-weight="700" fill="var(--ink)">你写的 ProjectConfig</text>
+  <rect x="44" y="60" width="260" height="46" rx="7" fill="var(--code-bg)" stroke="var(--line)"/>
+  <text x="58" y="80" font-size="11" class="mono" fill="var(--ink-2)">@Bean parrot() {</text>
+  <text x="58" y="97" font-size="11" class="mono" fill="var(--ink-2)">    return new Parrot(); }</text>
+  <rect x="44" y="122" width="260" height="80" rx="7" fill="var(--code-bg)" stroke="var(--line)"/>
+  <text x="58" y="142" font-size="11" class="mono" fill="var(--ink-2)">@Bean person() {</text>
+  <text x="58" y="159" font-size="11" class="mono" fill="var(--accent-ink)" font-weight="700">    p.setParrot(parrot());</text>
+  <text x="58" y="176" font-size="11" class="mono" fill="var(--ink-2)">    return p; }</text>
+  <text x="58" y="194" font-size="10" fill="var(--ink-3)">这行看起来是普通方法调用……</text>
+
+  <path d="M332 144 L392 144" stroke="var(--accent)" stroke-width="2" marker-end="url(#d1)"/>
+  <text x="362" y="134" font-size="10" text-anchor="middle" class="mono" fill="var(--accent)">运行时</text>
+
+  <rect x="400" y="20" width="296" height="248" rx="10" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/>
+  <text x="420" y="44" font-size="12" font-weight="700" fill="var(--accent-ink)">Spring 生成的 CGLIB 子类</text>
+  <text x="420" y="62" font-size="10.5" class="mono" fill="var(--ink-3)">ProjectConfig$$SpringCGLIB$$0</text>
+  <rect x="420" y="76" width="256" height="106" rx="7" fill="var(--surface)" stroke="var(--accent)"/>
+  <text x="434" y="97" font-size="11" class="mono" fill="var(--ink)">parrot() 被重写为：</text>
+  <text x="434" y="117" font-size="10.5" class="mono" fill="var(--ink-2)">if (上下文已有 parrot bean)</text>
+  <text x="434" y="134" font-size="10.5" class="mono" fill="var(--accent-ink)" font-weight="700">    return 缓存里那一个;</text>
+  <text x="434" y="151" font-size="10.5" class="mono" fill="var(--ink-2)">else</text>
+  <text x="434" y="168" font-size="10.5" class="mono" fill="var(--ink-2)">    return super.parrot();</text>
+  <text x="420" y="206" font-size="11" fill="var(--ink-2)">→ 所以第二次调用拿到的是</text>
+  <text x="420" y="224" font-size="11" fill="var(--ink-2)">　 <tspan font-weight="700" fill="var(--accent-ink)">同一个实例</tspan>，单例语义没被破坏</text>
+  <text x="420" y="250" font-size="10.5" fill="var(--ink-3)">这就是 @Configuration 和 @Component 的关键区别</text>
+  <defs><marker id="d1" markerWidth="8" markerHeight="8" refX="7" refY="3.6" orient="auto"><path d="M0 0 L8 3.6 L0 7.2 z" fill="var(--accent)"/></marker></defs>
+</svg>
+<figcaption><b>图 3-1</b>　<code>@Configuration</code> 类会被 CGLIB 做子类代理，代理拦截所有 <code>@Bean</code> 方法调用并先查上下文缓存。这也解释了为什么 <code>@Configuration</code> 类<strong>不能是 final</strong>、<code>@Bean</code> 方法不能是 <code>private</code>/<code>final</code>/<code>static</code>（静态方法不走代理）。</figcaption>
+</figure>
+
+<h3>方式 B：用 @Bean 方法参数（推荐）</h3>
+
+<pre class="codehead"><b>ssh_ch3_ex3 · ProjectConfig.java</b></pre>
+<pre><code class="language-java">@Bean
+public Parrot parrot() { ... }
+
+@Bean
+public Person person(Parrot parrot) {    // ← 让 Spring 把 parrot bean 递进来
+    Person p = new Person();
+    p.setName("Ella");
+    p.setParrot(parrot);
+    return p;
+}</code></pre>
+
+<div class="tip"><b>为什么这种更好</b>
+它不依赖“配置类被代理”这个隐式机制，意图更直白：这个 bean 需要一个 <code>Parrot</code>，从上下文里找一个给我。而且它对 <code>@Bean</code> 方法所在的类是不是配置类不敏感，重构时更安全。</div>
+
+<h2>3.3 让 Spring 自己连线：@Autowired</h2>
+
+<p>当两个类都是 <code>@Component</code>（不需要在配置类里写创建逻辑）时，用 <code>@Autowired</code>。它能放在三个位置。</p>
+
+<figure>
+<svg viewBox="0 0 720 300" role="img" aria-label="字段注入、构造器注入、setter 注入三种方式对比">
+  <g>
+    <rect x="16" y="18" width="222" height="264" rx="10" fill="var(--surface)" stroke="var(--line-strong)"/>
+    <text x="32" y="42" font-size="12.5" font-weight="700" fill="var(--ink)">字段注入</text>
+    <text x="32" y="60" font-size="10.5" class="mono" fill="var(--ink-3)">ssh_ch3_ex4</text>
+    <rect x="32" y="74" width="190" height="70" rx="7" fill="var(--code-bg)" stroke="var(--line)"/>
+    <text x="44" y="95" font-size="10.5" class="mono" fill="var(--hl-meta,var(--ink-2))">@Autowired</text>
+    <text x="44" y="112" font-size="10.5" class="mono" fill="var(--ink-2)">private Parrot parrot;</text>
+    <text x="44" y="132" font-size="10" fill="var(--ink-3)">反射直接写字段</text>
+    <text x="32" y="170" font-size="11.5" fill="var(--ink-2)">✓ 最短</text>
+    <text x="32" y="192" font-size="11.5" fill="var(--amber)">✗ 字段不能是 final</text>
+    <text x="32" y="214" font-size="11.5" fill="var(--amber)">✗ 单元测试难注入</text>
+    <text x="32" y="236" font-size="11.5" fill="var(--amber)">✗ 隐藏了依赖数量</text>
+    <text x="32" y="264" font-size="10.5" fill="var(--ink-3)">教学可以，生产别用</text>
+  </g>
+  <g>
+    <rect x="250" y="18" width="222" height="264" rx="10" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.8"/>
+    <text x="266" y="42" font-size="12.5" font-weight="700" fill="var(--accent-ink)">构造器注入 ★</text>
+    <text x="266" y="60" font-size="10.5" class="mono" fill="var(--ink-3)">ssh_ch3_ex5</text>
+    <rect x="266" y="74" width="190" height="70" rx="7" fill="var(--surface)" stroke="var(--accent)"/>
+    <text x="278" y="95" font-size="10.5" class="mono" fill="var(--ink-2)">@Autowired</text>
+    <text x="278" y="112" font-size="10.5" class="mono" fill="var(--ink-2)">Person(Parrot p) {</text>
+    <text x="278" y="129" font-size="10.5" class="mono" fill="var(--ink-2)">  this.parrot = p; }</text>
+    <text x="266" y="170" font-size="11.5" fill="var(--ink-2)">✓ 字段可以 final</text>
+    <text x="266" y="192" font-size="11.5" fill="var(--ink-2)">✓ 对象一造出来就完整</text>
+    <text x="266" y="214" font-size="11.5" fill="var(--ink-2)">✓ 测试里直接 new 传入</text>
+    <text x="266" y="236" font-size="11.5" fill="var(--ink-2)">✓ 依赖太多一眼看得出</text>
+    <text x="266" y="264" font-size="10.5" font-weight="700" fill="var(--accent-ink)">生产代码默认选这个</text>
+  </g>
+  <g>
+    <rect x="484" y="18" width="220" height="264" rx="10" fill="var(--surface)" stroke="var(--line-strong)"/>
+    <text x="500" y="42" font-size="12.5" font-weight="700" fill="var(--ink)">setter 注入</text>
+    <text x="500" y="60" font-size="10.5" class="mono" fill="var(--ink-3)">ssh_ch3_ex6</text>
+    <rect x="500" y="74" width="188" height="70" rx="7" fill="var(--code-bg)" stroke="var(--line)"/>
+    <text x="512" y="95" font-size="10.5" class="mono" fill="var(--ink-2)">@Autowired</text>
+    <text x="512" y="112" font-size="10.5" class="mono" fill="var(--ink-2)">void setParrot(</text>
+    <text x="512" y="129" font-size="10.5" class="mono" fill="var(--ink-2)">    Parrot p) {...}</text>
+    <text x="500" y="170" font-size="11.5" fill="var(--ink-2)">✓ 可选依赖能表达</text>
+    <text x="500" y="192" font-size="11.5" fill="var(--amber)">✗ 字段不能 final</text>
+    <text x="500" y="214" font-size="11.5" fill="var(--amber)">✗ 对象存在“半成品”态</text>
+    <text x="500" y="236" font-size="11.5" fill="var(--amber)">✗ 代码最啰嗦</text>
+    <text x="500" y="264" font-size="10.5" fill="var(--ink-3)">实践中几乎不用</text>
+  </g>
+</svg>
+<figcaption><b>图 3-2</b>　书里作者的态度很明确：<strong>生产代码用构造器注入</strong>。仓库从第 4 章开始的所有 Service/Controller 都是构造器注入，而且连 <code>@Autowired</code> 都省了。</figcaption>
+</figure>
+
+<div class="tip"><b>只有一个构造器时可以省略 @Autowired</b>
+Spring 4.3 起，如果类只有一个构造器，<code>@Autowired</code> 可以不写。仓库第 4 章之后的代码全是这种写法：
+<pre style="margin-top:8px;margin-bottom:0"><code class="language-java">@Service
+public class CommentService {
+    private final CommentRepository commentRepository;
+
+    public CommentService(CommentRepository commentRepository) {   // 没有 @Autowired
+        this.commentRepository = commentRepository;
+    }
+}</code></pre></div>
+
+<h2>3.4 循环依赖：一定要认识的报错</h2>
+
+<pre class="codehead"><b>ssh_ch3_ex7</b><span>这个工程跑起来会失败——这是故意的</span></pre>
+<pre><code class="language-java">@Component
+public class Person {
+    private Parrot parrot;
+    public Person(Parrot parrot) { this.parrot = parrot; }   // Person 要 Parrot
+}
+
+@Component
+public class Parrot {
+    private Person person;
+    public Parrot(Person person) { this.person = person; }   // Parrot 又要 Person
+}</code></pre>
+
+<figure>
+<svg viewBox="0 0 720 200" role="img" aria-label="构造器循环依赖导致死锁">
+  <rect x="130" y="60" width="150" height="60" rx="9" fill="var(--surface)" stroke="var(--line-strong)" stroke-width="1.6"/>
+  <text x="205" y="86" font-size="13" font-weight="700" text-anchor="middle" fill="var(--ink)">Person</text>
+  <text x="205" y="104" font-size="10.5" text-anchor="middle" class="mono" fill="var(--ink-3)">需要 Parrot</text>
+
+  <rect x="440" y="60" width="150" height="60" rx="9" fill="var(--surface)" stroke="var(--line-strong)" stroke-width="1.6"/>
+  <text x="515" y="86" font-size="13" font-weight="700" text-anchor="middle" fill="var(--ink)">Parrot</text>
+  <text x="515" y="104" font-size="10.5" text-anchor="middle" class="mono" fill="var(--ink-3)">需要 Person</text>
+
+  <path d="M282 78 Q360 46 438 78" fill="none" stroke="var(--amber)" stroke-width="2" marker-end="url(#e1)"/>
+  <text x="360" y="44" font-size="11" text-anchor="middle" fill="var(--amber)">“先给我 Parrot”</text>
+  <path d="M438 104 Q360 136 282 104" fill="none" stroke="var(--amber)" stroke-width="2" marker-end="url(#e1)"/>
+  <text x="360" y="154" font-size="11" text-anchor="middle" fill="var(--amber)">“先给我 Person”</text>
+
+  <rect x="150" y="166" width="420" height="26" rx="6" fill="var(--amber-soft)" stroke="var(--amber)"/>
+  <text x="360" y="184" font-size="11" text-anchor="middle" class="mono" fill="var(--amber)">BeanCurrentlyInCreationException</text>
+  <defs><marker id="e1" markerWidth="8" markerHeight="8" refX="7" refY="3.6" orient="auto"><path d="M0 0 L8 3.6 L0 7.2 z" fill="var(--amber)"/></marker></defs>
+</svg>
+<figcaption><b>图 3-3</b>　构造器注入的循环依赖是<strong>无解</strong>的：造 A 必须先有 B，造 B 必须先有 A，鸡生蛋。Spring 只能报错退出。</figcaption>
+</figure>
+
+<div class="warn"><b>Spring 6 起的行为变化</b>
+书里（Spring 5）默认允许<strong>字段/setter</strong>注入的循环依赖（Spring 用三级缓存暴露半成品对象绕过去）。<strong>Spring Boot 2.6 起默认禁止了所有循环依赖</strong>，需要显式在配置里写 <code>spring.main.allow-circular-references=true</code> 才放行。所以在这个仓库的 Boot 4 环境下，即使改成字段注入，循环依赖依然会启动失败。
+<p style="margin-bottom:0">正确做法从来不是打开开关，而是<strong>重新设计</strong>：抽出第三个类承担共同职责，或者把其中一个方向改成事件/回调。</p></div>
+
+<h2>3.5 多个候选 bean 时，Spring 怎么选</h2>
+
+<p>这是本章最实用的一节。当注入点的类型对应多个 bean 时，Spring 按下面的顺序决策：</p>
+
+<figure>
+<svg viewBox="0 0 720 330" role="img" aria-label="Spring 解析注入候选 bean 的决策流程">
+  <rect x="240" y="10" width="240" height="38" rx="8" fill="var(--surface-2)" stroke="var(--line-strong)"/>
+  <text x="360" y="34" font-size="12" text-anchor="middle" fill="var(--ink)">按类型找候选 bean</text>
+
+  <path d="M360 48 L360 72" stroke="var(--line-strong)" stroke-width="1.5" marker-end="url(#f1)"/>
+  <rect x="240" y="72" width="240" height="38" rx="8" fill="var(--surface)" stroke="var(--line-strong)"/>
+  <text x="360" y="96" font-size="12" text-anchor="middle" fill="var(--ink)">只有 1 个？</text>
+  <path d="M480 91 L620 91" stroke="var(--accent)" stroke-width="1.5" marker-end="url(#f2)"/>
+  <text x="550" y="83" font-size="10.5" text-anchor="middle" fill="var(--accent)">是</text>
+  <rect x="622" y="74" width="80" height="34" rx="7" fill="var(--accent-soft)" stroke="var(--accent)"/>
+  <text x="662" y="96" font-size="11" text-anchor="middle" fill="var(--accent-ink)">用它</text>
+
+  <path d="M360 110 L360 134" stroke="var(--line-strong)" stroke-width="1.5" marker-end="url(#f1)"/>
+  <text x="372" y="127" font-size="10.5" fill="var(--ink-3)">否</text>
+  <rect x="200" y="134" width="320" height="42" rx="8" fill="var(--surface)" stroke="var(--line-strong)"/>
+  <text x="360" y="152" font-size="12" text-anchor="middle" fill="var(--ink)">注入点上有 @Qualifier("x") 吗？</text>
+  <text x="360" y="168" font-size="10" text-anchor="middle" class="mono" fill="var(--ink-3)">ssh_ch3_ex8 / ex9</text>
+  <path d="M520 155 L620 155" stroke="var(--accent)" stroke-width="1.5" marker-end="url(#f2)"/>
+  <text x="570" y="147" font-size="10.5" text-anchor="middle" fill="var(--accent)">有</text>
+  <rect x="622" y="138" width="80" height="34" rx="7" fill="var(--accent-soft)" stroke="var(--accent)"/>
+  <text x="662" y="160" font-size="11" text-anchor="middle" fill="var(--accent-ink)">用 x</text>
+
+  <path d="M360 176 L360 200" stroke="var(--line-strong)" stroke-width="1.5" marker-end="url(#f1)"/>
+  <rect x="200" y="200" width="320" height="42" rx="8" fill="var(--surface)" stroke="var(--line-strong)"/>
+  <text x="360" y="218" font-size="12" text-anchor="middle" fill="var(--ink)">有某个 bean 标了 @Primary 吗？</text>
+  <text x="360" y="234" font-size="10" text-anchor="middle" class="mono" fill="var(--ink-3)">ssh_ch2_ex4 / ssh_ch4_ex5</text>
+  <path d="M520 221 L620 221" stroke="var(--accent)" stroke-width="1.5" marker-end="url(#f2)"/>
+  <text x="570" y="213" font-size="10.5" text-anchor="middle" fill="var(--accent)">有</text>
+  <rect x="622" y="204" width="80" height="34" rx="7" fill="var(--accent-soft)" stroke="var(--accent)"/>
+  <text x="662" y="226" font-size="11" text-anchor="middle" fill="var(--accent-ink)">用它</text>
+
+  <path d="M360 242 L360 266" stroke="var(--line-strong)" stroke-width="1.5" marker-end="url(#f1)"/>
+  <rect x="200" y="266" width="320" height="42" rx="8" fill="var(--surface)" stroke="var(--line-strong)"/>
+  <text x="360" y="284" font-size="12" text-anchor="middle" fill="var(--ink)">参数名 / 字段名 == 某个 bean 名？</text>
+  <text x="360" y="300" font-size="10" text-anchor="middle" fill="var(--ink-3)">最后的兜底匹配</text>
+  <path d="M520 287 L620 287" stroke="var(--accent)" stroke-width="1.5" marker-end="url(#f2)"/>
+  <rect x="622" y="270" width="80" height="34" rx="7" fill="var(--accent-soft)" stroke="var(--accent)"/>
+  <text x="662" y="292" font-size="11" text-anchor="middle" fill="var(--accent-ink)">用它</text>
+  <path d="M200 287 L110 287" stroke="var(--amber)" stroke-width="1.5" marker-end="url(#f3)"/>
+  <rect x="14" y="270" width="94" height="34" rx="7" fill="var(--amber-soft)" stroke="var(--amber)"/>
+  <text x="61" y="286" font-size="10" text-anchor="middle" fill="var(--amber)">都不匹配</text>
+  <text x="61" y="299" font-size="9" text-anchor="middle" class="mono" fill="var(--amber)">NoUniqueBean…</text>
+  <defs>
+    <marker id="f1" markerWidth="7" markerHeight="7" refX="6" refY="3.2" orient="auto"><path d="M0 0 L7 3.2 L0 6.4 z" fill="var(--line-strong)"/></marker>
+    <marker id="f2" markerWidth="7" markerHeight="7" refX="6" refY="3.2" orient="auto"><path d="M0 0 L7 3.2 L0 6.4 z" fill="var(--accent)"/></marker>
+    <marker id="f3" markerWidth="7" markerHeight="7" refX="6" refY="3.2" orient="auto"><path d="M0 0 L7 3.2 L0 6.4 z" fill="var(--amber)"/></marker>
+  </defs>
+</svg>
+<figcaption><b>图 3-4</b>　记住这条链，90% 的“注入失败/注入错了”问题都能自己定位。注意最后那条“参数名兜底”——它意味着<strong>把参数改个名字就可能改变程序行为</strong>，所以不要依赖它。</figcaption>
+</figure>
+
+<h3>@Qualifier 的两个用法</h3>
+
+<pre class="codehead"><b>ssh_ch3_ex8</b><span>标在 @Bean 方法的参数上</span></pre>
+<pre><code class="language-java">@Bean public Parrot parrot1() { ... "Koko" ... }
+@Bean public Parrot parrot2() { ... "Miki" ... }
+
+@Bean
+public Person person(@Qualifier("parrot2") Parrot parrot2) {
+    Person p = new Person();
+    p.setParrot(parrot2);          // 明确要 Miki
+    return p;
+}</code></pre>
+
+<pre class="codehead"><b>ssh_ch3_ex9</b><span>标在 @Component 类的构造器参数上</span></pre>
+<pre><code class="language-java">@Component
+public class Person {
+    private Parrot parrot;
+
+    public Person(@Qualifier("parrot2") Parrot parrot) {
+        this.parrot = parrot;
+    }
+}</code></pre>
+
+<p><span class="path">ssh_ch3_ex9</span> 还展示了一个容易忽略的能力：<strong><code>@ComponentScan</code> 和 <code>@Bean</code> 可以在同一个配置类里共存</strong>——<code>Person</code> 靠扫描进上下文，两只 <code>Parrot</code> 靠 <code>@Bean</code> 方法进上下文。</p>
+
+<h2>与书中的差异</h2>
+
+<div class="cmp">
+<div class="old"><h5>书中</h5>
+<ul style="margin:0;font-size:14px">
+<li>Spring 5.2，字段/setter 循环依赖默认<strong>允许</strong></li>
+<li><code>public static void main(String[] args)</code></li>
+<li>示例包名 <code>com.example</code>，工程名 <code>sq-ch3-ex1</code></li>
+</ul></div>
+<div class="new"><h5>仓库</h5>
+<ul style="margin:0;font-size:14px">
+<li>Spring 7，循环依赖默认<strong>全部禁止</strong></li>
+<li><code>static void main()</code>（Java 25）</li>
+<li>工程名 <code>ssh_ch3_ex1</code>，每个工程带 JUnit 5 测试</li>
+</ul></div>
+</div>
+<div class="why"><b>本章代码本身几乎没变。</b>依赖注入的 API 从 Spring 4 到 Spring 7 一直稳定，这是 Spring 生态最保值的部分——你在这一章学的东西十年后大概率还能用。</div>
+
+<h2>动手练习</h2>
+<div class="lab">
+<h4>练习 · 让循环依赖真的报错</h4>
+<ol style="margin-bottom:0">
+<li>运行 <span class="path">ssh_ch3_ex7</span>，完整读一遍堆栈，找到 <code>BeanCurrentlyInCreationException</code> 那一行。</li>
+<li>把 <code>Parrot</code> 的构造器注入改成 <code>@Autowired</code> 字段注入，再跑一次——<strong>在 Spring 7 下它依然失败</strong>，这与书里描述的 Spring 5 行为不同。</li>
+<li>把 <span class="path">ssh_ch3_ex8</span> 里的 <code>@Qualifier("parrot2")</code> 删掉，观察 Spring 如何按参数名 <code>parrot2</code> 兜底匹配成功；再把参数名改成 <code>p</code>，观察它开始报错。</li>
+</ol>
+</div>
+
+<h2>本章自测</h2>
+<details><summary>为什么在 <code>@Configuration</code> 类里直接调用 <code>parrot()</code> 不会创建两个实例？</summary>
+<p>因为 <code>@Configuration</code> 类会被 CGLIB 代理成子类，<code>@Bean</code> 方法被重写成“先查上下文缓存”的版本（图 3-1）。如果把 <code>@Configuration</code> 换成 <code>@Component</code>，这个代理不生效，<code>parrot()</code> 就是一次真实的方法调用，会造出第二个实例——这个差别叫 full mode vs lite mode。</p></details>
+<details><summary><code>@Primary</code> 和 <code>@Qualifier</code> 该用哪个？</summary>
+<p>方向不同：<code>@Primary</code> 由 <strong>bean 的定义方</strong>声明“我是默认选择”，全局生效，一个类型只能有一个；<code>@Qualifier</code> 由 <strong>注入点</strong>声明“我要哪一个”，局部生效，可以有任意多个。典型组合是：给最常用的实现打 <code>@Primary</code>，少数需要别的实现的地方用 <code>@Qualifier</code> 覆盖。第 4 章 <span class="path">ssh_ch4_ex5</span> 和 <span class="path">ex6</span> 正好演示了这两条路。</p></details>
+<details><summary>为什么构造器注入比字段注入好？</summary>
+<p>四个理由：① 字段能声明成 <code>final</code>，对象不可变；② 对象构造完成即处于完整可用状态，不存在依赖为 null 的中间态；③ 单元测试里可以直接 <code>new Service(mockRepo)</code>，不需要反射或 Spring 容器（第 15 章会用到）；④ 构造器参数一多就很刺眼，天然提醒你这个类职责过重。</p></details>

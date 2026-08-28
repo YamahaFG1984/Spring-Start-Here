@@ -1,0 +1,192 @@
+/* ── 令牌：浅色（默认，未标记状态也走这里） ───────────────── */
+:root{
+  --paper:#f4f7f3; --surface:#ffffff; --surface-2:#e9eee8;
+  --ink:#141f1a; --ink-2:#3c4a44; --ink-3:#6a7771;
+  --line:#d8e0d9; --line-strong:#b9c6bd;
+  --accent:#1b6b47; --accent-ink:#0f4a30; --accent-soft:#e0eee6;
+  --amber:#8a5712; --amber-soft:#f6ecd9;
+  --steel:#385a75; --steel-soft:#e2eaf1;
+  --code-bg:#eef2ec; --code-ink:#1d2b24;
+  --hl-key:#0f4a30; --hl-str:#8a5712; --hl-num:#385a75; --hl-com:#7d8a83; --hl-ann:#6b3a8a; --hl-type:#1d4f6b;
+  --shadow:0 1px 2px rgba(20,31,26,.05), 0 8px 24px -16px rgba(20,31,26,.28);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0d1411; --surface:#141d19; --surface-2:#1c2721;
+    --ink:#dde5df; --ink-2:#a9b5ae; --ink-3:#7f8d86;
+    --line:#26332c; --line-strong:#38483f;
+    --accent:#62b98d; --accent-ink:#8ed3ae; --accent-soft:#15291f;
+    --amber:#d9a44a; --amber-soft:#241d10;
+    --steel:#8fb6d4; --steel-soft:#14212b;
+    --code-bg:#101a15; --code-ink:#cfdad3;
+    --hl-key:#8ed3ae; --hl-str:#d9a44a; --hl-num:#8fb6d4; --hl-com:#6d7d75; --hl-ann:#c4a0dd; --hl-type:#7fc4d8;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -18px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0d1411; --surface:#141d19; --surface-2:#1c2721;
+  --ink:#dde5df; --ink-2:#a9b5ae; --ink-3:#7f8d86;
+  --line:#26332c; --line-strong:#38483f;
+  --accent:#62b98d; --accent-ink:#8ed3ae; --accent-soft:#15291f;
+  --amber:#d9a44a; --amber-soft:#241d10;
+  --steel:#8fb6d4; --steel-soft:#14212b;
+  --code-bg:#101a15; --code-ink:#cfdad3;
+  --hl-key:#8ed3ae; --hl-str:#d9a44a; --hl-num:#8fb6d4; --hl-com:#6d7d75; --hl-ann:#c4a0dd; --hl-type:#7fc4d8;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -18px rgba(0,0,0,.8);
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:"Noto Sans SC","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+  font-size:16.5px; line-height:1.78; font-feature-settings:"tnum" 0;
+}
+
+/* ── 版式骨架 ─────────────────────────────────────── */
+.wrap{max-width:1200px; margin:0 auto; padding:0 26px;
+      display:grid; grid-template-columns:236px minmax(0,1fr); gap:52px; align-items:start}
+.rail{position:sticky; top:0; max-height:100vh; overflow-y:auto; padding:34px 0 40px}
+.main{min-width:0; padding:34px 0 96px; max-width:78ch}
+@media (max-width:900px){
+  .wrap{grid-template-columns:minmax(0,1fr); gap:0}
+  .rail{position:static; max-height:none; padding:26px 0 0; border-bottom:1px solid var(--line); margin-bottom:26px}
+  .main{padding-top:14px}
+}
+
+/* ── 侧栏 ─────────────────────────────────────────── */
+.rail-brand{display:block; text-decoration:none; color:inherit; margin-bottom:22px}
+.rail-brand b{display:block; font-family:"Newsreader","Noto Serif SC",Georgia,serif;
+  font-size:21px; font-weight:600; line-height:1.25; letter-spacing:-.01em}
+.rail-brand span{display:block; font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); margin-top:5px}
+.rail-group{font-family:"JetBrains Mono",ui-monospace,monospace; font-size:10px; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--ink-3); margin:20px 0 8px; padding-left:2px}
+.rail nav{display:flex; flex-direction:column; gap:1px}
+.rail a.ch{display:grid; grid-template-columns:22px 1fr; gap:8px; align-items:baseline;
+  text-decoration:none; color:var(--ink-2); padding:4px 8px 4px 2px; border-radius:5px; font-size:13.5px; line-height:1.45}
+.rail a.ch i{font-style:normal; font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:11px; color:var(--ink-3); font-variant-numeric:tabular-nums}
+.rail a.ch:hover{background:var(--surface-2); color:var(--ink)}
+.rail a.ch[aria-current="page"]{background:var(--accent-soft); color:var(--accent-ink); font-weight:500}
+.rail a.ch[aria-current="page"] i{color:var(--accent)}
+a:focus-visible,summary:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:3px}
+
+/* ── 标题层级 ─────────────────────────────────────── */
+.eyebrow{font-family:"JetBrains Mono",ui-monospace,monospace; font-size:11px; letter-spacing:.18em;
+  text-transform:uppercase; color:var(--accent); margin:0 0 10px}
+h1{font-family:"Newsreader","Noto Serif SC",Georgia,serif; font-weight:600; font-size:clamp(30px,4.4vw,42px);
+  line-height:1.18; letter-spacing:-.015em; margin:0 0 14px; text-wrap:balance}
+h2{font-family:"Newsreader","Noto Serif SC",Georgia,serif; font-weight:600; font-size:26px; line-height:1.3;
+  margin:56px 0 16px; padding-top:20px; border-top:1px solid var(--line); text-wrap:balance; letter-spacing:-.01em}
+h3{font-size:18.5px; font-weight:700; margin:34px 0 10px; line-height:1.45; text-wrap:balance}
+h4{font-size:15px; font-weight:700; margin:22px 0 8px; color:var(--ink-2)}
+.lede{font-size:18px; line-height:1.72; color:var(--ink-2); margin:0 0 8px}
+p{margin:0 0 14px}
+ul,ol{margin:0 0 16px; padding-left:1.35em}
+li{margin:0 0 7px}
+li>ul,li>ol{margin-top:7px}
+strong{font-weight:700; color:var(--ink)}
+em{font-style:normal; background:linear-gradient(transparent 62%, var(--accent-soft) 62%); padding:0 1px}
+a{color:var(--accent-ink); text-underline-offset:2.5px; text-decoration-thickness:1px}
+hr{border:0; border-top:1px solid var(--line); margin:38px 0}
+
+/* ── 代码 ─────────────────────────────────────────── */
+code,kbd,.path{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+:not(pre)>code{font-size:.865em; background:var(--code-bg); color:var(--code-ink);
+  padding:.12em .38em; border-radius:4px; border:1px solid var(--line)}
+.path{font-size:.83em; background:var(--surface-2); color:var(--ink-2);
+  padding:.12em .42em; border-radius:4px; border:1px solid var(--line); white-space:nowrap}
+pre{margin:0 0 18px; background:var(--code-bg); border:1px solid var(--line); border-radius:9px;
+  padding:15px 17px; overflow-x:auto; line-height:1.62; box-shadow:var(--shadow)}
+pre code{font-size:13.2px; color:var(--code-ink); background:none; border:0; padding:0; white-space:pre}
+.codehead{display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;
+  font-family:"JetBrains Mono",ui-monospace,monospace; font-size:11px; color:var(--ink-3);
+  letter-spacing:.05em; margin:0 0 6px; padding:0 2px}
+.codehead b{color:var(--ink-2); font-weight:500}
+.hljs-keyword,.hljs-built_in,.hljs-literal{color:var(--hl-key)}
+.hljs-string,.hljs-attr{color:var(--hl-str)}
+.hljs-number{color:var(--hl-num)}
+.hljs-comment{color:var(--hl-com); font-style:italic}
+.hljs-meta{color:var(--hl-ann); font-weight:500}
+.hljs-title,.hljs-title.class_,.hljs-title.function_,.hljs-type{color:var(--hl-type)}
+.hljs-tag,.hljs-name{color:var(--hl-key)}
+
+/* ── 图 ───────────────────────────────────────────── */
+figure{margin:26px 0 28px; background:var(--surface); border:1px solid var(--line);
+  border-radius:11px; padding:20px 18px 14px; box-shadow:var(--shadow); overflow-x:auto}
+figure svg{display:block; width:100%; height:auto; max-width:100%; min-width:0}
+figcaption{margin-top:12px; font-size:13px; line-height:1.62; color:var(--ink-3); border-top:1px solid var(--line); padding-top:10px}
+figcaption b{color:var(--ink-2); font-weight:600}
+svg text{font-family:"Noto Sans SC","PingFang SC",system-ui,sans-serif}
+svg .mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+
+/* ── 对照卡：书里旧版 vs 仓库新版 ──────────────────── */
+.cmp{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:22px 0 24px}
+@media (max-width:660px){.cmp{grid-template-columns:1fr}}
+.cmp>div{border-radius:10px; padding:14px 15px; border:1px solid var(--line); background:var(--surface)}
+.cmp .old{border-left:3px solid var(--steel); background:var(--steel-soft)}
+.cmp .new{border-left:3px solid var(--accent); background:var(--accent-soft)}
+.cmp h5{margin:0 0 8px; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:10.5px;
+  letter-spacing:.14em; text-transform:uppercase; font-weight:500}
+.cmp .old h5{color:var(--steel)} .cmp .new h5{color:var(--accent)}
+.cmp p:last-child,.cmp ul:last-child,.cmp pre:last-child{margin-bottom:0}
+.cmp pre{background:transparent; border:0; padding:0; box-shadow:none; font-size:12.5px}
+.cmp code{background:transparent; border:0; padding:0}
+.why{margin:-8px 0 24px; padding:11px 15px; border-radius:9px; background:var(--surface-2);
+  border:1px solid var(--line); font-size:14.5px; line-height:1.7; color:var(--ink-2)}
+.why b{color:var(--ink)}
+
+/* ── 提示块 ───────────────────────────────────────── */
+.note,.warn,.tip{border-radius:9px; padding:13px 16px; margin:20px 0; font-size:15px; line-height:1.72;
+  border:1px solid var(--line); border-left-width:3px; background:var(--surface)}
+.note{border-left-color:var(--steel); background:var(--steel-soft)}
+.warn{border-left-color:var(--amber); background:var(--amber-soft)}
+.tip{border-left-color:var(--accent); background:var(--accent-soft)}
+.note>:last-child,.warn>:last-child,.tip>:last-child{margin-bottom:0}
+.note b:first-child,.warn b:first-child,.tip b:first-child{font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:11px; letter-spacing:.14em; text-transform:uppercase; display:block; margin-bottom:5px}
+.note b:first-child{color:var(--steel)} .warn b:first-child{color:var(--amber)} .tip b:first-child{color:var(--accent)}
+
+/* ── 表 ───────────────────────────────────────────── */
+.tablewrap{overflow-x:auto; margin:20px 0 24px; border:1px solid var(--line); border-radius:10px; background:var(--surface)}
+table{border-collapse:collapse; width:100%; font-size:14px; min-width:520px}
+th,td{text-align:left; padding:9px 13px; border-bottom:1px solid var(--line); vertical-align:top; line-height:1.6}
+thead th{font-family:"JetBrains Mono",ui-monospace,monospace; font-size:10.5px; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--ink-3); font-weight:500; background:var(--surface-2); white-space:nowrap}
+tbody tr:last-child td{border-bottom:0}
+td code{font-size:.84em; white-space:normal; overflow-wrap:break-word}
+th:last-child,td:last-child{padding-right:16px}
+.num{font-variant-numeric:tabular-nums}
+
+/* ── 实验 / 自测 ──────────────────────────────────── */
+.lab{border:1px solid var(--line); border-radius:11px; padding:16px 18px; margin:24px 0; background:var(--surface)}
+.lab>h4{margin-top:0; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:11px;
+  letter-spacing:.16em; text-transform:uppercase; color:var(--accent)}
+details{border:1px solid var(--line); border-radius:9px; padding:11px 15px; margin:0 0 9px; background:var(--surface)}
+details[open]{background:var(--surface-2)}
+summary{cursor:pointer; font-weight:600; font-size:15px; list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"?"; font-family:"JetBrains Mono",ui-monospace,monospace; color:var(--accent);
+  margin-right:9px; font-weight:700}
+details>*:not(summary){margin-top:10px}
+details>p:last-child{margin-bottom:0}
+
+/* ── 章节页脚导航 ─────────────────────────────────── */
+.pager{display:flex; justify-content:space-between; gap:14px; margin-top:60px; padding-top:22px; border-top:1px solid var(--line)}
+.pager a{display:block; text-decoration:none; color:var(--ink-2); font-size:14px; max-width:47%}
+.pager a span{display:block; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:10px;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); margin-bottom:3px}
+.pager a:hover{color:var(--accent-ink)}
+.pager .next{text-align:right; margin-left:auto}
+
+/* ── 首页卡片 ─────────────────────────────────────── */
+.cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(232px,1fr)); gap:13px; margin:22px 0 28px}
+.card{display:block; text-decoration:none; color:inherit; background:var(--surface); border:1px solid var(--line);
+  border-radius:11px; padding:14px 15px; box-shadow:var(--shadow); transition:border-color .15s, transform .15s}
+.card:hover{border-color:var(--accent); transform:translateY(-2px)}
+.card i{font-style:normal; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:11px;
+  letter-spacing:.1em; color:var(--accent); display:block; margin-bottom:5px}
+.card b{display:block; font-size:15.5px; line-height:1.4; margin-bottom:5px}
+.card p{margin:0; font-size:13px; color:var(--ink-3); line-height:1.6}
+@media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}

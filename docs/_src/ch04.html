@@ -1,0 +1,294 @@
+<p class="eyebrow">第 4 章 · 第一部分 基础</p>
+<h1>Spring 上下文：使用抽象</h1>
+<p class="lede">前三章的鹦鹉例子够简单，但不像真实代码。这一章换成一个真实需求——“发布一条评论”——并且第一次出现<strong>接口</strong>。你会看到依赖注入真正的威力不在于“少写几个 new”，而在于<em>让高层代码不知道低层用的是哪个实现</em>。</p>
+
+<div class="note"><b>本章工程</b>
+<span class="path">ssh_ch4_ex1</span> 纯 Java 无框架（基线）· <span class="path">ex2</span> @Component + 构造器注入 · <span class="path">ex3</span> 字段注入 · <span class="path">ex4</span> 改用 @Bean 配置 · <span class="path">ex5</span> 两个实现 + @Primary · <span class="path">ex6</span> 两个实现 + @Qualifier · <span class="path">ex7</span> 换成 @Service / @Repository</div>
+
+<h2>4.1 需求与无框架实现</h2>
+
+<p>需求一句话：<strong>发布一条评论 = 把它存起来 + 给作者发一条通知。</strong></p>
+<p>但“存哪里”（数据库？文件？）和“怎么通知”（邮件？推送？）是会变的。所以我们给这两件事各定义一个接口。</p>
+
+<figure>
+<svg viewBox="0 0 720 268" role="img" aria-label="CommentService 依赖两个接口，接口各有实现类">
+  <rect x="252" y="16" width="216" height="56" rx="9" fill="var(--accent)" stroke="var(--accent)"/>
+  <text x="360" y="40" font-size="13.5" font-weight="700" text-anchor="middle" fill="var(--paper)">CommentService</text>
+  <text x="360" y="59" font-size="10.5" text-anchor="middle" class="mono" fill="var(--paper)" opacity="0.82">publishComment(comment)</text>
+
+  <path d="M300 74 L180 116" stroke="var(--accent)" stroke-width="1.8" marker-end="url(#g1)"/>
+  <path d="M420 74 L540 116" stroke="var(--accent)" stroke-width="1.8" marker-end="url(#g1)"/>
+  <text x="212" y="98" font-size="10.5" class="mono" fill="var(--ink-3)">依赖</text>
+  <text x="486" y="98" font-size="10.5" class="mono" fill="var(--ink-3)">依赖</text>
+
+  <rect x="52" y="118" width="256" height="48" rx="9" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="5 3"/>
+  <text x="180" y="139" font-size="12.5" font-weight="700" text-anchor="middle" fill="var(--accent-ink)">«interface» CommentRepository</text>
+  <text x="180" y="157" font-size="10.5" text-anchor="middle" class="mono" fill="var(--ink-2)">storeComment(comment)</text>
+
+  <rect x="412" y="118" width="256" height="48" rx="9" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="5 3"/>
+  <text x="540" y="139" font-size="12.5" font-weight="700" text-anchor="middle" fill="var(--accent-ink)">«interface» CommentNotificationProxy</text>
+  <text x="540" y="157" font-size="10.5" text-anchor="middle" class="mono" fill="var(--ink-2)">sendComment(comment)</text>
+
+  <path d="M180 200 L180 170" stroke="var(--line-strong)" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#g2)"/>
+  <rect x="82" y="202" width="196" height="42" rx="8" fill="var(--surface)" stroke="var(--line-strong)"/>
+  <text x="180" y="228" font-size="11.5" text-anchor="middle" fill="var(--ink)" class="mono">DBCommentRepository</text>
+
+  <path d="M480 200 L500 170" stroke="var(--line-strong)" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#g2)"/>
+  <path d="M624 200 L580 170" stroke="var(--line-strong)" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#g2)"/>
+  <rect x="376" y="202" width="200" height="42" rx="8" fill="var(--surface)" stroke="var(--line-strong)"/>
+  <text x="476" y="221" font-size="11" text-anchor="middle" fill="var(--ink)" class="mono">EmailComment-</text>
+  <text x="476" y="236" font-size="11" text-anchor="middle" fill="var(--ink)" class="mono">NotificationProxy</text>
+  <rect x="590" y="202" width="114" height="42" rx="8" fill="var(--surface)" stroke="var(--line-strong)" stroke-dasharray="3 3"/>
+  <text x="647" y="221" font-size="11" text-anchor="middle" fill="var(--ink-3)" class="mono">CommentPush-</text>
+  <text x="647" y="236" font-size="10" text-anchor="middle" fill="var(--ink-3)">（ex5 起加入）</text>
+  <defs>
+    <marker id="g1" markerWidth="8" markerHeight="8" refX="7" refY="3.6" orient="auto"><path d="M0 0 L8 3.6 L0 7.2 z" fill="var(--accent)"/></marker>
+    <marker id="g2" markerWidth="9" markerHeight="9" refX="8" refY="4" orient="auto"><path d="M0 0 L9 4 L0 8 z" fill="none" stroke="var(--line-strong)" stroke-width="1.2"/></marker>
+  </defs>
+</svg>
+<figcaption><b>图 4-1</b>　<code>CommentService</code> 只认识两个<strong>接口</strong>。换存储、换通知渠道，它一行都不用改。虚线空心箭头表示“实现”，实线表示“依赖”。</figcaption>
+</figure>
+
+<pre class="codehead"><b>ssh_ch4_ex1</b><span>纯 Java，没有 Spring</span></pre>
+<pre><code class="language-java">public class CommentService {
+    private final CommentRepository commentRepository;
+    private final CommentNotificationProxy commentNotificationProxy;
+
+    public CommentService(CommentRepository commentRepository,
+                          CommentNotificationProxy commentNotificationProxy) {
+        this.commentRepository = commentRepository;
+        this.commentNotificationProxy = commentNotificationProxy;
+    }
+
+    public void publishComment(Comment comment) {
+        commentRepository.storeComment(comment);
+        commentNotificationProxy.sendComment(comment);
+    }
+}
+
+// Main.java —— 所有接线都要手写
+var commentRepository = new DBCommentRepository();
+var commentNotificationProxy = new EmailCommentNotificationProxy();
+var commentService = new CommentService(commentRepository, commentNotificationProxy);</code></pre>
+
+<div class="tip"><b>先看清这个基线</b>
+<span class="path">ssh_ch4_ex1</span> 的 <code>CommentService</code> 已经是良好设计了：面向接口、构造器注入、字段 final。<strong>Spring 并没有改变这个设计，它只是接管了 <code>Main</code> 里那三行 <code>new</code>。</strong>这句话是理解整本书的关键。</div>
+
+<h2>4.2 哪些类该进上下文</h2>
+
+<p>这是新手最常问的问题。判断标准只有一条：<strong>Spring 需要管理它吗？</strong></p>
+
+<figure>
+<svg viewBox="0 0 720 232" role="img" aria-label="哪些类应该成为 bean 的判断">
+  <rect x="16" y="16" width="336" height="200" rx="10" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/>
+  <text x="36" y="42" font-size="12.5" font-weight="700" fill="var(--accent-ink)">✓ 该进上下文</text>
+  <g font-size="12" fill="var(--ink-2)">
+    <text x="36" y="72" class="mono" font-size="11.5">DBCommentRepository</text>
+    <text x="36" y="94">…因为 CommentService 要注入它</text>
+    <text x="36" y="122" class="mono" font-size="11.5">EmailCommentNotificationProxy</text>
+    <text x="36" y="144">…同上</text>
+    <text x="36" y="172" class="mono" font-size="11.5">CommentService</text>
+    <text x="36" y="194">…因为它需要 Spring 帮它注入依赖</text>
+  </g>
+
+  <rect x="368" y="16" width="336" height="200" rx="10" fill="var(--surface-2)" stroke="var(--line-strong)"/>
+  <text x="388" y="42" font-size="12.5" font-weight="700" fill="var(--ink-2)">✗ 不该进上下文</text>
+  <g font-size="12" fill="var(--ink-3)">
+    <text x="388" y="72" class="mono" font-size="11.5">Comment</text>
+    <text x="388" y="94">数据模型：每条评论一个新实例，</text>
+    <text x="388" y="112">运行时 new 出来，Spring 管不了也不该管</text>
+    <text x="388" y="146" font-size="11.5">一般规律：</text>
+    <text x="388" y="168">值对象 / DTO / 实体 → 不是 bean</text>
+    <text x="388" y="190">服务 / 仓储 / 控制器 / 配置 → 是 bean</text>
+  </g>
+</svg>
+<figcaption><b>图 4-2</b>　<code>Comment</code> 是<strong>数据</strong>，不是<strong>组件</strong>。区分它们的一个土办法：如果这个类的实例数量随业务数据量增长，它就不该是 bean。</figcaption>
+</figure>
+
+<h3>三种写法，同一个结果</h3>
+
+<pre class="codehead"><b>ssh_ch4_ex2</b><span>构造型注解 + 构造器注入（推荐）</span></pre>
+<pre><code class="language-java">@Component
+public class DBCommentRepository implements CommentRepository { ... }
+
+@Component
+public class EmailCommentNotificationProxy implements CommentNotificationProxy { ... }
+
+@Component
+public class CommentService {
+    private final CommentRepository commentRepository;
+    private final CommentNotificationProxy commentNotificationProxy;
+
+    public CommentService(CommentRepository commentRepository,          // 没有 @Autowired
+                          CommentNotificationProxy commentNotificationProxy) {
+        this.commentRepository = commentRepository;
+        this.commentNotificationProxy = commentNotificationProxy;
+    }
+    ...
+}
+
+@Configuration
+@ComponentScan(basePackages = {
+        "com.example.proxies", "com.example.repositories", "com.example.services"})
+public class ProjectConfiguration { }</code></pre>
+
+<p><span class="path">ssh_ch4_ex3</span> 把它改成字段注入（<code>@Autowired private CommentRepository ...</code>），<span class="path">ssh_ch4_ex4</span> 则完全不用注解、改在配置类里写 <code>@Bean</code>：</p>
+
+<pre class="codehead"><b>ssh_ch4_ex4</b><span>三个 @Bean，业务类上一个注解都没有</span></pre>
+<pre><code class="language-java">@Configuration
+public class ProjectConfiguration {
+
+    @Bean CommentNotificationProxy commentNotificationProxy() {
+        return new EmailCommentNotificationProxy();
+    }
+
+    @Bean CommentRepository commentRepository() {
+        return new DBCommentRepository();
+    }
+
+    @Bean CommentService commentService(CommentRepository commentRepository,
+                                        CommentNotificationProxy commentNotificationProxy) {
+        return new CommentService(commentRepository, commentNotificationProxy);
+    }
+}</code></pre>
+
+<div class="note"><b>注意 @Bean 方法的返回类型</b>
+写的是接口 <code>CommentRepository</code> 而不是实现类 <code>DBCommentRepository</code>。这样上下文里这个 bean 的类型就是接口类型，注入点按接口找也一定能找到。这是一个小但重要的习惯。</div>
+
+<h2>4.3 一个接口有多个实现时</h2>
+
+<p><span class="path">ssh_ch4_ex5</span> 起，<code>CommentNotificationProxy</code> 多了一个实现 <code>CommentPushNotificationProxy</code>。这时 <code>CommentService</code> 的注入点就有两个候选了。</p>
+
+<h3>解法一：@Primary（ex5）</h3>
+<pre><code class="language-java">@Component
+@Primary                                   // 默认用推送
+public class CommentPushNotificationProxy implements CommentNotificationProxy { ... }
+
+@Component                                 // 邮件实现还在，但不是默认
+public class EmailCommentNotificationProxy implements CommentNotificationProxy { ... }</code></pre>
+
+<h3>解法二：@Qualifier（ex6）</h3>
+
+<p>仓库这里用了一个<strong>比书里更现代的写法</strong>：把 <code>@Qualifier</code> 直接标在实现类上，当作“标签”用，而不是依赖 bean 名字。</p>
+
+<pre class="codehead"><b>ssh_ch4_ex6</b></pre>
+<pre><code class="language-java">@Component
+@Qualifier("PUSH")                                  // ← 给这个实现贴个标签
+public class CommentPushNotificationProxy implements CommentNotificationProxy { ... }
+
+@Component
+@Qualifier("EMAIL")
+public class EmailCommentNotificationProxy implements CommentNotificationProxy { ... }
+
+@Component
+public class CommentService {
+    public CommentService(CommentRepository commentRepository,
+                          @Qualifier("PUSH") CommentNotificationProxy proxy) {   // ← 按标签要
+        ...
+    }
+}</code></pre>
+
+<div class="cmp">
+<div class="old"><h5>书中 · 靠 bean 名字</h5>
+<pre><code>@Component            // bean 名 =
+public class CommentPush
+       NotificationProxy {}
+
+// 注入点必须写全类名首字母小写
+@Qualifier("commentPush
+            NotificationProxy")</code></pre></div>
+<div class="new"><h5>仓库 · 靠语义标签</h5>
+<pre><code>@Component
+@Qualifier("PUSH")
+public class CommentPush
+       NotificationProxy {}
+
+// 注入点写业务含义
+@Qualifier("PUSH")</code></pre></div>
+</div>
+<div class="why"><b>为什么这样更好：</b>bean 名字跟类名绑定，<strong>重命名类就会悄悄改变行为</strong>（注入点的字符串没有编译期检查）。用 <code>@Qualifier("PUSH")</code> 这种语义标签，类名怎么改都不影响；而且标签表达的是“业务意图”，读代码的人一眼知道选的是推送而不是邮件。这是 Spring 官方文档推荐的做法，书里没展开。</div>
+
+<h2>4.4 更精确的构造型注解</h2>
+
+<p><span class="path">ssh_ch4_ex7</span> 把 <code>@Component</code> 换成了更有语义的两个：</p>
+
+<figure>
+<svg viewBox="0 0 720 224" role="img" aria-label="@Component 与其派生注解 @Service @Repository @Controller 的关系">
+  <rect x="270" y="16" width="180" height="44" rx="9" fill="var(--accent)" stroke="var(--accent)"/>
+  <text x="360" y="43" font-size="13" font-weight="700" text-anchor="middle" fill="var(--paper)" class="mono">@Component</text>
+
+  <path d="M300 62 L150 106" stroke="var(--accent)" stroke-width="1.5" marker-end="url(#h1)"/>
+  <path d="M360 62 L360 106" stroke="var(--accent)" stroke-width="1.5" marker-end="url(#h1)"/>
+  <path d="M420 62 L570 106" stroke="var(--accent)" stroke-width="1.5" marker-end="url(#h1)"/>
+
+  <rect x="42" y="108" width="216" height="98" rx="9" fill="var(--surface)" stroke="var(--line-strong)"/>
+  <text x="150" y="132" font-size="12.5" font-weight="700" text-anchor="middle" fill="var(--ink)" class="mono">@Service</text>
+  <text x="150" y="154" font-size="11.5" text-anchor="middle" fill="var(--ink-2)">承载业务逻辑的类</text>
+  <text x="150" y="176" font-size="10.5" text-anchor="middle" class="mono" fill="var(--ink-3)">CommentService</text>
+  <text x="150" y="196" font-size="10.5" text-anchor="middle" fill="var(--ink-3)">第 4、8、9、13 章</text>
+
+  <rect x="270" y="108" width="180" height="98" rx="9" fill="var(--surface)" stroke="var(--line-strong)"/>
+  <text x="360" y="132" font-size="12.5" font-weight="700" text-anchor="middle" fill="var(--ink)" class="mono">@Repository</text>
+  <text x="360" y="154" font-size="11.5" text-anchor="middle" fill="var(--ink-2)">访问数据的类</text>
+  <text x="360" y="176" font-size="10.5" text-anchor="middle" class="mono" fill="var(--ink-3)">DBCommentRepository</text>
+  <text x="360" y="196" font-size="10.5" text-anchor="middle" fill="var(--ink-3)">第 12、13 章</text>
+
+  <rect x="462" y="108" width="216" height="98" rx="9" fill="var(--surface)" stroke="var(--line-strong)"/>
+  <text x="570" y="132" font-size="12.5" font-weight="700" text-anchor="middle" fill="var(--ink)" class="mono">@Controller</text>
+  <text x="570" y="154" font-size="11.5" text-anchor="middle" fill="var(--ink-2)">处理 HTTP 请求的类</text>
+  <text x="570" y="176" font-size="10.5" text-anchor="middle" class="mono" fill="var(--ink-3)">MainController</text>
+  <text x="570" y="196" font-size="10.5" text-anchor="middle" fill="var(--ink-3)">第 7 章起</text>
+  <defs><marker id="h1" markerWidth="7" markerHeight="7" refX="6" refY="3.2" orient="auto"><path d="M0 0 L7 3.2 L0 6.4 z" fill="var(--accent)"/></marker></defs>
+</svg>
+<figcaption><b>图 4-3</b>　这三个注解本身都标注了 <code>@Component</code>，所以扫描逻辑完全一样。<strong>换用它们不改变任何行为</strong>——但 <code>@Repository</code> 会额外启用数据访问异常翻译，<code>@Controller</code> 会被 Spring MVC 识别为请求处理器。对读代码的人来说，它们是分层架构的路标。</figcaption>
+</figure>
+
+<pre class="codehead"><b>ssh_ch4_ex7</b></pre>
+<pre><code class="language-java">@Repository
+public class DBCommentRepository implements CommentRepository { ... }
+
+@Service
+public class CommentService {
+    public CommentService(CommentRepository commentRepository,
+                          @Qualifier("PUSH") CommentNotificationProxy proxy) { ... }
+}</code></pre>
+
+<h2>仓库里的测试：验证“接线正确”</h2>
+
+<p>仓库给 ex2–ex7 都写了测试，其中最有意思的一个是直接断言<strong>注进去的到底是哪个实例</strong>：</p>
+
+<pre class="codehead"><b>ssh_ch4_ex6 · AppTests.java</b></pre>
+<pre><code class="language-java">@Test
+@DisplayName("Test that CommentService is linked to CommentRepository and CommentNotificationProxy")
+void testCommentServiceIsLinkedToDependencies() {
+    CommentService service = context.getBean(CommentService.class);
+    CommentRepository repository = context.getBean(DBCommentRepository.class);
+    CommentNotificationProxy proxy = context.getBean(CommentPushNotificationProxy.class);
+
+    Object injectedRepository = ReflectionTestUtils.getField(service, "commentRepository");
+    Object injectedProxy = ReflectionTestUtils.getField(service, "commentNotificationProxy");
+
+    assertSame(repository, injectedRepository);
+    assertSame(proxy, injectedProxy);        // 确认注入的是 PUSH 那个实现
+}</code></pre>
+
+<div class="note"><b>ReflectionTestUtils</b>
+Spring Test 提供的工具，用反射读取私有字段。<strong>只在测试里用</strong>。这里它回答的问题是：“<code>@Qualifier(&quot;PUSH&quot;)</code> 真的生效了吗？” —— 比打印日志靠谱得多。</div>
+
+<h2>动手练习</h2>
+<div class="lab">
+<h4>练习 · 感受解耦</h4>
+<ol style="margin-bottom:0">
+<li>在 <span class="path">ssh_ch4_ex2</span> 里新增一个 <code>FileCommentRepository implements CommentRepository</code>，加上 <code>@Component</code>，然后运行——观察 <code>NoUniqueBeanDefinitionException</code>。</li>
+<li>用三种方式各修一次这个错：给新实现加 <code>@Primary</code>；给两个实现加 <code>@Qualifier</code> 标签；把新实现的 <code>@Component</code> 去掉。</li>
+<li>对比 <span class="path">ssh_ch4_ex1</span>（无框架）和 <span class="path">ssh_ch4_ex2</span>（Spring）的 <code>CommentService.java</code>——<strong>找出它们的差异</strong>。答案是：只多了一个 <code>@Component</code>。这就是本章想让你体会的东西。</li>
+</ol>
+</div>
+
+<h2>本章自测</h2>
+<details><summary>为什么 <code>Comment</code> 不该是 bean？</summary>
+<p>因为它是数据，不是组件。bean 的默认作用域是单例——整个应用只有一个实例。而评论显然是每条一个对象、随用户输入不断产生的。把数据模型放进上下文既没有意义（没人需要注入一条评论），也会引入危险的共享状态。这条判断在第 5 章讲作用域时会更清楚。</p></details>
+<details><summary><code>@Service</code> 和 <code>@Component</code> 在功能上有区别吗？</summary>
+<p>对容器注册来说没有区别——<code>@Service</code> 的定义上就标着 <code>@Component</code>。区别在语义和少数特化行为：<code>@Repository</code> 会开启持久层异常翻译（把 JDBC 的 <code>SQLException</code> 转成 Spring 的 <code>DataAccessException</code> 体系），<code>@Controller</code> 会被 Spring MVC 的处理器映射识别。<code>@Service</code> 目前纯粹是语义标记。</p></details>
+<details><summary>为什么书里强调“面向接口”，而不是直接注入实现类？</summary>
+<p>Spring 完全允许你注入实现类，代码也能跑。但面向接口给你三样东西：① 换实现不用改调用方；② 测试时可以塞一个假实现或 mock（第 15 章）；③ Spring 用 JDK 动态代理给 bean 加事务/切面时，代理对象实现的是接口——如果你按实现类注入，某些代理场景会直接失败（第 6 章会详细讲这个坑）。</p></details>

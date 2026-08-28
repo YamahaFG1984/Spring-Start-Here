@@ -1,0 +1,561 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第 2 章 Spring 上下文：定义 bean · Spring Start Here 学习手册</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+/* ── 令牌：浅色（默认，未标记状态也走这里） ───────────────── */
+:root{
+  --paper:#f4f7f3; --surface:#ffffff; --surface-2:#e9eee8;
+  --ink:#141f1a; --ink-2:#3c4a44; --ink-3:#6a7771;
+  --line:#d8e0d9; --line-strong:#b9c6bd;
+  --accent:#1b6b47; --accent-ink:#0f4a30; --accent-soft:#e0eee6;
+  --amber:#8a5712; --amber-soft:#f6ecd9;
+  --steel:#385a75; --steel-soft:#e2eaf1;
+  --code-bg:#eef2ec; --code-ink:#1d2b24;
+  --hl-key:#0f4a30; --hl-str:#8a5712; --hl-num:#385a75; --hl-com:#7d8a83; --hl-ann:#6b3a8a; --hl-type:#1d4f6b;
+  --shadow:0 1px 2px rgba(20,31,26,.05), 0 8px 24px -16px rgba(20,31,26,.28);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0d1411; --surface:#141d19; --surface-2:#1c2721;
+    --ink:#dde5df; --ink-2:#a9b5ae; --ink-3:#7f8d86;
+    --line:#26332c; --line-strong:#38483f;
+    --accent:#62b98d; --accent-ink:#8ed3ae; --accent-soft:#15291f;
+    --amber:#d9a44a; --amber-soft:#241d10;
+    --steel:#8fb6d4; --steel-soft:#14212b;
+    --code-bg:#101a15; --code-ink:#cfdad3;
+    --hl-key:#8ed3ae; --hl-str:#d9a44a; --hl-num:#8fb6d4; --hl-com:#6d7d75; --hl-ann:#c4a0dd; --hl-type:#7fc4d8;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -18px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0d1411; --surface:#141d19; --surface-2:#1c2721;
+  --ink:#dde5df; --ink-2:#a9b5ae; --ink-3:#7f8d86;
+  --line:#26332c; --line-strong:#38483f;
+  --accent:#62b98d; --accent-ink:#8ed3ae; --accent-soft:#15291f;
+  --amber:#d9a44a; --amber-soft:#241d10;
+  --steel:#8fb6d4; --steel-soft:#14212b;
+  --code-bg:#101a15; --code-ink:#cfdad3;
+  --hl-key:#8ed3ae; --hl-str:#d9a44a; --hl-num:#8fb6d4; --hl-com:#6d7d75; --hl-ann:#c4a0dd; --hl-type:#7fc4d8;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -18px rgba(0,0,0,.8);
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:"Noto Sans SC","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+  font-size:16.5px; line-height:1.78; font-feature-settings:"tnum" 0;
+}
+
+/* ── 版式骨架 ─────────────────────────────────────── */
+.wrap{max-width:1200px; margin:0 auto; padding:0 26px;
+      display:grid; grid-template-columns:236px minmax(0,1fr); gap:52px; align-items:start}
+.rail{position:sticky; top:0; max-height:100vh; overflow-y:auto; padding:34px 0 40px}
+.main{min-width:0; padding:34px 0 96px; max-width:78ch}
+@media (max-width:900px){
+  .wrap{grid-template-columns:minmax(0,1fr); gap:0}
+  .rail{position:static; max-height:none; padding:26px 0 0; border-bottom:1px solid var(--line); margin-bottom:26px}
+  .main{padding-top:14px}
+}
+
+/* ── 侧栏 ─────────────────────────────────────────── */
+.rail-brand{display:block; text-decoration:none; color:inherit; margin-bottom:22px}
+.rail-brand b{display:block; font-family:"Newsreader","Noto Serif SC",Georgia,serif;
+  font-size:21px; font-weight:600; line-height:1.25; letter-spacing:-.01em}
+.rail-brand span{display:block; font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); margin-top:5px}
+.rail-group{font-family:"JetBrains Mono",ui-monospace,monospace; font-size:10px; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--ink-3); margin:20px 0 8px; padding-left:2px}
+.rail nav{display:flex; flex-direction:column; gap:1px}
+.rail a.ch{display:grid; grid-template-columns:22px 1fr; gap:8px; align-items:baseline;
+  text-decoration:none; color:var(--ink-2); padding:4px 8px 4px 2px; border-radius:5px; font-size:13.5px; line-height:1.45}
+.rail a.ch i{font-style:normal; font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:11px; color:var(--ink-3); font-variant-numeric:tabular-nums}
+.rail a.ch:hover{background:var(--surface-2); color:var(--ink)}
+.rail a.ch[aria-current="page"]{background:var(--accent-soft); color:var(--accent-ink); font-weight:500}
+.rail a.ch[aria-current="page"] i{color:var(--accent)}
+a:focus-visible,summary:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:3px}
+
+/* ── 标题层级 ─────────────────────────────────────── */
+.eyebrow{font-family:"JetBrains Mono",ui-monospace,monospace; font-size:11px; letter-spacing:.18em;
+  text-transform:uppercase; color:var(--accent); margin:0 0 10px}
+h1{font-family:"Newsreader","Noto Serif SC",Georgia,serif; font-weight:600; font-size:clamp(30px,4.4vw,42px);
+  line-height:1.18; letter-spacing:-.015em; margin:0 0 14px; text-wrap:balance}
+h2{font-family:"Newsreader","Noto Serif SC",Georgia,serif; font-weight:600; font-size:26px; line-height:1.3;
+  margin:56px 0 16px; padding-top:20px; border-top:1px solid var(--line); text-wrap:balance; letter-spacing:-.01em}
+h3{font-size:18.5px; font-weight:700; margin:34px 0 10px; line-height:1.45; text-wrap:balance}
+h4{font-size:15px; font-weight:700; margin:22px 0 8px; color:var(--ink-2)}
+.lede{font-size:18px; line-height:1.72; color:var(--ink-2); margin:0 0 8px}
+p{margin:0 0 14px}
+ul,ol{margin:0 0 16px; padding-left:1.35em}
+li{margin:0 0 7px}
+li>ul,li>ol{margin-top:7px}
+strong{font-weight:700; color:var(--ink)}
+em{font-style:normal; background:linear-gradient(transparent 62%, var(--accent-soft) 62%); padding:0 1px}
+a{color:var(--accent-ink); text-underline-offset:2.5px; text-decoration-thickness:1px}
+hr{border:0; border-top:1px solid var(--line); margin:38px 0}
+
+/* ── 代码 ─────────────────────────────────────────── */
+code,kbd,.path{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+:not(pre)>code{font-size:.865em; background:var(--code-bg); color:var(--code-ink);
+  padding:.12em .38em; border-radius:4px; border:1px solid var(--line)}
+.path{font-size:.83em; background:var(--surface-2); color:var(--ink-2);
+  padding:.12em .42em; border-radius:4px; border:1px solid var(--line); white-space:nowrap}
+pre{margin:0 0 18px; background:var(--code-bg); border:1px solid var(--line); border-radius:9px;
+  padding:15px 17px; overflow-x:auto; line-height:1.62; box-shadow:var(--shadow)}
+pre code{font-size:13.2px; color:var(--code-ink); background:none; border:0; padding:0; white-space:pre}
+.codehead{display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;
+  font-family:"JetBrains Mono",ui-monospace,monospace; font-size:11px; color:var(--ink-3);
+  letter-spacing:.05em; margin:0 0 6px; padding:0 2px}
+.codehead b{color:var(--ink-2); font-weight:500}
+.hljs-keyword,.hljs-built_in,.hljs-literal{color:var(--hl-key)}
+.hljs-string,.hljs-attr{color:var(--hl-str)}
+.hljs-number{color:var(--hl-num)}
+.hljs-comment{color:var(--hl-com); font-style:italic}
+.hljs-meta{color:var(--hl-ann); font-weight:500}
+.hljs-title,.hljs-title.class_,.hljs-title.function_,.hljs-type{color:var(--hl-type)}
+.hljs-tag,.hljs-name{color:var(--hl-key)}
+
+/* ── 图 ───────────────────────────────────────────── */
+figure{margin:26px 0 28px; background:var(--surface); border:1px solid var(--line);
+  border-radius:11px; padding:20px 18px 14px; box-shadow:var(--shadow); overflow-x:auto}
+figure svg{display:block; width:100%; height:auto; max-width:100%; min-width:0}
+figcaption{margin-top:12px; font-size:13px; line-height:1.62; color:var(--ink-3); border-top:1px solid var(--line); padding-top:10px}
+figcaption b{color:var(--ink-2); font-weight:600}
+svg text{font-family:"Noto Sans SC","PingFang SC",system-ui,sans-serif}
+svg .mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+
+/* ── 对照卡：书里旧版 vs 仓库新版 ──────────────────── */
+.cmp{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:22px 0 24px}
+@media (max-width:660px){.cmp{grid-template-columns:1fr}}
+.cmp>div{border-radius:10px; padding:14px 15px; border:1px solid var(--line); background:var(--surface)}
+.cmp .old{border-left:3px solid var(--steel); background:var(--steel-soft)}
+.cmp .new{border-left:3px solid var(--accent); background:var(--accent-soft)}
+.cmp h5{margin:0 0 8px; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:10.5px;
+  letter-spacing:.14em; text-transform:uppercase; font-weight:500}
+.cmp .old h5{color:var(--steel)} .cmp .new h5{color:var(--accent)}
+.cmp p:last-child,.cmp ul:last-child,.cmp pre:last-child{margin-bottom:0}
+.cmp pre{background:transparent; border:0; padding:0; box-shadow:none; font-size:12.5px}
+.cmp code{background:transparent; border:0; padding:0}
+.why{margin:-8px 0 24px; padding:11px 15px; border-radius:9px; background:var(--surface-2);
+  border:1px solid var(--line); font-size:14.5px; line-height:1.7; color:var(--ink-2)}
+.why b{color:var(--ink)}
+
+/* ── 提示块 ───────────────────────────────────────── */
+.note,.warn,.tip{border-radius:9px; padding:13px 16px; margin:20px 0; font-size:15px; line-height:1.72;
+  border:1px solid var(--line); border-left-width:3px; background:var(--surface)}
+.note{border-left-color:var(--steel); background:var(--steel-soft)}
+.warn{border-left-color:var(--amber); background:var(--amber-soft)}
+.tip{border-left-color:var(--accent); background:var(--accent-soft)}
+.note>:last-child,.warn>:last-child,.tip>:last-child{margin-bottom:0}
+.note b:first-child,.warn b:first-child,.tip b:first-child{font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:11px; letter-spacing:.14em; text-transform:uppercase; display:block; margin-bottom:5px}
+.note b:first-child{color:var(--steel)} .warn b:first-child{color:var(--amber)} .tip b:first-child{color:var(--accent)}
+
+/* ── 表 ───────────────────────────────────────────── */
+.tablewrap{overflow-x:auto; margin:20px 0 24px; border:1px solid var(--line); border-radius:10px; background:var(--surface)}
+table{border-collapse:collapse; width:100%; font-size:14px; min-width:520px}
+th,td{text-align:left; padding:9px 13px; border-bottom:1px solid var(--line); vertical-align:top; line-height:1.6}
+thead th{font-family:"JetBrains Mono",ui-monospace,monospace; font-size:10.5px; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--ink-3); font-weight:500; background:var(--surface-2); white-space:nowrap}
+tbody tr:last-child td{border-bottom:0}
+td code{font-size:.84em; white-space:normal; overflow-wrap:break-word}
+th:last-child,td:last-child{padding-right:16px}
+.num{font-variant-numeric:tabular-nums}
+
+/* ── 实验 / 自测 ──────────────────────────────────── */
+.lab{border:1px solid var(--line); border-radius:11px; padding:16px 18px; margin:24px 0; background:var(--surface)}
+.lab>h4{margin-top:0; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:11px;
+  letter-spacing:.16em; text-transform:uppercase; color:var(--accent)}
+details{border:1px solid var(--line); border-radius:9px; padding:11px 15px; margin:0 0 9px; background:var(--surface)}
+details[open]{background:var(--surface-2)}
+summary{cursor:pointer; font-weight:600; font-size:15px; list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"?"; font-family:"JetBrains Mono",ui-monospace,monospace; color:var(--accent);
+  margin-right:9px; font-weight:700}
+details>*:not(summary){margin-top:10px}
+details>p:last-child{margin-bottom:0}
+
+/* ── 章节页脚导航 ─────────────────────────────────── */
+.pager{display:flex; justify-content:space-between; gap:14px; margin-top:60px; padding-top:22px; border-top:1px solid var(--line)}
+.pager a{display:block; text-decoration:none; color:var(--ink-2); font-size:14px; max-width:47%}
+.pager a span{display:block; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:10px;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); margin-bottom:3px}
+.pager a:hover{color:var(--accent-ink)}
+.pager .next{text-align:right; margin-left:auto}
+
+/* ── 首页卡片 ─────────────────────────────────────── */
+.cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(232px,1fr)); gap:13px; margin:22px 0 28px}
+.card{display:block; text-decoration:none; color:inherit; background:var(--surface); border:1px solid var(--line);
+  border-radius:11px; padding:14px 15px; box-shadow:var(--shadow); transition:border-color .15s, transform .15s}
+.card:hover{border-color:var(--accent); transform:translateY(-2px)}
+.card i{font-style:normal; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:11px;
+  letter-spacing:.1em; color:var(--accent); display:block; margin-bottom:5px}
+.card b{display:block; font-size:15.5px; line-height:1.4; margin-bottom:5px}
+.card p{margin:0; font-size:13px; color:var(--ink-3); line-height:1.6}
+@media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
+
+</style>
+</head>
+<body>
+<div class="wrap"><aside class="rail"><a class="rail-brand" href="index.html"><b>Spring Start Here<br>学习手册</b><span>Spring Boot 4 · Spring 7 · Java 25</span></a><div class="rail-group">第一部分 · 基础</div><nav><a class="ch" href="ch01.html"><i>01</i><span>真实世界中的 Spring</span></a><a class="ch" href="ch02.html" aria-current="page"><i>02</i><span>Spring 上下文：定义 bean</span></a><a class="ch" href="ch03.html"><i>03</i><span>Spring 上下文：装配 bean</span></a><a class="ch" href="ch04.html"><i>04</i><span>Spring 上下文：使用抽象</span></a><a class="ch" href="ch05.html"><i>05</i><span>Bean 作用域与生命周期</span></a><a class="ch" href="ch06.html"><i>06</i><span>用 Spring AOP 实现切面</span></a></nav><div class="rail-group">第二部分 · 实现</div><nav><a class="ch" href="ch07.html"><i>07</i><span>理解 Spring Boot 与 Spring MVC</span></a><a class="ch" href="ch08.html"><i>08</i><span>用 Boot + MVC 实现 Web 应用</span></a><a class="ch" href="ch09.html"><i>09</i><span>使用 Spring Web 作用域</span></a><a class="ch" href="ch10.html"><i>10</i><span>实现 REST 服务</span></a><a class="ch" href="ch11.html"><i>11</i><span>消费 REST 端点</span></a><a class="ch" href="ch12.html"><i>12</i><span>在 Spring 应用中使用数据源</span></a><a class="ch" href="ch13.html"><i>13</i><span>在 Spring 应用中使用事务</span></a><a class="ch" href="ch14.html"><i>14</i><span>用 Spring Data 实现持久化</span></a><a class="ch" href="ch15.html"><i>15</i><span>单元测试</span></a><a class="ch" href="ch16.html"><i>16</i><span>Spring 集成测试</span></a></nav><div class="rail-group">总览</div><nav><a class="ch" href="index.html"><i>◆</i><span>目录与版本对照</span></a></nav></aside><main class="main">
+<p class="eyebrow">第 2 章 · 第一部分 基础</p>
+<h1>Spring 上下文：定义 bean</h1>
+<p class="lede">上下文（context）是 Spring 的核心数据结构：一块由框架管理的对象池。你要做的第一件事，就是学会用三种方式往里面放东西——因为只有进了池子的对象，Spring 才能对它做任何事。</p>
+
+<div class="note"><b>本章工程</b>
+<span class="path">ssh_ch2_ex1</span> 空上下文 · <span class="path">ssh_ch2_ex2</span> @Bean 加多个 bean · <span class="path">ssh_ch2_ex3</span> 同类型多个 bean 用名字取 · <span class="path">ssh_ch2_ex4</span> @Primary · <span class="path">ssh_ch2_ex5</span> @Component + @ComponentScan + @PostConstruct · <span class="path">ssh_ch2_ex6</span> registerBean() 编程式注册</div>
+
+<h2>2.1 先把工程建起来</h2>
+
+<p>第 2–6 章都是纯 Spring Core 工程，<strong>没有 Spring Boot</strong>。这是作者刻意的安排：先让你手工创建上下文，看清它是个普通 Java 对象，之后 Boot 的“魔法”才不神秘。</p>
+
+<pre class="codehead"><b>ssh_ch2_ex1/pom.xml</b><span>唯一的依赖</span></pre>
+<pre><code class="language-xml">&lt;properties&gt;
+    &lt;java.version&gt;25&lt;/java.version&gt;
+&lt;/properties&gt;
+
+&lt;dependencies&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.springframework&lt;/groupId&gt;
+        &lt;artifactId&gt;spring-context&lt;/artifactId&gt;
+        &lt;version&gt;7.0.1&lt;/version&gt;
+    &lt;/dependency&gt;
+&lt;/dependencies&gt;</code></pre>
+
+<div class="cmp">
+<div class="old"><h5>书中</h5><pre><code>Java 11
+spring-context 5.2.6.RELEASE</code></pre></div>
+<div class="new"><h5>仓库</h5><pre><code>Java 25
+spring-context 7.0.1</code></pre></div>
+</div>
+<div class="why"><b>为什么变：</b>Spring 6 起最低要求 Java 17，Spring 7 要求 Java 17+ 并全面适配新 JDK。<code>spring-context</code> 会自动传递引入 <code>spring-core</code>、<code>spring-beans</code>、<code>spring-aop</code>、<code>spring-expression</code>，所以只写一个依赖就够了——这一点书里和仓库一致。</div>
+
+<h3>上下文长什么样</h3>
+
+<pre class="codehead"><b>ssh_ch2_ex1/src/main/java/com/example/Main.java</b></pre>
+<pre><code class="language-java">public class Main {
+    static void main() {
+        var context = new AnnotationConfigApplicationContext();
+        Parrot p = new Parrot();   // 这个 p 只是普通对象，跟 context 毫无关系
+    }
+}</code></pre>
+
+<div class="warn"><b>Java 25 的新 main 写法</b>
+注意 <code>static void main()</code>——没有 <code>public</code>，没有 <code>String[] args</code>。这是 Java 25 定稿的“紧凑源文件与实例 main 方法”。<strong>书里全部是 <code>public static void main(String[] args)</code></strong>。如果你的 JDK 低于 25，把它改回去就能跑，功能完全一样。</div>
+
+<figure>
+<svg viewBox="0 0 720 216" role="img" aria-label="JVM 堆中的对象与 Spring 上下文中的 bean 的区别">
+  <rect x="16" y="16" width="688" height="184" rx="10" fill="none" stroke="var(--line-strong)" stroke-dasharray="5 4"/>
+  <text x="30" y="38" font-size="11.5" class="mono" fill="var(--ink-3)">JVM 堆</text>
+  <rect x="44" y="60" width="240" height="112" rx="9" fill="var(--surface-2)" stroke="var(--line-strong)"/>
+  <text x="164" y="84" font-size="12" text-anchor="middle" fill="var(--ink-3)">普通对象</text>
+  <circle cx="110" cy="122" r="22" fill="var(--surface)" stroke="var(--line-strong)"/>
+  <text x="110" y="126" font-size="11" text-anchor="middle" fill="var(--ink-2)" class="mono">p</text>
+  <circle cx="180" cy="122" r="22" fill="var(--surface)" stroke="var(--line-strong)"/>
+  <text x="180" y="126" font-size="11" text-anchor="middle" fill="var(--ink-2)" class="mono">x</text>
+  <text x="164" y="162" font-size="10.5" text-anchor="middle" fill="var(--ink-3)">Spring 看不见，也管不了</text>
+
+  <rect x="352" y="60" width="316" height="112" rx="9" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/>
+  <text x="510" y="84" font-size="12" text-anchor="middle" fill="var(--accent-ink)" font-weight="700">Spring context</text>
+  <rect x="374" y="98" width="128" height="52" rx="7" fill="var(--surface)" stroke="var(--accent)"/>
+  <text x="438" y="120" font-size="11" text-anchor="middle" fill="var(--ink)" class="mono">"parrot"</text>
+  <text x="438" y="138" font-size="10.5" text-anchor="middle" fill="var(--ink-3)">Parrot 实例</text>
+  <rect x="518" y="98" width="128" height="52" rx="7" fill="var(--surface)" stroke="var(--accent)"/>
+  <text x="582" y="120" font-size="11" text-anchor="middle" fill="var(--ink)" class="mono">"hello"</text>
+  <text x="582" y="138" font-size="10.5" text-anchor="middle" fill="var(--ink-3)">String 实例</text>
+</svg>
+<figcaption><b>图 2-1</b>　bean 不是特殊的对象，它就是普通对象——区别只在于<strong>它的引用被上下文持有</strong>，因而 Spring 能给它注入依赖、加代理、管生命周期。<code>new Parrot()</code> 造出来的对象不是 bean。</figcaption>
+</figure>
+
+<h2>2.2 方式一：@Bean 方法</h2>
+
+<pre class="codehead"><b>ssh_ch2_ex2 · config/ProjectConfig.java</b></pre>
+<pre><code class="language-java">@Configuration
+public class ProjectConfig {
+
+    @Bean
+    Parrot parrot() {          // ← 方法名就是 bean 的名字
+        var p = new Parrot();
+        p.setName("Koko");
+        return p;
+    }
+
+    @Bean
+    String hello() { return "Hello"; }   // 任何类型都能当 bean
+
+    @Bean
+    Integer ten() { return 10; }
+}</code></pre>
+
+<pre class="codehead"><b>ssh_ch2_ex2 · Main.java</b></pre>
+<pre><code class="language-java">var context = new AnnotationConfigApplicationContext(ProjectConfig.class);
+
+Parrot p = context.getBean(Parrot.class);   // 按类型取
+System.out.println(p.getName());            // Koko
+System.out.println(context.getBean(String.class));   // Hello
+System.out.println(context.getBean(Integer.class));  // 10</code></pre>
+
+<p>三条规则，记住就够用：</p>
+<ol>
+<li><code>@Configuration</code> 标记“这是一个配置类”，把它传给 <code>AnnotationConfigApplicationContext</code> 的构造器。</li>
+<li>方法上的 <code>@Bean</code> 表示“把返回值放进上下文”。方法<strong>只在容器启动时被调一次</strong>（单例，见第 5 章）。</li>
+<li><strong>方法名 = bean 名</strong>。也可以写 <code>@Bean(name = "miki")</code> 覆盖。</li>
+</ol>
+
+<div class="tip"><b>可以放任何类型</b>
+<code>String</code> 和 <code>Integer</code> 也能当 bean。这不是玩笑——第 12 章的 <code>DataSource</code>、第 6 章的切面对象，本质上都是这样注册进去的。</div>
+
+<h3>同一类型有多个 bean 怎么办</h3>
+
+<pre class="codehead"><b>ssh_ch2_ex3 · ProjectConfig.java</b></pre>
+<pre><code class="language-java">@Bean Parrot parrot1() { var p = new Parrot(); p.setName("Koko"); return p; }
+@Bean Parrot parrot2() { var p = new Parrot(); p.setName("Miki"); return p; }
+@Bean Parrot parrot3() { var p = new Parrot(); p.setName("Riki"); return p; }</code></pre>
+
+<p>此时 <code>context.getBean(Parrot.class)</code> 会抛 <code>NoUniqueBeanDefinitionException</code>。两种解法：</p>
+
+<figure>
+<svg viewBox="0 0 720 250" role="img" aria-label="按名字取 bean 与 @Primary 的对比">
+  <rect x="16" y="14" width="330" height="222" rx="10" fill="var(--surface)" stroke="var(--line-strong)"/>
+  <text x="34" y="38" font-size="12.5" font-weight="700" fill="var(--ink)">解法 A · 按名字取</text>
+  <text x="34" y="58" font-size="11" class="mono" fill="var(--ink-3)">ssh_ch2_ex3</text>
+  <g class="mono" font-size="11.5">
+    <rect x="34" y="74" width="90" height="34" rx="6" fill="var(--surface-2)" stroke="var(--line-strong)"/>
+    <text x="79" y="96" text-anchor="middle" fill="var(--ink-2)">parrot1</text>
+    <rect x="134" y="74" width="90" height="34" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/>
+    <text x="179" y="96" text-anchor="middle" fill="var(--accent-ink)">parrot2</text>
+    <rect x="234" y="74" width="90" height="34" rx="6" fill="var(--surface-2)" stroke="var(--line-strong)"/>
+    <text x="279" y="96" text-anchor="middle" fill="var(--ink-2)">parrot3</text>
+  </g>
+  <path d="M179 140 L179 114" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#b2)"/>
+  <rect x="34" y="146" width="290" height="38" rx="7" fill="var(--code-bg)" stroke="var(--line)"/>
+  <text x="179" y="170" font-size="11" text-anchor="middle" class="mono" fill="var(--ink)">getBean("parrot2", Parrot.class)</text>
+  <text x="179" y="210" font-size="11" text-anchor="middle" fill="var(--ink-3)">调用方指定 → 每次都要写名字</text>
+
+  <rect x="374" y="14" width="330" height="222" rx="10" fill="var(--surface)" stroke="var(--line-strong)"/>
+  <text x="392" y="38" font-size="12.5" font-weight="700" fill="var(--ink)">解法 B · @Primary</text>
+  <text x="392" y="58" font-size="11" class="mono" fill="var(--ink-3)">ssh_ch2_ex4</text>
+  <g class="mono" font-size="11.5">
+    <rect x="392" y="74" width="90" height="34" rx="6" fill="var(--surface-2)" stroke="var(--line-strong)"/>
+    <text x="437" y="96" text-anchor="middle" fill="var(--ink-2)">parrot1</text>
+    <rect x="492" y="74" width="90" height="34" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="2"/>
+    <text x="537" y="92" text-anchor="middle" fill="var(--accent-ink)">parrot2</text>
+    <text x="537" y="105" text-anchor="middle" font-size="9" fill="var(--accent)">@Primary</text>
+    <rect x="592" y="74" width="90" height="34" rx="6" fill="var(--surface-2)" stroke="var(--line-strong)"/>
+    <text x="637" y="96" text-anchor="middle" fill="var(--ink-2)">parrot3</text>
+  </g>
+  <path d="M537 140 L537 114" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#b2)"/>
+  <rect x="392" y="146" width="290" height="38" rx="7" fill="var(--code-bg)" stroke="var(--line)"/>
+  <text x="537" y="170" font-size="11" text-anchor="middle" class="mono" fill="var(--ink)">getBean(Parrot.class)</text>
+  <text x="537" y="210" font-size="11" text-anchor="middle" fill="var(--ink-3)">定义方指定默认 → 调用方不用管</text>
+  <defs><marker id="b2" markerWidth="7" markerHeight="7" refX="1" refY="3.2" orient="auto"><path d="M7 0 L0 3.2 L7 6.4 z" fill="var(--accent)"/></marker></defs>
+</svg>
+<figcaption><b>图 2-2</b>　<code>@Primary</code> 的语义是“默认选我”。它不排除其他 bean，只是在按类型解析出现歧义时胜出。第 3 章的 <code>@Qualifier</code> 是更精确的第三种解法。</figcaption>
+</figure>
+
+<h2>2.3 方式二：构造型注解（@Component）</h2>
+
+<p><code>@Bean</code> 的问题是：每加一个 bean 就要写一个方法。对自己写的类，更省事的方式是<strong>直接标注类本身</strong>，然后让 Spring 扫描。</p>
+
+<pre class="codehead"><b>ssh_ch2_ex5 · beans/Parrot.java</b></pre>
+<pre><code class="language-java">@Component
+public class Parrot {
+
+    private String name;
+
+    @PostConstruct
+    void init() {
+        System.out.println("Parrot initialized");
+        this.name = "Koko";
+    }
+    // getter / setter ...
+}</code></pre>
+
+<pre class="codehead"><b>ssh_ch2_ex5 · config/ProjectConfig.java</b></pre>
+<pre><code class="language-java">@Configuration
+@ComponentScan(basePackages = "com.example.beans")   // 去哪儿找 @Component
+public class ProjectConfig { }</code></pre>
+
+<div class="cmp">
+<div class="old"><h5>书中 · import</h5><pre><code>import javax.annotation.PostConstruct;
+
+&lt;!-- 还要单独加依赖 --&gt;
+javax.annotation-api 1.3.2</code></pre></div>
+<div class="new"><h5>仓库 · import</h5><pre><code>import jakarta.annotation.PostConstruct;
+
+&lt;!-- 依赖也换名字了 --&gt;
+jakarta.annotation-api 2.1.1</code></pre></div>
+</div>
+<div class="why"><b>为什么变：</b>Java EE 更名为 Jakarta EE 后，包名从 <code>javax.*</code> 改成 <code>jakarta.*</code>。Spring 6 起只认 <code>jakarta.*</code>。<strong>你在书上看到的每一个 <code>javax.</code> import，在这个仓库里都要换成 <code>jakarta.</code></strong>——这是全书最高频的一处差异。</div>
+
+<h3>@Bean 和 @Component 该用哪个</h3>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th></th><th>@Bean</th><th>@Component</th></tr></thead>
+<tbody>
+<tr><td>控制粒度</td><td>完全控制实例的创建过程</td><td>Spring 调无参/唯一构造器</td></tr>
+<tr><td>同类型多实例</td><td>可以（写多个方法）</td><td>一个类只能有一个</td></tr>
+<tr><td>能否用于第三方类</td><td><strong>可以</strong>（你不能改别人的源码去加注解）</td><td>不行</td></tr>
+<tr><td>代码量</td><td>每个 bean 一个方法</td><td>一个注解</td></tr>
+<tr><td>初始化后逻辑</td><td>写在方法体里</td><td>用 <code>@PostConstruct</code></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="tip"><b>实战选择</b>
+自己写的类用 <code>@Component</code>（及第 4 章的 <code>@Service</code>/<code>@Repository</code>）；第三方类（<code>DataSource</code>、<code>RestClient</code>、切面对象）用 <code>@Bean</code>。仓库里第 12 章的 <span class="path">ssh_ch12_ex3</span> 就是典型的 <code>@Bean</code> 用法。</div>
+
+<h3>@PostConstruct 的执行时机</h3>
+
+<figure>
+<svg viewBox="0 0 720 132" role="img" aria-label="bean 创建流程时间线">
+  <line x1="40" y1="72" x2="684" y2="72" stroke="var(--line-strong)" stroke-width="2"/>
+  <g text-anchor="middle">
+    <circle cx="90" cy="72" r="8" fill="var(--surface)" stroke="var(--accent)" stroke-width="2"/>
+    <text x="90" y="48" font-size="11.5" fill="var(--ink)">发现类</text>
+    <text x="90" y="100" font-size="10.5" class="mono" fill="var(--ink-3)">@ComponentScan</text>
+
+    <circle cx="268" cy="72" r="8" fill="var(--surface)" stroke="var(--accent)" stroke-width="2"/>
+    <text x="268" y="48" font-size="11.5" fill="var(--ink)">调用构造器</text>
+    <text x="268" y="100" font-size="10.5" class="mono" fill="var(--ink-3)">new Parrot()</text>
+
+    <circle cx="452" cy="72" r="8" fill="var(--surface)" stroke="var(--accent)" stroke-width="2"/>
+    <text x="452" y="48" font-size="11.5" fill="var(--ink)">注入依赖</text>
+    <text x="452" y="100" font-size="10.5" class="mono" fill="var(--ink-3)">@Autowired 字段/setter</text>
+
+    <circle cx="632" cy="72" r="9" fill="var(--accent)" stroke="var(--accent)" stroke-width="2"/>
+    <text x="632" y="48" font-size="11.5" font-weight="700" fill="var(--accent-ink)">初始化回调</text>
+    <text x="632" y="100" font-size="10.5" class="mono" fill="var(--accent)">@PostConstruct</text>
+  </g>
+</svg>
+<figcaption><b>图 2-3</b>　<code>@PostConstruct</code> 在<strong>依赖注入完成之后</strong>执行，所以在它里面可以安全地使用被注入的字段——构造器里则不行（字段注入时构造器早已跑完，此时依赖还是 null）。这是第 3 章讲注入方式时的重要伏笔。</figcaption>
+</figure>
+
+<h2>2.4 方式三：编程式注册</h2>
+
+<p>前两种方式都是“启动时按配置注册”。如果 bean 要不要注册取决于<strong>运行时条件</strong>，就需要第三种。</p>
+
+<pre class="codehead"><b>ssh_ch2_ex6 · Main.java</b></pre>
+<pre><code class="language-java">var context = new AnnotationConfigApplicationContext(ProjectConfig.class);
+
+Parrot x = new Parrot();
+x.setName("Koko");
+
+Supplier&lt;Parrot&gt; parrotSupplier = () -&gt; x;      // 提供实例的工厂
+
+context.registerBean("parrot1", Parrot.class, parrotSupplier);
+
+Parrot p = context.getBean(Parrot.class);
+System.out.println(p.getName());   // Koko</code></pre>
+
+<p><code>registerBean()</code> 的四个参数：bean 名字、类型、<code>Supplier</code>（怎么造出这个实例）、以及可选的若干 <code>BeanDefinitionCustomizer</code>（比如 <code>bd -&gt; bd.setPrimary(true)</code>）。</p>
+
+<div class="note"><b>什么时候真的会用到</b>
+比如“只有配置里开启了某个开关才注册这个 bean”。不过现代 Spring 里更常见的做法是 <code>@Conditional</code> 系列注解（Boot 的自动配置大量使用），<code>registerBean</code> 属于兜底手段，了解即可。</div>
+
+<h2>三种方式全景</h2>
+
+<figure>
+<svg viewBox="0 0 720 268" role="img" aria-label="三种向上下文添加 bean 的方式对比">
+  <rect x="250" y="196" width="220" height="56" rx="10" fill="var(--accent)" stroke="var(--accent)"/>
+  <text x="360" y="221" font-size="13" font-weight="700" text-anchor="middle" fill="var(--paper)">Spring context</text>
+  <text x="360" y="240" font-size="10.5" text-anchor="middle" class="mono" fill="var(--paper)" opacity="0.8">AnnotationConfigApplicationContext</text>
+
+  <rect x="16" y="18" width="212" height="122" rx="9" fill="var(--surface)" stroke="var(--line-strong)"/>
+  <text x="34" y="42" font-size="12.5" font-weight="700" fill="var(--ink)" class="mono">@Bean</text>
+  <text x="34" y="64" font-size="11.5" fill="var(--ink-2)">写在 @Configuration 类的</text>
+  <text x="34" y="82" font-size="11.5" fill="var(--ink-2)">方法上，你控制怎么造</text>
+  <text x="34" y="108" font-size="11" fill="var(--ink-3)">✓ 第三方类</text>
+  <text x="34" y="126" font-size="11" fill="var(--ink-3)">✓ 同类型多实例</text>
+
+  <rect x="254" y="18" width="212" height="122" rx="9" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/>
+  <text x="272" y="42" font-size="12.5" font-weight="700" fill="var(--accent-ink)" class="mono">@Component</text>
+  <text x="272" y="64" font-size="11.5" fill="var(--ink-2)">标在类上，靠</text>
+  <text x="272" y="82" font-size="11.5" fill="var(--ink-2)">@ComponentScan 扫描发现</text>
+  <text x="272" y="108" font-size="11" fill="var(--ink-3)">✓ 代码最少（首选）</text>
+  <text x="272" y="126" font-size="11" fill="var(--ink-3)">✗ 只能用于自己的类</text>
+
+  <rect x="492" y="18" width="212" height="122" rx="9" fill="var(--surface)" stroke="var(--line-strong)"/>
+  <text x="510" y="42" font-size="12.5" font-weight="700" fill="var(--ink)" class="mono">registerBean()</text>
+  <text x="510" y="64" font-size="11.5" fill="var(--ink-2)">运行时调用 API 注册，</text>
+  <text x="510" y="82" font-size="11.5" fill="var(--ink-2)">可按条件决定注不注册</text>
+  <text x="510" y="108" font-size="11" fill="var(--ink-3)">✓ 运行时动态</text>
+  <text x="510" y="126" font-size="11" fill="var(--ink-3)">✗ 用得很少</text>
+
+  <path d="M122 144 L300 192" stroke="var(--line-strong)" stroke-width="1.5" marker-end="url(#c1)"/>
+  <path d="M360 144 L360 192" stroke="var(--accent)" stroke-width="2" marker-end="url(#c2)"/>
+  <path d="M598 144 L420 192" stroke="var(--line-strong)" stroke-width="1.5" marker-end="url(#c1)"/>
+  <defs>
+    <marker id="c1" markerWidth="7" markerHeight="7" refX="6" refY="3.2" orient="auto"><path d="M0 0 L7 3.2 L0 6.4 z" fill="var(--line-strong)"/></marker>
+    <marker id="c2" markerWidth="7" markerHeight="7" refX="6" refY="3.2" orient="auto"><path d="M0 0 L7 3.2 L0 6.4 z" fill="var(--accent)"/></marker>
+  </defs>
+</svg>
+<figcaption><b>图 2-4</b>　三条路通向同一个上下文。真实项目里 95% 用 <code>@Component</code> 系列，剩下的用 <code>@Bean</code>。</figcaption>
+</figure>
+
+<h2>仓库里的测试写法</h2>
+
+<p>仓库比书多了一样东西：<strong>每个工程都带 JUnit 5 测试</strong>。<span class="path">ssh_ch2_ex2</span> 甚至用了 Spring 的测试扩展：</p>
+
+<pre class="codehead"><b>ssh_ch2_ex2 · src/test/java/com/example/AppTests.java</b></pre>
+<pre><code class="language-java">@ExtendWith(SpringExtension.class)
+@ContextConfiguration(classes = { ProjectConfig.class })
+public class AppTests {
+
+    @Autowired private Parrot parrot;
+    @Autowired private String hello;
+    @Autowired private Integer ten;
+
+    @Test
+    @DisplayName("Test that the parrot 'Koko' is in the Spring context")
+    void testKokoIsInContext() {
+        assertEquals("Koko", parrot.getName());
+    }
+}</code></pre>
+
+<p>其余工程（ex3–ex6）用的是更朴素的写法：在 <code>@BeforeEach</code> 里 <code>new AnnotationConfigApplicationContext(...)</code>，然后直接 <code>getBean</code> 断言。两种写法都值得会——前者是第 16 章的雏形。</p>
+
+<div class="note"><b>版本提示</b>
+<code>spring-test</code> 7.0.1 + <code>junit-jupiter</code> 5.11.4。书里这几章没有测试代码，是仓库额外补的。</div>
+
+<h2>动手练习</h2>
+<div class="lab">
+<h4>练习 · 三种方式各来一遍</h4>
+<ol style="margin-bottom:0">
+<li>在 <span class="path">ssh_ch2_ex2</span> 里再加一个 <code>@Bean LocalDate today()</code>，用 <code>getBean(LocalDate.class)</code> 取出来打印。</li>
+<li>把 <span class="path">ssh_ch2_ex3</span> 的 <code>getBean("parrot2", Parrot.class)</code> 改成 <code>getBean(Parrot.class)</code>，跑一次，<strong>读一遍异常信息</strong>——认识 <code>NoUniqueBeanDefinitionException</code> 比记住它有用。</li>
+<li>在 <span class="path">ssh_ch2_ex5</span> 的 <code>Parrot</code> 构造器里打印 <code>this.name</code>，再对比 <code>@PostConstruct</code> 里打印的值，验证图 2-3 的顺序。</li>
+</ol>
+</div>
+
+<h2>本章自测</h2>
+<details><summary><code>@Bean</code> 方法会被调用几次？</summary>
+<p>默认作用域是单例，所以整个上下文生命周期内<strong>只调用一次</strong>，返回值被缓存起来。第 5 章会看到把它改成 <code>@Scope(BeanDefinition.SCOPE_PROTOTYPE)</code> 后，每次 <code>getBean</code> 都会重新调用。这个细节也是第 3 章“方法直接调用能装配 bean”能成立的原因。</p></details>
+<details><summary>bean 的名字默认是什么？</summary>
+<p><code>@Bean</code> 方式取方法名；<code>@Component</code> 方式取类名首字母小写（<code>CommentService</code> → <code>commentService</code>）。两者都可以显式指定：<code>@Bean("miki")</code> / <code>@Component("miki")</code>。名字在第 3 章配合 <code>@Qualifier</code> 时会变得重要。</p></details>
+<details><summary>为什么 <code>@PostConstruct</code> 需要额外加依赖？</summary>
+<p>因为它不属于 Spring，而是 Jakarta Annotations 规范的一部分。Java 11 之前这些注解在 JDK 里，之后被移出，所以要显式加 <code>jakarta.annotation-api</code>（书里是 <code>javax.annotation-api</code>）。仓库里只有 <span class="path">ssh_ch2_ex5</span> 加了这个依赖，因为只有它用到。</p></details>
+
+<div class="pager"><a class="prev" href="ch01.html"><span>上一章</span>1. 真实世界中的 Spring</a><a class="next" href="ch03.html"><span>下一章</span>3. Spring 上下文：装配 bean</a></div>
+</main></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/java.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/sql.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/properties.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+<script>
+(function(){ if(!window.hljs) return;
+  document.querySelectorAll('pre code[class^="language-"]').forEach(function(el){
+    try{ hljs.highlightElement(el); }catch(e){}
+  });
+})();
+</script>
+</body>
+</html>

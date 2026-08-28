@@ -1,0 +1,224 @@
+<p class="eyebrow">第 1 章 · 第一部分 基础</p>
+<h1>真实世界中的 Spring</h1>
+<p class="lede">这一章不写代码，但它决定了你后面 15 章能不能“看懂为什么”。我们先弄清三件事：框架到底替我们扛了什么、Spring 生态里那一堆名字各管什么、以及这个仓库用的技术栈跟书里差多远。</p>
+
+<div class="note">
+<b>本章对应工程</b>
+无。仓库里最早的代码是 <span class="path">ssh_ch2_ex1</span>。本章内容全部来自书的第 1 章，加上我对仓库 <span class="path">pom.xml</span> 的实测结论。
+</div>
+
+<h2>1.1 为什么要用框架</h2>
+
+<p>作者在书的开篇用了一个冰山比喻，我觉得它是整本书最值钱的一张图。用户看到的是“业务逻辑”——下单、转账、发评论；但真正撑起一个企业级应用的代码，绝大部分在水面以下，而且<strong>跟你的业务没有一点关系</strong>。</p>
+
+<figure>
+<svg viewBox="0 0 720 320" role="img" aria-label="冰山图：水面上是业务逻辑，水面下是事务、安全、日志、持久化、缓存、数据传输">
+  <line x1="0" y1="108" x2="720" y2="108" stroke="var(--steel)" stroke-width="1.5" stroke-dasharray="7 5"/>
+  <text x="8" y="100" font-size="11" fill="var(--steel)" class="mono">WATERLINE — 用户能看见的部分</text>
+  <path d="M360 18 L470 104 L250 104 Z" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="2"/>
+  <text x="360" y="82" font-size="15" font-weight="700" fill="var(--accent-ink)" text-anchor="middle">业务逻辑</text>
+  <path d="M250 112 L470 112 L620 300 L100 300 Z" fill="var(--surface-2)" stroke="var(--line-strong)" stroke-width="1.5"/>
+  <g font-size="13" fill="var(--ink-2)" text-anchor="middle">
+    <text x="300" y="145">事务管理</text>
+    <text x="430" y="145">安全 / 认证授权</text>
+    <text x="270" y="185">日志</text>
+    <text x="400" y="185">数据持久化</text>
+    <text x="520" y="185">缓存</text>
+    <text x="290" y="225">对象生命周期</text>
+    <text x="450" y="225">HTTP 数据转换</text>
+    <text x="360" y="265">连接池 · 线程池 · 序列化 · 重试 · 监控</text>
+  </g>
+</svg>
+<figcaption><b>图 1-1</b>　水面以上是你被雇来写的代码；水面以下是每个企业应用都要写、而且写法几乎相同的代码。框架的价值就是把水下这一大块变成“依赖 + 少量配置”。</figcaption>
+</figure>
+
+<p>所以“用框架”这个决定的本质是：<em>用一点点自由度，换掉一大堆重复且容易写错的基础设施代码</em>。Spring 之所以在 Java 世界占了半壁江山，是因为它把水下这块拆成了可以按需取用的模块，而不是一个必须整体吞下的庞然大物。</p>
+
+<h2>1.2 Spring 生态：那些名字分别是什么</h2>
+
+<p>初学者最大的困惑是：Spring、Spring Framework、Spring Boot、Spring Data、Spring Security……到底谁包含谁？下面这张图是我按仓库里实际用到的依赖画的层次关系。</p>
+
+<figure>
+<svg viewBox="0 0 720 372" role="img" aria-label="Spring 生态分层图">
+  <rect x="20" y="16" width="680" height="66" rx="9" fill="var(--surface-2)" stroke="var(--line-strong)"/>
+  <text x="36" y="41" font-size="13" font-weight="700" fill="var(--ink)">你的应用代码</text>
+  <text x="36" y="63" font-size="12" fill="var(--ink-3)">Controller · Service · Repository · 领域模型</text>
+
+  <rect x="20" y="96" width="680" height="70" rx="9" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/>
+  <text x="36" y="121" font-size="13" font-weight="700" fill="var(--accent-ink)">Spring Boot　<tspan class="mono" font-size="11" font-weight="400">spring-boot-starter-parent 4.x</tspan></text>
+  <text x="36" y="143" font-size="12" fill="var(--ink-2)">起步依赖（starter）· 自动配置 · 内嵌 Tomcat · 外部化配置 · 可执行 jar</text>
+  <text x="36" y="160" font-size="11" fill="var(--ink-3)" class="mono">它不是新框架，是“把下面这些东西替你配好”的一层</text>
+
+  <g font-size="12">
+    <rect x="20" y="180" width="160" height="86" rx="9" fill="var(--surface)" stroke="var(--line-strong)"/>
+    <text x="34" y="203" font-size="12.5" font-weight="700" fill="var(--ink)">Spring MVC</text>
+    <text x="34" y="223" fill="var(--ink-3)">第 7–11 章</text>
+    <text x="34" y="241" fill="var(--ink-3)">@Controller</text>
+    <text x="34" y="257" fill="var(--ink-3)">@RestController</text>
+
+    <rect x="192" y="180" width="160" height="86" rx="9" fill="var(--surface)" stroke="var(--line-strong)"/>
+    <text x="206" y="203" font-size="12.5" font-weight="700" fill="var(--ink)">Data Access</text>
+    <text x="206" y="223" fill="var(--ink-3)">第 12–14 章</text>
+    <text x="206" y="241" fill="var(--ink-3)">JdbcTemplate</text>
+    <text x="206" y="257" fill="var(--ink-3)">@Transactional</text>
+
+    <rect x="364" y="180" width="160" height="86" rx="9" fill="var(--surface)" stroke="var(--line-strong)"/>
+    <text x="378" y="203" font-size="12.5" font-weight="700" fill="var(--ink)">Spring Data</text>
+    <text x="378" y="223" fill="var(--ink-3)">第 14 章</text>
+    <text x="378" y="241" fill="var(--ink-3)">CrudRepository</text>
+    <text x="378" y="257" fill="var(--ink-3)">派生查询</text>
+
+    <rect x="536" y="180" width="164" height="86" rx="9" fill="var(--surface)" stroke="var(--line-strong)"/>
+    <text x="550" y="203" font-size="12.5" font-weight="700" fill="var(--ink)">Spring Test</text>
+    <text x="550" y="223" fill="var(--ink-3)">第 15–16 章</text>
+    <text x="550" y="241" fill="var(--ink-3)">@SpringBootTest</text>
+    <text x="550" y="257" fill="var(--ink-3)">MockMvc</text>
+  </g>
+
+  <rect x="20" y="282" width="680" height="74" rx="9" fill="var(--accent)" stroke="var(--accent)"/>
+  <text x="36" y="307" font-size="13.5" font-weight="700" fill="var(--paper)">Spring Core　<tspan class="mono" font-size="11" font-weight="400">spring-context 7.0.1</tspan></text>
+  <text x="36" y="329" font-size="12" fill="var(--paper)" opacity="0.92">IoC 容器（第 2–5 章）　·　AOP 切面（第 6 章）　·　SpEL　·　事件</text>
+  <text x="36" y="347" font-size="11" fill="var(--paper)" opacity="0.75" class="mono">上面每一层都建立在这里 —— 所以这本书花 5 章讲它</text>
+</svg>
+<figcaption><b>图 1-2</b>　Spring Core 是地基，其他都是建在地基上的房间；Spring Boot 横在你和它们之间，负责“按约定装修好”。<b>本书 2/3 的篇幅（第 2–6 章）只讲最底下那一层</b>，因为不懂容器，上面全是魔法。</figcaption>
+</figure>
+
+<h3>核心概念：IoC（控制反转）</h3>
+
+<p>整本书真正的主角是 <strong>Spring 上下文（Spring context）</strong>，也叫 IoC 容器。一句话解释它：</p>
+
+<div class="tip"><b>一句话</b>
+平时是<strong>你</strong>决定什么时候 <code>new</code> 一个对象、把哪个对象塞给谁；用了容器之后，<strong>容器</strong>来决定。“谁来控制对象的创建和关联”这件事被反转了，所以叫控制反转。</div>
+
+<figure>
+<svg viewBox="0 0 720 246" role="img" aria-label="控制反转前后对比图">
+  <text x="16" y="20" font-size="11" class="mono" fill="var(--steel)">不用容器：你自己 new，自己接线</text>
+  <rect x="16" y="32" width="316" height="196" rx="9" fill="var(--steel-soft)" stroke="var(--steel)" stroke-dasharray="4 3"/>
+  <rect x="40" y="52" width="120" height="40" rx="7" fill="var(--surface)" stroke="var(--line-strong)"/>
+  <text x="100" y="77" font-size="12" text-anchor="middle" fill="var(--ink)" class="mono">new Repo()</text>
+  <rect x="188" y="52" width="120" height="40" rx="7" fill="var(--surface)" stroke="var(--line-strong)"/>
+  <text x="248" y="77" font-size="12" text-anchor="middle" fill="var(--ink)" class="mono">new Proxy()</text>
+  <rect x="90" y="140" width="168" height="44" rx="7" fill="var(--surface)" stroke="var(--line-strong)"/>
+  <text x="174" y="167" font-size="12" text-anchor="middle" fill="var(--ink)" class="mono">new Service(a, b)</text>
+  <path d="M100 94 L160 136" stroke="var(--steel)" stroke-width="1.4" marker-end="url(#a1)"/>
+  <path d="M248 94 L190 136" stroke="var(--steel)" stroke-width="1.4" marker-end="url(#a1)"/>
+  <text x="174" y="208" font-size="11.5" text-anchor="middle" fill="var(--ink-3)">换实现 = 改 main 里的每一行</text>
+
+  <text x="388" y="20" font-size="11" class="mono" fill="var(--accent)">用容器：你只声明，容器负责接线</text>
+  <rect x="388" y="32" width="316" height="196" rx="9" fill="var(--accent-soft)" stroke="var(--accent)"/>
+  <text x="546" y="52" font-size="11" text-anchor="middle" class="mono" fill="var(--accent-ink)">Spring context</text>
+  <rect x="410" y="62" width="120" height="38" rx="7" fill="var(--surface)" stroke="var(--accent)"/>
+  <text x="470" y="86" font-size="12" text-anchor="middle" fill="var(--ink)" class="mono">Repo bean</text>
+  <rect x="556" y="62" width="124" height="38" rx="7" fill="var(--surface)" stroke="var(--accent)"/>
+  <text x="618" y="86" font-size="12" text-anchor="middle" fill="var(--ink)" class="mono">Proxy bean</text>
+  <rect x="462" y="146" width="168" height="42" rx="7" fill="var(--surface)" stroke="var(--accent)"/>
+  <text x="546" y="172" font-size="12" text-anchor="middle" fill="var(--ink)" class="mono">Service bean</text>
+  <path d="M470 102 L520 142" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#a2)"/>
+  <path d="M618 102 L572 142" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#a2)"/>
+  <text x="546" y="212" font-size="11.5" text-anchor="middle" fill="var(--ink-3)">换实现 = 改一个注解</text>
+  <defs>
+    <marker id="a1" markerWidth="7" markerHeight="7" refX="6" refY="3.2" orient="auto"><path d="M0 0 L7 3.2 L0 6.4 z" fill="var(--steel)"/></marker>
+    <marker id="a2" markerWidth="7" markerHeight="7" refX="6" refY="3.2" orient="auto"><path d="M0 0 L7 3.2 L0 6.4 z" fill="var(--accent)"/></marker>
+  </defs>
+</svg>
+<figcaption><b>图 1-3</b>　左边是第 4 章 <span class="path">ssh_ch4_ex1</span> 的写法（纯 Java，无框架），右边是 <span class="path">ssh_ch4_ex2</span> 起的写法。这两个工程是同一个需求的两种实现，建议第 4 章时对着读。</figcaption>
+</figure>
+
+<h2>1.3 Spring 用在哪些地方</h2>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th>场景</th><th>Spring 扮演什么角色</th><th>本书是否覆盖</th></tr></thead>
+<tbody>
+<tr><td>后端服务（最主要）</td><td>暴露 REST 端点、访问数据库、调用别的服务、管事务和安全</td><td>是，第 7–16 章</td></tr>
+<tr><td>自动化测试框架</td><td>用 IoC 容器管理测试用的对象和配置，接数据库/消息队列做数据准备</td><td>部分，第 15–16 章思路相同</td></tr>
+<tr><td>桌面应用</td><td>只用 Spring Core 的容器和 AOP 来组织对象</td><td>第 2–6 章的知识直接可用</td></tr>
+<tr><td>Android 等移动端</td><td>基本不用（体积和启动时间敏感）</td><td>否</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>什么时候<em>不</em>该用框架</h3>
+<ul>
+<li><strong>包体积必须极小</strong>：框架带来的依赖树可能比你的业务代码大一个数量级。</li>
+<li><strong>安全要求必须完全自研</strong>：不能接受“信任第三方代码”的场景（少见，但存在）。</li>
+<li><strong>已有大量定制</strong>：如果你已经把框架的每个扩展点都改写了，说明框架跟需求不匹配，维护成本反而更高。</li>
+<li><strong>迁移收益不足</strong>：一个能跑十年的老系统，为了“用上新框架”而重写，通常是负收益。</li>
+</ul>
+
+<h2>1.4 这个仓库和书里的代码差多少</h2>
+
+<p>这是本手册存在的主要理由。书出版于 2021 年，用的是 Spring 5.2 / Spring Boot 2.3；仓库里的代码已经升级到 <strong>Spring Framework 7.0.1 / Spring Boot 4.x / Java 25</strong>。这中间隔了 <code>javax → jakarta</code> 大迁移、Boot 3、Boot 4 三道坎，差异不是“版本号变大”那么简单。</p>
+
+<div class="cmp">
+<div class="old"><h5>书中（2021）</h5>
+<pre><code>Java 11
+spring-context 5.2.6.RELEASE
+spring-boot-starter-parent 2.3.4.RELEASE
+javax.annotation-api 1.3.2
+spring-boot-starter-web
+spring-boot-starter-test
+@MockBean</code></pre></div>
+<div class="new"><h5>仓库（当前）</h5>
+<pre><code>Java 25
+spring-context 7.0.1
+spring-boot-starter-parent 4.0.x / 4.1.0
+jakarta.annotation-api 2.1.1
+spring-boot-starter-webmvc
+spring-boot-starter-webmvc-test
+@MockitoBean</code></pre></div>
+</div>
+
+<div class="why"><b>为什么变：</b>Jakarta EE 把 <code>javax.*</code> 命名空间整体改成 <code>jakarta.*</code>（Oracle 把 Java EE 商标捐给 Eclipse 基金会后的法律后果），Spring 6 起全线跟进；Spring Boot 4 把过去的“大 starter”拆成了按技术划分的模块化 starter；<code>@MockBean</code> 在 Spring Framework 6.2 被 <code>@MockitoBean</code> 取代并在 Boot 4 中移除。</div>
+
+<h3>全局差异速查表</h3>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th>维度</th><th>书里（Spring 5 / Boot 2）</th><th>仓库里（Spring 7 / Boot 4）</th><th>影响章节</th></tr></thead>
+<tbody>
+<tr><td>JDK</td><td>Java 11</td><td><code>&lt;java.version&gt;25&lt;/java.version&gt;</code></td><td>全部</td></tr>
+<tr><td>核心包</td><td><code>spring-context</code> 5.2.x</td><td><code>spring-context</code> 7.0.1</td><td>2–6</td></tr>
+<tr><td>Boot 父 POM</td><td>2.3.4.RELEASE</td><td>4.0.4 / 4.0.5 / 4.0.6 / 4.1.0</td><td>7–16</td></tr>
+<tr><td>Web starter</td><td><code>spring-boot-starter-web</code></td><td><code>spring-boot-starter-webmvc</code></td><td>7–14</td></tr>
+<tr><td>测试 starter</td><td><code>spring-boot-starter-test</code></td><td><code>spring-boot-starter-webmvc-test</code> / <code>-jdbc-test</code> / <code>-data-jdbc-test</code></td><td>7–16</td></tr>
+<tr><td>注解命名空间</td><td><code>javax.annotation.PostConstruct</code></td><td><code>jakarta.annotation.PostConstruct</code></td><td>2</td></tr>
+<tr><td>main 方法</td><td><code>public static void main(String[] args)</code></td><td><code>static void main()</code>（Java 25 紧凑 main）</td><td>2–6</td></tr>
+<tr><td>作用域常量</td><td><code>ConfigurableBeanFactory.SCOPE_PROTOTYPE</code></td><td><code>BeanDefinition.SCOPE_PROTOTYPE</code></td><td>5</td></tr>
+<tr><td>HTTP 客户端</td><td>OpenFeign / RestTemplate / WebClient</td><td>额外新增 <strong>RestClient</strong>，且它排在第一位</td><td>11</td></tr>
+<tr><td>数据库</td><td>MySQL（要自己装）</td><td>H2 内存库（<code>spring-boot-h2console</code>），开箱即跑</td><td>12–14</td></tr>
+<tr><td>Mock 注解</td><td><code>@MockBean</code></td><td><code>@MockitoBean</code></td><td>15–16</td></tr>
+<tr><td>章节数</td><td>15 章</td><td>16 章（测试拆成单元测试 + 集成测试两章）</td><td>15–16</td></tr>
+<tr><td>工程命名</td><td><code>sq-ch2-ex1</code></td><td><code>ssh_ch2_ex1</code></td><td>全部</td></tr>
+<tr><td>新增内容</td><td>—</td><td><span class="path">ssh_ch10_openapi</span>：OpenAPI 契约先行 + Swagger UI</td><td>10</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="warn"><b>读书时请注意</b>
+书上所有 <code>javax.</code> 开头的 import 在本仓库里都要改成 <code>jakarta.</code>；所有 <code>spring-boot-starter-web</code> 要改成 <code>spring-boot-starter-webmvc</code>。这两条会在第 2 章和第 7 章各绊你一次，提前记住能省不少时间。</div>
+
+<h2>1.5 跑起来：环境准备</h2>
+
+<div class="lab">
+<h4>动手 · 验证环境</h4>
+<pre class="codehead"><b>终端</b></pre>
+<pre><code class="language-bash">java -version          # 需要 JDK 25（Java 25 的紧凑 main 方法是必需的）
+mvn -version           # Maven 3.9+；也可以直接用工程里的 ./mvnw
+
+cd ssh_ch2_ex1
+./mvnw compile         # 第一次会下载依赖，之后很快
+</code></pre>
+<p style="margin-bottom:0">Spring Core 的工程（第 2–6 章）没有 <code>spring-boot-maven-plugin</code>，直接在 IDE 里运行 <code>Main</code> 类即可；Boot 工程（第 7 章起）用 <code>./mvnw spring-boot:run</code>。</p>
+</div>
+
+<div class="warn"><b>JDK 版本卡点</b>
+仓库里第 2–6 章的 <code>Main</code> 写的是 <code>static void main()</code>——没有 <code>public</code>、没有 <code>String[] args</code>。这是 Java 25 才正式定稿的<strong>实例 main 方法与紧凑源文件</strong>特性。<strong>用 JDK 21 或更低版本会直接编译不过</strong>，报“找不到 main 方法”。这是仓库和书之间最容易踩的第一个坑。</div>
+
+<h2>本章自测</h2>
+<details><summary>Spring Boot 和 Spring Framework 是什么关系？</summary>
+<p>Spring Boot 不是替代品，而是建立在 Spring Framework 之上的一层“约定优于配置”工具：它提供起步依赖（把一组常用依赖打包成一个）、自动配置（根据 classpath 上有什么来推断该注册哪些 bean）、内嵌服务器和外部化配置。你在第 2–6 章学的容器知识，在 Boot 项目里一字不差地成立。</p></details>
+<details><summary>为什么这本书要用 5 章讲“上下文”？</summary>
+<p>因为后面所有能力都是通过“往上下文里放 bean、让 Spring 用代理包装它们”实现的。<code>@Transactional</code> 生效靠代理（第 6 章 AOP + 第 13 章），<code>@RequestScope</code> 生效靠作用域（第 5 章 + 第 9 章），Spring Data 的 Repository 是容器动态生成的 bean（第 14 章）。跳过第 2–6 章，后面每一个特性都会像魔法。</p></details>
+<details><summary>本仓库为什么把书里 15 章的内容拆成了 16 章？</summary>
+<p>第 2 版把原第 15 章“测试你的 Spring 应用”拆成了两章：第 15 章讲纯单元测试（不启动 Spring，用 Mockito 手工装配），第 16 章讲 Spring 集成测试（启动上下文、<code>@SpringBootTest</code>、<code>@MockitoBean</code>、MockMvc）。仓库里对应的 commit 就叫 <code>CH15</code> 和 <code>CH16</code>，它们没有新建工程，而是往 <span class="path">ssh_ch14_ex1</span> 和 <span class="path">ssh_ch9_ex1</span> 里加了测试类。</p></details>

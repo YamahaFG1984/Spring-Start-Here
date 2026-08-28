@@ -1,0 +1,259 @@
+<p class="eyebrow">第 8 章 · 第二部分 实现</p>
+<h1>用 Boot + MVC 实现 Web 应用</h1>
+<p class="lede">上一章的页面是死的。这一章让它动起来：控制器把数据交给模板引擎，模板引擎渲染成 HTML；再学会从请求里取数据——查询参数、路径变量、表单提交。</p>
+
+<div class="note"><b>本章工程</b>
+<span class="path">ssh_ch8_ex1</span> Thymeleaf 动态视图 · <span class="path">ex2</span> 一个 @RequestParam · <span class="path">ex3</span> 多个 @RequestParam · <span class="path">ex4</span> @PathVariable · <span class="path">ex5</span> 商品列表 GET+POST（逐个参数）· <span class="path">ex6</span> 表单直接绑定成对象</div>
+
+<h2>8.1 动态视图：Model 与 Thymeleaf</h2>
+
+<pre class="codehead"><b>ssh_ch8_ex1/pom.xml</b><span>比第 7 章多了模板引擎</span></pre>
+<pre><code class="language-xml">&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-boot-starter-thymeleaf&lt;/artifactId&gt;
+&lt;/dependency&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-boot-starter-webmvc&lt;/artifactId&gt;
+&lt;/dependency&gt;</code></pre>
+
+<pre class="codehead"><b>ssh_ch8_ex1 · controller/MainController.java</b></pre>
+<pre><code class="language-java">@Controller
+public class MainController {
+
+    @RequestMapping("/home")
+    public String home(Model page) {              // ← Spring 自动传进来一个 Model
+        page.addAttribute("username", "Katy");
+        page.addAttribute("color", "red");
+        return "home.html";
+    }
+}</code></pre>
+
+<pre class="codehead"><b>ssh_ch8_ex1 · resources/templates/home.html</b></pre>
+<pre><code class="language-xml">&lt;html lang="en" xmlns:th="http://www.thymeleaf.org"&gt;   &lt;!-- 声明 th: 命名空间 --&gt;
+&lt;body&gt;
+&lt;h1&gt;Welcome
+    &lt;span th:style="'color:' + ${color}"
+          th:text="${username}"&gt;&lt;/span&gt;!&lt;/h1&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+
+<figure>
+<svg viewBox="0 0 720 260" role="img" aria-label="Model 把数据从控制器传给模板引擎的过程">
+  <rect x="16" y="60" width="150" height="76" rx="9" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/>
+  <text x="91" y="88" font-size="12" font-weight="700" text-anchor="middle" fill="var(--ink)">Controller</text>
+  <text x="91" y="108" font-size="9.5" text-anchor="middle" class="mono" fill="var(--ink-3)">addAttribute</text>
+  <text x="91" y="124" font-size="9.5" text-anchor="middle" class="mono" fill="var(--ink-3)">("username","Katy")</text>
+
+  <path d="M168 98 L230 98" stroke="var(--accent)" stroke-width="2" marker-end="url(#m1)"/>
+  <rect x="232" y="52" width="150" height="92" rx="9" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/>
+  <text x="307" y="76" font-size="12" font-weight="700" text-anchor="middle" fill="var(--accent-ink)">Model</text>
+  <text x="307" y="94" font-size="9.5" text-anchor="middle" fill="var(--ink-3)">一个 Map，作用域仅限本次请求</text>
+  <rect x="248" y="102" width="118" height="18" rx="4" fill="var(--surface)" stroke="var(--accent)"/>
+  <text x="307" y="115" font-size="9.5" text-anchor="middle" class="mono" fill="var(--ink-2)">username → "Katy"</text>
+  <rect x="248" y="124" width="118" height="18" rx="4" fill="var(--surface)" stroke="var(--accent)"/>
+  <text x="307" y="137" font-size="9.5" text-anchor="middle" class="mono" fill="var(--ink-2)">color → "red"</text>
+
+  <path d="M384 98 L446 98" stroke="var(--accent)" stroke-width="2" marker-end="url(#m1)"/>
+  <rect x="448" y="52" width="152" height="92" rx="9" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/>
+  <text x="524" y="76" font-size="12" font-weight="700" text-anchor="middle" fill="var(--ink)">Thymeleaf</text>
+  <text x="524" y="96" font-size="9.5" text-anchor="middle" fill="var(--ink-3)">读 templates/home.html</text>
+  <text x="524" y="114" font-size="9.5" text-anchor="middle" class="mono" fill="var(--ink-3)">th:text="${username}"</text>
+  <text x="524" y="132" font-size="9.5" text-anchor="middle" fill="var(--ink-3)">替换成实际值</text>
+
+  <path d="M602 98 L648 98" stroke="var(--accent)" stroke-width="2" marker-end="url(#m1)"/>
+  <rect x="650" y="66" width="56" height="64" rx="8" fill="var(--surface-2)" stroke="var(--line-strong)"/>
+  <text x="678" y="94" font-size="10.5" text-anchor="middle" fill="var(--ink)">HTML</text>
+  <text x="678" y="110" font-size="9.5" text-anchor="middle" fill="var(--ink-3)">给浏览器</text>
+
+  <rect x="120" y="182" width="480" height="56" rx="8" fill="var(--code-bg)" stroke="var(--line)"/>
+  <text x="140" y="204" font-size="11" class="mono" fill="var(--ink-3)">模板里：</text>
+  <text x="200" y="204" font-size="11" class="mono" fill="var(--ink-2)">&lt;span th:style="'color:'+${color}" th:text="${username}"&gt;&lt;/span&gt;</text>
+  <text x="140" y="226" font-size="11" class="mono" fill="var(--ink-3)">渲染后：</text>
+  <text x="200" y="226" font-size="11" class="mono" fill="var(--accent-ink)">&lt;span style="color:red"&gt;Katy&lt;/span&gt;</text>
+  <defs><marker id="m1" markerWidth="8" markerHeight="8" refX="7" refY="3.6" orient="auto"><path d="M0 0 L8 3.6 L0 7.2 z" fill="var(--accent)"/></marker></defs>
+</svg>
+<figcaption><b>图 8-1</b>　<code>Model</code> 是控制器和视图之间唯一的数据通道，生命周期只有<strong>这一次请求</strong>。渲染在服务端完成，浏览器收到的是已经填好值的纯 HTML。</figcaption>
+</figure>
+
+<div class="warn"><b>目录必须是 templates</b>
+用了 Thymeleaf 之后，模板文件要放在 <span class="path">src/main/resources/templates/</span>，<strong>不是 static/</strong>。放错的症状是：浏览器里直接看到 <code>&lt;span th:text="${username}"&gt;</code> 原样输出，或者干脆 404。</div>
+
+<h2>8.2 从请求里取数据</h2>
+
+<h3>方式一：查询参数 @RequestParam</h3>
+
+<pre class="codehead"><b>ssh_ch8_ex3</b><span>两个参数</span></pre>
+<pre><code class="language-java">@RequestMapping("/home")
+public String home(
+        @RequestParam String name,
+        @RequestParam String color,
+        Model page) {
+    page.addAttribute("username", name);
+    page.addAttribute("color", color);
+    return "home.html";
+}
+// 访问：http://localhost:8080/home?name=Katy&amp;color=blue</code></pre>
+
+<h3>方式二：路径变量 @PathVariable</h3>
+
+<pre class="codehead"><b>ssh_ch8_ex4</b></pre>
+<pre><code class="language-java">@RequestMapping("/home/{color}")            // 花括号占位
+public String home(@PathVariable String color, Model page) {
+    page.addAttribute("username", "Katy");
+    page.addAttribute("color", color);
+    return "home.html";
+}
+// 访问：http://localhost:8080/home/red</code></pre>
+
+<figure>
+<svg viewBox="0 0 720 216" role="img" aria-label="查询参数与路径变量的 URL 结构对比">
+  <text x="16" y="26" font-size="11" class="mono" fill="var(--steel)">@RequestParam · 查询参数</text>
+  <rect x="16" y="36" width="688" height="46" rx="8" fill="var(--steel-soft)" stroke="var(--steel)"/>
+  <text x="36" y="65" font-size="14" class="mono" fill="var(--ink)">http://localhost:8080/home<tspan fill="var(--steel)" font-weight="700">?name=Katy&amp;color=blue</tspan></text>
+  <text x="36" y="102" font-size="11.5" fill="var(--ink-2)">用于：可选的、用来<tspan font-weight="700">筛选或修饰</tspan>的数据 —— 分页、排序、过滤条件</text>
+  <text x="36" y="120" font-size="11.5" fill="var(--ink-3)">可选写法：<tspan class="mono">@RequestParam(required = false)</tspan> · <tspan class="mono">@RequestParam(defaultValue = "1")</tspan></text>
+
+  <text x="16" y="156" font-size="11" class="mono" fill="var(--accent)">@PathVariable · 路径变量</text>
+  <rect x="16" y="166" width="688" height="46" rx="8" fill="var(--accent-soft)" stroke="var(--accent)"/>
+  <text x="36" y="195" font-size="14" class="mono" fill="var(--ink)">http://localhost:8080/home<tspan fill="var(--accent-ink)" font-weight="700">/red</tspan>　　映射 <tspan class="mono" fill="var(--ink-3)">"/home/{color}"</tspan></text>
+</svg>
+<figcaption><b>图 8-2</b>　选择标准：<strong>路径变量用于“标识某个资源”</strong>（<code>/users/42</code>），<strong>查询参数用于“修饰一次查询”</strong>（<code>?page=2&amp;sort=name</code>）。路径变量天然是必填的，查询参数天然是可选的。</figcaption>
+</figure>
+
+<h2>8.3 GET 与 POST：一个完整的小应用</h2>
+
+<p><span class="path">ssh_ch8_ex5</span> 是本章第一个像样的应用：一个商品列表页，能查看也能添加。</p>
+
+<pre class="codehead"><b>ssh_ch8_ex5 · controllers/ProductsController.java</b></pre>
+<pre><code class="language-java">@Controller
+public class ProductsController {
+
+    private final ProductService productService;
+
+    public ProductsController(ProductService productService) {   // 构造器注入（第 3 章）
+        this.productService = productService;
+    }
+
+    // @RequestMapping("/products")                    ← 作者留的旧写法注释
+    @GetMapping("/products")
+    public String viewProducts(Model model) {
+        model.addAttribute("products", productService.findAll());
+        return "products.html";
+    }
+
+    // @RequestMapping(path = "/products", method = RequestMethod.POST)
+    @PostMapping("/products")
+    public String addProduct(@RequestParam String name,
+                             @RequestParam double price,
+                             Model model) {
+        Product p = new Product();
+        p.setName(name);
+        p.setPrice(price);
+        productService.addProduct(p);
+
+        model.addAttribute("products", productService.findAll());
+        return "products.html";
+    }
+}</code></pre>
+
+<pre class="codehead"><b>ssh_ch8_ex5 · templates/products.html</b><span>循环 + 表单</span></pre>
+<pre><code class="language-xml">&lt;table&gt;
+    &lt;tr&gt;&lt;th&gt;PRODUCT NAME&lt;/th&gt;&lt;th&gt;PRODUCT PRICE&lt;/th&gt;&lt;/tr&gt;
+    &lt;tr th:each="p: ${products}"&gt;             &lt;!-- 相当于 for (Product p : products) --&gt;
+        &lt;td th:text="${p.name}"&gt;&lt;/td&gt;
+        &lt;td th:text="${p.price}"&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+&lt;/table&gt;
+
+&lt;form action="/products" method="post"&gt;
+    Name: &lt;input type="text" name="name"&gt;&lt;br /&gt;
+    Price: &lt;input type="number" step="any" name="price"&gt;&lt;br /&gt;
+    &lt;button type="submit"&gt;Add product&lt;/button&gt;
+&lt;/form&gt;</code></pre>
+
+<figure>
+<svg viewBox="0 0 720 268" role="img" aria-label="同一个路径下 GET 与 POST 走向不同的控制器方法">
+  <rect x="240" y="16" width="240" height="40" rx="8" fill="var(--surface-2)" stroke="var(--line-strong)"/>
+  <text x="360" y="41" font-size="12.5" text-anchor="middle" class="mono" fill="var(--ink)">/products</text>
+
+  <path d="M300 58 L180 96" stroke="var(--accent)" stroke-width="1.8" marker-end="url(#n1)"/>
+  <text x="212" y="80" font-size="11" class="mono" font-weight="700" fill="var(--accent)">GET</text>
+  <path d="M420 58 L540 96" stroke="var(--amber)" stroke-width="1.8" marker-end="url(#n2)"/>
+  <text x="500" y="80" font-size="11" class="mono" font-weight="700" fill="var(--amber)">POST</text>
+
+  <rect x="34" y="98" width="290" height="152" rx="10" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.5"/>
+  <text x="54" y="122" font-size="11.5" font-weight="700" class="mono" fill="var(--accent-ink)">@GetMapping</text>
+  <text x="54" y="144" font-size="11.5" fill="var(--ink-2)">浏览器地址栏访问触发</text>
+  <text x="54" y="166" font-size="11.5" fill="var(--ink-2)">语义：<tspan font-weight="700">读取</tspan>，不改变服务端状态</text>
+  <text x="54" y="188" font-size="11.5" fill="var(--ink-2)">可以被缓存、被收藏、被重复执行</text>
+  <rect x="54" y="200" width="250" height="34" rx="6" fill="var(--surface)" stroke="var(--accent)"/>
+  <text x="66" y="221" font-size="10.5" class="mono" fill="var(--ink-2)">viewProducts() → 查列表 → 渲染</text>
+
+  <rect x="396" y="98" width="290" height="152" rx="10" fill="var(--amber-soft)" stroke="var(--amber)" stroke-width="1.5"/>
+  <text x="416" y="122" font-size="11.5" font-weight="700" class="mono" fill="var(--amber)">@PostMapping</text>
+  <text x="416" y="144" font-size="11.5" fill="var(--ink-2)">提交表单触发</text>
+  <text x="416" y="166" font-size="11.5" fill="var(--ink-2)">语义：<tspan font-weight="700">修改</tspan>服务端状态</text>
+  <text x="416" y="188" font-size="11.5" fill="var(--ink-2)">刷新页面会提示“重新提交表单”</text>
+  <rect x="416" y="200" width="250" height="34" rx="6" fill="var(--surface)" stroke="var(--amber)"/>
+  <text x="428" y="221" font-size="10.5" class="mono" fill="var(--ink-2)">addProduct() → 新增 → 再渲染</text>
+  <defs>
+    <marker id="n1" markerWidth="8" markerHeight="8" refX="7" refY="3.6" orient="auto"><path d="M0 0 L8 3.6 L0 7.2 z" fill="var(--accent)"/></marker>
+    <marker id="n2" markerWidth="8" markerHeight="8" refX="7" refY="3.6" orient="auto"><path d="M0 0 L8 3.6 L0 7.2 z" fill="var(--amber)"/></marker>
+  </defs>
+</svg>
+<figcaption><b>图 8-3</b>　同一个 URL，靠 HTTP 方法区分。<strong>注意 POST 之后直接渲染页面会导致刷新重复提交</strong>——第 9 章的 <span class="path">ssh_ch9_ex2</span> 会用 <code>return "redirect:/main"</code> 解决它（这个模式叫 POST-Redirect-GET）。</figcaption>
+</figure>
+
+<h3>更省事的写法：直接绑定成对象</h3>
+
+<pre class="codehead"><b>ssh_ch8_ex6</b><span>对比 ex5</span></pre>
+<pre><code class="language-java">@PostMapping("/products")
+public String addProduct(Product p, Model model) {    // ← 不再逐个写 @RequestParam
+    productService.addProduct(p);
+    model.addAttribute("products", productService.findAll());
+    return "products.html";
+}</code></pre>
+
+<div class="tip"><b>它是怎么工作的</b>
+Spring 看到一个既不是 <code>Model</code>、也没有任何注解的自定义类型参数，就会：new 一个实例 → 遍历它的 setter → 用<strong>同名的</strong>请求参数去填。表单里 <code>name="name"</code> 和 <code>name="price"</code> 正好对上 <code>setName</code> / <code>setPrice</code>。<br>
+参数一多，这种写法优势就非常明显。真实项目里再配上 <code>@Valid</code> 做校验，就是标准的表单处理方式。</div>
+
+<div class="note"><b>一个小细节</b>
+<span class="path">ssh_ch8_ex6</span> 的 <code>Main</code> 写的是 <code>static void main(String[] args)</code>（没有 <code>public</code>），而其他 Boot 工程都是 <code>public static void main</code>。功能一样，Java 25 允许省略 <code>public</code>。仓库里这类不一致有几处，不用纠结。</div>
+
+<h2>与书中的差异</h2>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th>项</th><th>书中</th><th>仓库</th></tr></thead>
+<tbody>
+<tr><td>Boot 版本</td><td>2.3.4.RELEASE</td><td>4.0.4（ex1–ex4）/ 4.0.5（ex5–ex6）</td></tr>
+<tr><td>Web starter</td><td><code>spring-boot-starter-web</code></td><td><code>spring-boot-starter-webmvc</code></td></tr>
+<tr><td>Thymeleaf 测试</td><td>无</td><td>额外加 <code>spring-boot-starter-thymeleaf-test</code></td></tr>
+<tr><td>映射注解</td><td>多用 <code>@RequestMapping</code></td><td>统一 <code>@GetMapping</code>/<code>@PostMapping</code>，旧写法留作注释</td></tr>
+<tr><td>控制器依赖</td><td>字段 <code>@Autowired</code> 居多</td><td>一律构造器注入</td></tr>
+<tr><td>测试</td><td>无</td><td>每个工程带 MockMvc 测试</td></tr>
+</tbody>
+</table>
+</div>
+<div class="why"><b>Thymeleaf 语法本身没有变化。</b><code>th:text</code>、<code>th:each</code>、<code>th:style</code> 从 Thymeleaf 3 起就是这样，书里的模板代码可以直接拿来用。</div>
+
+<h2>动手练习</h2>
+<div class="lab">
+<h4>练习 · 把 ex5 改造成 ex6</h4>
+<ol style="margin-bottom:0">
+<li>运行 <span class="path">ssh_ch8_ex5</span>，添加两个商品，然后<strong>按 F5 刷新</strong>——浏览器会弹出“确认重新提交表单”。记住这个现象，第 9 章解决它。</li>
+<li>把 <span class="path">ssh_ch8_ex5</span> 的 <code>addProduct</code> 改成 ex6 的对象绑定写法，验证结果一致。</li>
+<li>给 <code>Product</code> 加一个 <code>String category</code> 字段和对应的表单输入框，观察对象绑定<strong>自动</strong>处理了新字段——而逐个 <code>@RequestParam</code> 的写法需要改方法签名。</li>
+<li>重启应用，发现商品列表空了。想想为什么（提示：<code>ProductService</code> 用的是内存里的 <code>ArrayList</code>，且它是单例 bean）。第 12 章会把它换成数据库。</li>
+</ol>
+</div>
+
+<h2>本章自测</h2>
+<details><summary><code>Model</code> 里的数据能活多久？</summary>
+<p>只在<strong>这一次请求</strong>内。渲染完成，数据就没了。如果需要跨请求保留（比如登录后记住用户是谁），要用第 9 章的 session 作用域，或者 <code>RedirectAttributes</code>（跨一次重定向）。</p></details>
+<details><summary><code>@RequestParam</code> 和 <code>@PathVariable</code> 怎么选？</summary>
+<p>看数据的角色：它是<strong>资源标识</strong>还是<strong>查询修饰</strong>。<code>/products/42</code> 里的 42 标识某个商品 → 路径变量；<code>/products?category=book&amp;page=2</code> 里的两个值在筛选结果 → 查询参数。第 10 章做 REST 时这个区分更重要，因为它直接决定 API 设计的好坏。</p></details>
+<details><summary>为什么 <code>@PostMapping</code> 之后刷新会重复提交？</summary>
+<p>因为浏览器记住的“当前页面”是一次 POST 请求，刷新就是把这次 POST 再发一遍。标准解法是 POST-Redirect-GET：POST 处理完不直接渲染，而是返回 <code>redirect:</code> 让浏览器发起一次新的 GET。<span class="path">ssh_ch9_ex2</span> 的 <code>return "redirect:/main"</code> 就是这个模式。</p></details>

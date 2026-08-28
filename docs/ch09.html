@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第 9 章 使用 Spring Web 作用域 · Spring Start Here 学习手册</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+/* ── 令牌：浅色（默认，未标记状态也走这里） ───────────────── */
+:root{
+  --paper:#f4f7f3; --surface:#ffffff; --surface-2:#e9eee8;
+  --ink:#141f1a; --ink-2:#3c4a44; --ink-3:#6a7771;
+  --line:#d8e0d9; --line-strong:#b9c6bd;
+  --accent:#1b6b47; --accent-ink:#0f4a30; --accent-soft:#e0eee6;
+  --amber:#8a5712; --amber-soft:#f6ecd9;
+  --steel:#385a75; --steel-soft:#e2eaf1;
+  --code-bg:#eef2ec; --code-ink:#1d2b24;
+  --hl-key:#0f4a30; --hl-str:#8a5712; --hl-num:#385a75; --hl-com:#7d8a83; --hl-ann:#6b3a8a; --hl-type:#1d4f6b;
+  --shadow:0 1px 2px rgba(20,31,26,.05), 0 8px 24px -16px rgba(20,31,26,.28);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0d1411; --surface:#141d19; --surface-2:#1c2721;
+    --ink:#dde5df; --ink-2:#a9b5ae; --ink-3:#7f8d86;
+    --line:#26332c; --line-strong:#38483f;
+    --accent:#62b98d; --accent-ink:#8ed3ae; --accent-soft:#15291f;
+    --amber:#d9a44a; --amber-soft:#241d10;
+    --steel:#8fb6d4; --steel-soft:#14212b;
+    --code-bg:#101a15; --code-ink:#cfdad3;
+    --hl-key:#8ed3ae; --hl-str:#d9a44a; --hl-num:#8fb6d4; --hl-com:#6d7d75; --hl-ann:#c4a0dd; --hl-type:#7fc4d8;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -18px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0d1411; --surface:#141d19; --surface-2:#1c2721;
+  --ink:#dde5df; --ink-2:#a9b5ae; --ink-3:#7f8d86;
+  --line:#26332c; --line-strong:#38483f;
+  --accent:#62b98d; --accent-ink:#8ed3ae; --accent-soft:#15291f;
+  --amber:#d9a44a; --amber-soft:#241d10;
+  --steel:#8fb6d4; --steel-soft:#14212b;
+  --code-bg:#101a15; --code-ink:#cfdad3;
+  --hl-key:#8ed3ae; --hl-str:#d9a44a; --hl-num:#8fb6d4; --hl-com:#6d7d75; --hl-ann:#c4a0dd; --hl-type:#7fc4d8;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -18px rgba(0,0,0,.8);
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:"Noto Sans SC","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+  font-size:16.5px; line-height:1.78; font-feature-settings:"tnum" 0;
+}
+
+/* ── 版式骨架 ─────────────────────────────────────── */
+.wrap{max-width:1200px; margin:0 auto; padding:0 26px;
+      display:grid; grid-template-columns:236px minmax(0,1fr); gap:52px; align-items:start}
+.rail{position:sticky; top:0; max-height:100vh; overflow-y:auto; padding:34px 0 40px}
+.main{min-width:0; padding:34px 0 96px; max-width:78ch}
+@media (max-width:900px){
+  .wrap{grid-template-columns:minmax(0,1fr); gap:0}
+  .rail{position:static; max-height:none; padding:26px 0 0; border-bottom:1px solid var(--line); margin-bottom:26px}
+  .main{padding-top:14px}
+}
+
+/* ── 侧栏 ─────────────────────────────────────────── */
+.rail-brand{display:block; text-decoration:none; color:inherit; margin-bottom:22px}
+.rail-brand b{display:block; font-family:"Newsreader","Noto Serif SC",Georgia,serif;
+  font-size:21px; font-weight:600; line-height:1.25; letter-spacing:-.01em}
+.rail-brand span{display:block; font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); margin-top:5px}
+.rail-group{font-family:"JetBrains Mono",ui-monospace,monospace; font-size:10px; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--ink-3); margin:20px 0 8px; padding-left:2px}
+.rail nav{display:flex; flex-direction:column; gap:1px}
+.rail a.ch{display:grid; grid-template-columns:22px 1fr; gap:8px; align-items:baseline;
+  text-decoration:none; color:var(--ink-2); padding:4px 8px 4px 2px; border-radius:5px; font-size:13.5px; line-height:1.45}
+.rail a.ch i{font-style:normal; font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:11px; color:var(--ink-3); font-variant-numeric:tabular-nums}
+.rail a.ch:hover{background:var(--surface-2); color:var(--ink)}
+.rail a.ch[aria-current="page"]{background:var(--accent-soft); color:var(--accent-ink); font-weight:500}
+.rail a.ch[aria-current="page"] i{color:var(--accent)}
+a:focus-visible,summary:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:3px}
+
+/* ── 标题层级 ─────────────────────────────────────── */
+.eyebrow{font-family:"JetBrains Mono",ui-monospace,monospace; font-size:11px; letter-spacing:.18em;
+  text-transform:uppercase; color:var(--accent); margin:0 0 10px}
+h1{font-family:"Newsreader","Noto Serif SC",Georgia,serif; font-weight:600; font-size:clamp(30px,4.4vw,42px);
+  line-height:1.18; letter-spacing:-.015em; margin:0 0 14px; text-wrap:balance}
+h2{font-family:"Newsreader","Noto Serif SC",Georgia,serif; font-weight:600; font-size:26px; line-height:1.3;
+  margin:56px 0 16px; padding-top:20px; border-top:1px solid var(--line); text-wrap:balance; letter-spacing:-.01em}
+h3{font-size:18.5px; font-weight:700; margin:34px 0 10px; line-height:1.45; text-wrap:balance}
+h4{font-size:15px; font-weight:700; margin:22px 0 8px; color:var(--ink-2)}
+.lede{font-size:18px; line-height:1.72; color:var(--ink-2); margin:0 0 8px}
+p{margin:0 0 14px}
+ul,ol{margin:0 0 16px; padding-left:1.35em}
+li{margin:0 0 7px}
+li>ul,li>ol{margin-top:7px}
+strong{font-weight:700; color:var(--ink)}
+em{font-style:normal; background:linear-gradient(transparent 62%, var(--accent-soft) 62%); padding:0 1px}
+a{color:var(--accent-ink); text-underline-offset:2.5px; text-decoration-thickness:1px}
+hr{border:0; border-top:1px solid var(--line); margin:38px 0}
+
+/* ── 代码 ─────────────────────────────────────────── */
+code,kbd,.path{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+:not(pre)>code{font-size:.865em; background:var(--code-bg); color:var(--code-ink);
+  padding:.12em .38em; border-radius:4px; border:1px solid var(--line)}
+.path{font-size:.83em; background:var(--surface-2); color:var(--ink-2);
+  padding:.12em .42em; border-radius:4px; border:1px solid var(--line); white-space:nowrap}
+pre{margin:0 0 18px; background:var(--code-bg); border:1px solid var(--line); border-radius:9px;
+  padding:15px 17px; overflow-x:auto; line-height:1.62; box-shadow:var(--shadow)}
+pre code{font-size:13.2px; color:var(--code-ink); background:none; border:0; padding:0; white-space:pre}
+.codehead{display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;
+  font-family:"JetBrains Mono",ui-monospace,monospace; font-size:11px; color:var(--ink-3);
+  letter-spacing:.05em; margin:0 0 6px; padding:0 2px}
+.codehead b{color:var(--ink-2); font-weight:500}
+.hljs-keyword,.hljs-built_in,.hljs-literal{color:var(--hl-key)}
+.hljs-string,.hljs-attr{color:var(--hl-str)}
+.hljs-number{color:var(--hl-num)}
+.hljs-comment{color:var(--hl-com); font-style:italic}
+.hljs-meta{color:var(--hl-ann); font-weight:500}
+.hljs-title,.hljs-title.class_,.hljs-title.function_,.hljs-type{color:var(--hl-type)}
+.hljs-tag,.hljs-name{color:var(--hl-key)}
+
+/* ── 图 ───────────────────────────────────────────── */
+figure{margin:26px 0 28px; background:var(--surface); border:1px solid var(--line);
+  border-radius:11px; padding:20px 18px 14px; box-shadow:var(--shadow); overflow-x:auto}
+figure svg{display:block; width:100%; height:auto; max-width:100%; min-width:0}
+figcaption{margin-top:12px; font-size:13px; line-height:1.62; color:var(--ink-3); border-top:1px solid var(--line); padding-top:10px}
+figcaption b{color:var(--ink-2); font-weight:600}
+svg text{font-family:"Noto Sans SC","PingFang SC",system-ui,sans-serif}
+svg .mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+
+/* ── 对照卡：书里旧版 vs 仓库新版 ──────────────────── */
+.cmp{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:22px 0 24px}
+@media (max-width:660px){.cmp{grid-template-columns:1fr}}
+.cmp>div{border-radius:10px; padding:14px 15px; border:1px solid var(--line); background:var(--surface)}
+.cmp .old{border-left:3px solid var(--steel); background:var(--steel-soft)}
+.cmp .new{border-left:3px solid var(--accent); background:var(--accent-soft)}
+.cmp h5{margin:0 0 8px; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:10.5px;
+  letter-spacing:.14em; text-transform:uppercase; font-weight:500}
+.cmp .old h5{color:var(--steel)} .cmp .new h5{color:var(--accent)}
+.cmp p:last-child,.cmp ul:last-child,.cmp pre:last-child{margin-bottom:0}
+.cmp pre{background:transparent; border:0; padding:0; box-shadow:none; font-size:12.5px}
+.cmp code{background:transparent; border:0; padding:0}
+.why{margin:-8px 0 24px; padding:11px 15px; border-radius:9px; background:var(--surface-2);
+  border:1px solid var(--line); font-size:14.5px; line-height:1.7; color:var(--ink-2)}
+.why b{color:var(--ink)}
+
+/* ── 提示块 ───────────────────────────────────────── */
+.note,.warn,.tip{border-radius:9px; padding:13px 16px; margin:20px 0; font-size:15px; line-height:1.72;
+  border:1px solid var(--line); border-left-width:3px; background:var(--surface)}
+.note{border-left-color:var(--steel); background:var(--steel-soft)}
+.warn{border-left-color:var(--amber); background:var(--amber-soft)}
+.tip{border-left-color:var(--accent); background:var(--accent-soft)}
+.note>:last-child,.warn>:last-child,.tip>:last-child{margin-bottom:0}
+.note b:first-child,.warn b:first-child,.tip b:first-child{font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:11px; letter-spacing:.14em; text-transform:uppercase; display:block; margin-bottom:5px}
+.note b:first-child{color:var(--steel)} .warn b:first-child{color:var(--amber)} .tip b:first-child{color:var(--accent)}
+
+/* ── 表 ───────────────────────────────────────────── */
+.tablewrap{overflow-x:auto; margin:20px 0 24px; border:1px solid var(--line); border-radius:10px; background:var(--surface)}
+table{border-collapse:collapse; width:100%; font-size:14px; min-width:520px}
+th,td{text-align:left; padding:9px 13px; border-bottom:1px solid var(--line); vertical-align:top; line-height:1.6}
+thead th{font-family:"JetBrains Mono",ui-monospace,monospace; font-size:10.5px; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--ink-3); font-weight:500; background:var(--surface-2); white-space:nowrap}
+tbody tr:last-child td{border-bottom:0}
+td code{font-size:.84em; white-space:normal; overflow-wrap:break-word}
+th:last-child,td:last-child{padding-right:16px}
+.num{font-variant-numeric:tabular-nums}
+
+/* ── 实验 / 自测 ──────────────────────────────────── */
+.lab{border:1px solid var(--line); border-radius:11px; padding:16px 18px; margin:24px 0; background:var(--surface)}
+.lab>h4{margin-top:0; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:11px;
+  letter-spacing:.16em; text-transform:uppercase; color:var(--accent)}
+details{border:1px solid var(--line); border-radius:9px; padding:11px 15px; margin:0 0 9px; background:var(--surface)}
+details[open]{background:var(--surface-2)}
+summary{cursor:pointer; font-weight:600; font-size:15px; list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"?"; font-family:"JetBrains Mono",ui-monospace,monospace; color:var(--accent);
+  margin-right:9px; font-weight:700}
+details>*:not(summary){margin-top:10px}
+details>p:last-child{margin-bottom:0}
+
+/* ── 章节页脚导航 ─────────────────────────────────── */
+.pager{display:flex; justify-content:space-between; gap:14px; margin-top:60px; padding-top:22px; border-top:1px solid var(--line)}
+.pager a{display:block; text-decoration:none; color:var(--ink-2); font-size:14px; max-width:47%}
+.pager a span{display:block; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:10px;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); margin-bottom:3px}
+.pager a:hover{color:var(--accent-ink)}
+.pager .next{text-align:right; margin-left:auto}
+
+/* ── 首页卡片 ─────────────────────────────────────── */
+.cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(232px,1fr)); gap:13px; margin:22px 0 28px}
+.card{display:block; text-decoration:none; color:inherit; background:var(--surface); border:1px solid var(--line);
+  border-radius:11px; padding:14px 15px; box-shadow:var(--shadow); transition:border-color .15s, transform .15s}
+.card:hover{border-color:var(--accent); transform:translateY(-2px)}
+.card i{font-style:normal; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:11px;
+  letter-spacing:.1em; color:var(--accent); display:block; margin-bottom:5px}
+.card b{display:block; font-size:15.5px; line-height:1.4; margin-bottom:5px}
+.card p{margin:0; font-size:13px; color:var(--ink-3); line-height:1.6}
+@media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
+
+</style>
+</head>
+<body>
+<div class="wrap"><aside class="rail"><a class="rail-brand" href="index.html"><b>Spring Start Here<br>学习手册</b><span>Spring Boot 4 · Spring 7 · Java 25</span></a><div class="rail-group">第一部分 · 基础</div><nav><a class="ch" href="ch01.html"><i>01</i><span>真实世界中的 Spring</span></a><a class="ch" href="ch02.html"><i>02</i><span>Spring 上下文：定义 bean</span></a><a class="ch" href="ch03.html"><i>03</i><span>Spring 上下文：装配 bean</span></a><a class="ch" href="ch04.html"><i>04</i><span>Spring 上下文：使用抽象</span></a><a class="ch" href="ch05.html"><i>05</i><span>Bean 作用域与生命周期</span></a><a class="ch" href="ch06.html"><i>06</i><span>用 Spring AOP 实现切面</span></a></nav><div class="rail-group">第二部分 · 实现</div><nav><a class="ch" href="ch07.html"><i>07</i><span>理解 Spring Boot 与 Spring MVC</span></a><a class="ch" href="ch08.html"><i>08</i><span>用 Boot + MVC 实现 Web 应用</span></a><a class="ch" href="ch09.html" aria-current="page"><i>09</i><span>使用 Spring Web 作用域</span></a><a class="ch" href="ch10.html"><i>10</i><span>实现 REST 服务</span></a><a class="ch" href="ch11.html"><i>11</i><span>消费 REST 端点</span></a><a class="ch" href="ch12.html"><i>12</i><span>在 Spring 应用中使用数据源</span></a><a class="ch" href="ch13.html"><i>13</i><span>在 Spring 应用中使用事务</span></a><a class="ch" href="ch14.html"><i>14</i><span>用 Spring Data 实现持久化</span></a><a class="ch" href="ch15.html"><i>15</i><span>单元测试</span></a><a class="ch" href="ch16.html"><i>16</i><span>Spring 集成测试</span></a></nav><div class="rail-group">总览</div><nav><a class="ch" href="index.html"><i>◆</i><span>目录与版本对照</span></a></nav></aside><main class="main">
+<p class="eyebrow">第 9 章 · 第二部分 实现</p>
+<h1>使用 Spring Web 作用域</h1>
+<p class="lede">第 5 章说“单例 bean 不能有状态”，但登录这类功能天生就需要状态。Spring 的答案不是让你去写 <code>synchronized</code>，而是提供三种 web 专属作用域——让每个请求、每个用户会话各拿一份自己的实例。</p>
+
+<div class="note"><b>本章工程</b>
+<span class="path">ssh_ch9_ex1</span> @RequestScope 登录 · <span class="path">ex2</span> 加上 @SessionScope 记住登录状态 · <span class="path">ex3</span> 再加 @ApplicationScope 统计全局登录次数</div>
+
+<h2>9.1 三种作用域，一张图看懂</h2>
+
+<figure>
+<svg viewBox="0 0 720 380" role="img" aria-label="request、session、application 三种 web 作用域的生命周期范围">
+  <rect x="16" y="16" width="688" height="348" rx="12" fill="var(--surface-2)" stroke="var(--line-strong)" stroke-width="1.6"/>
+  <text x="36" y="40" font-size="12" font-weight="700" class="mono" fill="var(--ink)">@ApplicationScope</text>
+  <text x="36" y="58" font-size="10.5" fill="var(--ink-3)">整个应用一个实例，所有用户共享，应用停止才销毁</text>
+  <rect x="510" y="26" width="180" height="42" rx="7" fill="var(--surface)" stroke="var(--line-strong)"/>
+  <text x="600" y="44" font-size="10.5" text-anchor="middle" class="mono" fill="var(--ink-2)">LoginCountService</text>
+  <text x="600" y="60" font-size="9.5" text-anchor="middle" fill="var(--ink-3)">count = 17（全局）</text>
+
+  <rect x="36" y="80" width="322" height="268" rx="10" fill="var(--steel-soft)" stroke="var(--steel)" stroke-width="1.6"/>
+  <text x="56" y="104" font-size="12" font-weight="700" class="mono" fill="var(--steel)">@SessionScope · 用户 A</text>
+  <text x="56" y="122" font-size="10.5" fill="var(--ink-3)">一个浏览器会话一个实例，跨多次请求存活</text>
+  <rect x="56" y="134" width="280" height="38" rx="7" fill="var(--surface)" stroke="var(--steel)"/>
+  <text x="196" y="152" font-size="10.5" text-anchor="middle" class="mono" fill="var(--ink-2)">LoggedUserManagementService</text>
+  <text x="196" y="167" font-size="9.5" text-anchor="middle" fill="var(--steel)">username = "natalie"</text>
+
+  <rect x="56" y="186" width="132" height="72" rx="9" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/>
+  <text x="122" y="208" font-size="10.5" font-weight="700" class="mono" text-anchor="middle" fill="var(--accent-ink)">@RequestScope</text>
+  <text x="122" y="224" font-size="9.5" text-anchor="middle" fill="var(--ink-3)">请求 1 · POST /</text>
+  <rect x="68" y="230" width="108" height="20" rx="4" fill="var(--surface)" stroke="var(--accent)"/>
+  <text x="122" y="244" font-size="9" text-anchor="middle" class="mono" fill="var(--ink-2)">LoginProcessor@a1</text>
+
+  <rect x="204" y="186" width="132" height="72" rx="9" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/>
+  <text x="270" y="208" font-size="10.5" font-weight="700" class="mono" text-anchor="middle" fill="var(--accent-ink)">@RequestScope</text>
+  <text x="270" y="224" font-size="9.5" text-anchor="middle" fill="var(--ink-3)">请求 2 · GET /main</text>
+  <rect x="216" y="230" width="108" height="20" rx="4" fill="var(--surface)" stroke="var(--accent)"/>
+  <text x="270" y="244" font-size="9" text-anchor="middle" class="mono" fill="var(--ink-2)">LoginProcessor@b2</text>
+
+  <text x="196" y="288" font-size="10" text-anchor="middle" fill="var(--ink-3)">每个请求一个新实例，响应发出即销毁</text>
+  <text x="196" y="312" font-size="10.5" text-anchor="middle" fill="var(--steel)">这两个请求属于<tspan font-weight="700">同一个 session</tspan>，</text>
+  <text x="196" y="330" font-size="10.5" text-anchor="middle" fill="var(--steel)">所以共享上面那个 username</text>
+
+  <rect x="378" y="80" width="308" height="268" rx="10" fill="var(--steel-soft)" stroke="var(--steel)" stroke-width="1.6" stroke-dasharray="5 4"/>
+  <text x="398" y="104" font-size="12" font-weight="700" class="mono" fill="var(--steel)">@SessionScope · 用户 B</text>
+  <text x="398" y="122" font-size="10.5" fill="var(--ink-3)">另一个浏览器 / 另一台机器</text>
+  <rect x="398" y="134" width="270" height="38" rx="7" fill="var(--surface)" stroke="var(--steel)"/>
+  <text x="533" y="152" font-size="10.5" text-anchor="middle" class="mono" fill="var(--ink-2)">LoggedUserManagementService</text>
+  <text x="533" y="167" font-size="9.5" text-anchor="middle" fill="var(--steel)">username = "peter"　← 完全独立的另一个实例</text>
+
+  <rect x="398" y="186" width="132" height="72" rx="9" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/>
+  <text x="464" y="208" font-size="10.5" font-weight="700" class="mono" text-anchor="middle" fill="var(--accent-ink)">@RequestScope</text>
+  <text x="464" y="224" font-size="9.5" text-anchor="middle" fill="var(--ink-3)">请求 3</text>
+  <rect x="410" y="230" width="108" height="20" rx="4" fill="var(--surface)" stroke="var(--accent)"/>
+  <text x="464" y="244" font-size="9" text-anchor="middle" class="mono" fill="var(--ink-2)">LoginProcessor@c3</text>
+
+  <text x="533" y="300" font-size="10.5" text-anchor="middle" fill="var(--ink-2)">用户 A 和用户 B 看到的登录次数是同一个（17），</text>
+  <text x="533" y="318" font-size="10.5" text-anchor="middle" fill="var(--ink-2)">但看到的用户名各是各的</text>
+</svg>
+<figcaption><b>图 9-1</b>　三层嵌套关系：一个应用有多个 session，一个 session 有多次请求。<strong>作用域越小，越安全；作用域越大，越要小心并发。</strong></figcaption>
+</figure>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th>作用域</th><th>注解</th><th>实例数</th><th>销毁时机</th><th>典型用途</th></tr></thead>
+<tbody>
+<tr><td>request</td><td><code>@RequestScope</code></td><td>每次 HTTP 请求一个</td><td>响应发出后</td><td>接收表单数据、请求级临时状态</td></tr>
+<tr><td>session</td><td><code>@SessionScope</code></td><td>每个用户会话一个</td><td>会话超时或失效</td><td>登录用户信息、购物车</td></tr>
+<tr><td>application</td><td><code>@ApplicationScope</code></td><td>整个应用一个</td><td>应用关闭</td><td>全局计数、缓存（要考虑并发）</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2>9.2 request 作用域：接住这次请求的数据</h2>
+
+<pre class="codehead"><b>ssh_ch9_ex1 · processors/LoginProcessor.java</b></pre>
+<pre><code class="language-java">@Component
+@RequestScope                     // ← 关键
+public class LoginProcessor {
+
+    private String username;      // 有状态字段——因为是 request 作用域，所以安全
+    private String password;
+
+    public boolean login() {
+        return "natalie".equals(username) &amp;&amp; "password".equals(password);
+    }
+    // getter / setter ...
+}</code></pre>
+
+<pre class="codehead"><b>ssh_ch9_ex1 · controllers/LoginController.java</b></pre>
+<pre><code class="language-java">@Controller
+public class LoginController {
+
+    private final LoginProcessor loginProcessor;
+
+    public LoginController(LoginProcessor loginProcessor) { ... }
+
+    @GetMapping("/")
+    public String loginGet() { return "login.html"; }
+
+    @PostMapping("/")
+    public String loginPost(@RequestParam String username,
+                            @RequestParam String password,
+                            Model model) {
+        loginProcessor.setUsername(username);
+        loginProcessor.setPassword(password);
+        boolean loggedIn = loginProcessor.login();
+
+        model.addAttribute("message", loggedIn ? "You are now logged in." : "Login failed!");
+        return "login.html";
+    }
+}</code></pre>
+
+<div class="warn"><b>这里藏着第 5 章的知识点</b>
+<code>LoginController</code> 是<strong>单例</strong>，<code>LoginProcessor</code> 是<strong>request 作用域</strong>——按第 5 章的结论，单例注入短作用域 bean 应该会“失效”才对。<br>
+它没失效，是因为 Spring 给 web 作用域的 bean 自动加了<strong>作用域代理</strong>：注入进 Controller 的那个引用其实是一个代理对象，每次方法调用时它去查“当前线程绑定的请求里那个真实实例”，再转发过去。所以你写起来像普通字段，行为却是每请求一份。</div>
+
+<figure>
+<svg viewBox="0 0 720 190" role="img" aria-label="作用域代理如何让单例持有请求作用域 bean">
+  <rect x="20" y="62" width="150" height="62" rx="9" fill="var(--surface)" stroke="var(--line-strong)" stroke-width="1.6"/>
+  <text x="95" y="88" font-size="11.5" font-weight="700" text-anchor="middle" fill="var(--ink)">LoginController</text>
+  <text x="95" y="106" font-size="9.5" text-anchor="middle" fill="var(--ink-3)">singleton · 只有一个</text>
+
+  <path d="M172 93 L226 93" stroke="var(--line-strong)" stroke-width="1.8" marker-end="url(#o1)"/>
+  <text x="199" y="84" font-size="9" text-anchor="middle" class="mono" fill="var(--ink-3)">字段引用</text>
+
+  <rect x="228" y="56" width="160" height="74" rx="9" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.8" stroke-dasharray="4 3"/>
+  <text x="308" y="80" font-size="11.5" font-weight="700" text-anchor="middle" fill="var(--accent-ink)">作用域代理</text>
+  <text x="308" y="98" font-size="9.5" text-anchor="middle" fill="var(--ink-3)">看起来是 LoginProcessor，</text>
+  <text x="308" y="114" font-size="9.5" text-anchor="middle" fill="var(--ink-3)">实际是个转发器</text>
+
+  <path d="M390 76 L462 46" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#o2)"/>
+  <path d="M390 93 L462 93" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#o2)"/>
+  <path d="M390 110 L462 140" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#o2)"/>
+  <text x="424" y="34" font-size="9" text-anchor="middle" fill="var(--ink-3)">按当前请求转发</text>
+
+  <rect x="464" y="26" width="220" height="38" rx="7" fill="var(--surface)" stroke="var(--accent)"/>
+  <text x="574" y="50" font-size="10" text-anchor="middle" class="mono" fill="var(--ink-2)">请求1 → LoginProcessor@a1</text>
+  <rect x="464" y="74" width="220" height="38" rx="7" fill="var(--surface)" stroke="var(--accent)"/>
+  <text x="574" y="98" font-size="10" text-anchor="middle" class="mono" fill="var(--ink-2)">请求2 → LoginProcessor@b2</text>
+  <rect x="464" y="122" width="220" height="38" rx="7" fill="var(--surface)" stroke="var(--accent)"/>
+  <text x="574" y="146" font-size="10" text-anchor="middle" class="mono" fill="var(--ink-2)">请求3 → LoginProcessor@c3</text>
+  <defs>
+    <marker id="o1" markerWidth="8" markerHeight="8" refX="7" refY="3.6" orient="auto"><path d="M0 0 L8 3.6 L0 7.2 z" fill="var(--line-strong)"/></marker>
+    <marker id="o2" markerWidth="8" markerHeight="8" refX="7" refY="3.6" orient="auto"><path d="M0 0 L8 3.6 L0 7.2 z" fill="var(--accent)"/></marker>
+  </defs>
+</svg>
+<figcaption><b>图 9-2</b>　<code>@RequestScope</code> / <code>@SessionScope</code> 这些注解内部已经带了 <code>proxyMode = TARGET_CLASS</code>，所以你不用手动配置代理。这正是第 5 章讲的 <code>ScopedProxyMode</code> 在实际场景里的应用。</figcaption>
+</figure>
+
+<h2>9.3 session 作用域：记住登录状态</h2>
+
+<pre class="codehead"><b>ssh_ch9_ex2 · services/LoggedUserManagementService.java</b></pre>
+<pre><code class="language-java">@Service
+@SessionScope                     // 一个用户会话一个实例
+public class LoggedUserManagementService {
+    private String username;
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
+}</code></pre>
+
+<pre class="codehead"><b>ssh_ch9_ex2 · LoginProcessor 登录成功时写入 session</b></pre>
+<pre><code class="language-java">@Component
+@RequestScope
+public class LoginProcessor {
+
+    private final LoggedUserManagementService loggedUserManagementService;   // session 作用域
+    private String username;
+    private String password;
+
+    public boolean login() {
+        boolean loginResult = false;
+        if ("natalie".equals(username) &amp;&amp; "password".equals(password)) {
+            loginResult = true;
+            loggedUserManagementService.setUsername(username);    // ← 存进 session
+        }
+        return loginResult;
+    }
+}</code></pre>
+
+<pre class="codehead"><b>ssh_ch9_ex2 · MainController.java</b><span>受保护页面 + 登出</span></pre>
+<pre><code class="language-java">@GetMapping("/main")
+public String home(@RequestParam(required = false) String logout, Model model) {
+    if (logout != null) {
+        loggedUserManagementService.setUsername(null);      // 登出 = 清空 session 里的用户名
+    }
+
+    String username = loggedUserManagementService.getUsername();
+    if (username == null) {
+        return "redirect:/";                                // 没登录，踢回登录页
+    }
+
+    model.addAttribute("username", username);
+    return "main.html";
+}</code></pre>
+
+<figure>
+<svg viewBox="0 0 720 256" role="img" aria-label="登录、跳转、登出的完整流程">
+  <g font-size="10.5">
+    <rect x="16" y="28" width="118" height="46" rx="8" fill="var(--surface)" stroke="var(--line-strong)"/>
+    <text x="75" y="48" font-size="11" text-anchor="middle" fill="var(--ink)">① GET /</text>
+    <text x="75" y="64" text-anchor="middle" fill="var(--ink-3)">显示登录表单</text>
+
+    <path d="M136 51 L172 51" stroke="var(--line-strong)" stroke-width="1.5" marker-end="url(#p1)"/>
+
+    <rect x="174" y="28" width="140" height="46" rx="8" fill="var(--accent-soft)" stroke="var(--accent)"/>
+    <text x="244" y="48" font-size="11" text-anchor="middle" fill="var(--accent-ink)">② POST /</text>
+    <text x="244" y="64" text-anchor="middle" fill="var(--ink-2)">校验 → 写 session</text>
+
+    <path d="M316 51 L352 51" stroke="var(--accent)" stroke-width="1.5" marker-end="url(#p2)"/>
+
+    <rect x="354" y="28" width="150" height="46" rx="8" fill="var(--surface)" stroke="var(--accent)"/>
+    <text x="429" y="48" font-size="11" text-anchor="middle" fill="var(--ink)">③ redirect:/main</text>
+    <text x="429" y="64" text-anchor="middle" fill="var(--ink-3)">302，避免重复提交</text>
+
+    <path d="M506 51 L542 51" stroke="var(--accent)" stroke-width="1.5" marker-end="url(#p2)"/>
+
+    <rect x="544" y="28" width="160" height="46" rx="8" fill="var(--surface)" stroke="var(--line-strong)"/>
+    <text x="624" y="48" font-size="11" text-anchor="middle" fill="var(--ink)">④ GET /main</text>
+    <text x="624" y="64" text-anchor="middle" fill="var(--ink-3)">读 session → 渲染</text>
+  </g>
+
+  <rect x="174" y="106" width="330" height="52" rx="9" fill="var(--steel-soft)" stroke="var(--steel)" stroke-width="1.5"/>
+  <text x="339" y="128" font-size="11" text-anchor="middle" class="mono" fill="var(--steel)">LoggedUserManagementService（@SessionScope）</text>
+  <text x="339" y="146" font-size="10.5" text-anchor="middle" fill="var(--ink-2)">username = "natalie"　—— 步骤 ② 写入，步骤 ④ 读出</text>
+  <path d="M244 78 L280 102" stroke="var(--steel)" stroke-width="1.4" stroke-dasharray="3 3" marker-end="url(#p3)"/>
+  <path d="M600 78 L440 102" stroke="var(--steel)" stroke-width="1.4" stroke-dasharray="3 3" marker-end="url(#p3)"/>
+
+  <rect x="174" y="186" width="330" height="52" rx="9" fill="var(--amber-soft)" stroke="var(--amber)" stroke-width="1.5"/>
+  <text x="339" y="208" font-size="11" text-anchor="middle" class="mono" fill="var(--amber)">GET /main?logout</text>
+  <text x="339" y="226" font-size="10.5" text-anchor="middle" fill="var(--ink-2)">setUsername(null) → 下次访问 /main 被重定向回登录页</text>
+  <path d="M339 162 L339 182" stroke="var(--amber)" stroke-width="1.4" marker-end="url(#p4)"/>
+  <defs>
+    <marker id="p1" markerWidth="8" markerHeight="8" refX="7" refY="3.6" orient="auto"><path d="M0 0 L8 3.6 L0 7.2 z" fill="var(--line-strong)"/></marker>
+    <marker id="p2" markerWidth="8" markerHeight="8" refX="7" refY="3.6" orient="auto"><path d="M0 0 L8 3.6 L0 7.2 z" fill="var(--accent)"/></marker>
+    <marker id="p3" markerWidth="8" markerHeight="8" refX="7" refY="3.6" orient="auto"><path d="M0 0 L8 3.6 L0 7.2 z" fill="var(--steel)"/></marker>
+    <marker id="p4" markerWidth="8" markerHeight="8" refX="7" refY="3.6" orient="auto"><path d="M0 0 L8 3.6 L0 7.2 z" fill="var(--amber)"/></marker>
+  </defs>
+</svg>
+<figcaption><b>图 9-3</b>　<span class="path">ssh_ch9_ex2</span> 的完整流程。注意步骤 ③ 的 <code>redirect:/main</code>——这就是第 8 章遗留的“刷新重复提交”问题的标准解法（POST-Redirect-GET）。</figcaption>
+</figure>
+
+<div class="warn"><b>这不是真正的安全</b>
+书里也强调了：这是<strong>教学示例</strong>，不是可用的认证方案。密码明文比较、没有防 CSRF、没有会话固定攻击防护、没有密码加密存储。真实项目请用 Spring Security（作者另有一本 <em>Spring Security in Action</em> 讲这个）。</div>
+
+<h2>9.4 application 作用域：全应用共享</h2>
+
+<pre class="codehead"><b>ssh_ch9_ex3 · services/LoginCountService.java</b></pre>
+<pre><code class="language-java">@Service
+@ApplicationScope
+public class LoginCountService {
+    private int count;
+    public void increment() { count++; }
+    public int getCount() { return count; }
+}</code></pre>
+
+<div class="warn"><b>这段代码有并发 bug</b>
+<code>count++</code> 不是原子操作（读→加→写三步）。两个线程同时登录，可能都读到 17、都写回 18，丢掉一次计数。<strong>application 作用域的 bean 和单例 bean 面临完全相同的线程安全问题。</strong><br>
+修法：把 <code>int</code> 换成 <code>AtomicInteger</code>，或给方法加 <code>synchronized</code>。
+<pre style="margin:8px 0 0"><code class="language-java">private final AtomicInteger count = new AtomicInteger();
+public void increment() { count.incrementAndGet(); }
+public int getCount()   { return count.get(); }</code></pre>
+<p style="margin:8px 0 0">书里明确建议：这种全局共享状态，其实更应该放到数据库里——多实例部署时内存计数本来就不对。</p></div>
+
+<h2>与书中的差异</h2>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th>项</th><th>书中</th><th>仓库</th></tr></thead>
+<tbody>
+<tr><td>Boot 版本</td><td>2.3.4.RELEASE</td><td>4.0.6</td></tr>
+<tr><td>作用域注解</td><td><code>@RequestScope</code> / <code>@SessionScope</code> / <code>@ApplicationScope</code></td><td>完全相同</td></tr>
+<tr><td>依赖注入</td><td>字段 <code>@Autowired</code></td><td>构造器注入</td></tr>
+<tr><td>测试</td><td>无</td><td>ex1 有 4 个测试类，包括第 15 章才讲的纯单元测试</td></tr>
+</tbody>
+</table>
+</div>
+<div class="why"><b>web 作用域的 API 完全没变。</b>值得一提的是仓库在 <span class="path">ssh_ch9_ex1/src/test/java/.../unit/LoginControllerUnitTests.java</span> 放了一个纯 Mockito 单元测试——这是第 2 版新增的第 15 章内容，用 <code>@Mock</code> + <code>@InjectMocks</code> 完全不启动 Spring 来测控制器。读第 15 章时会回来看它。</div>
+
+<h2>动手练习</h2>
+<div class="lab">
+<h4>练习 · 亲手验证作用域边界</h4>
+<ol style="margin-bottom:0">
+<li>启动 <span class="path">ssh_ch9_ex2</span>，用 <code>natalie / password</code> 登录，能看到欢迎页。</li>
+<li><strong>换一个浏览器</strong>（或用无痕窗口）访问 <code>/main</code>——会被重定向回登录页。这证明 session 作用域的 bean 是按会话隔离的。</li>
+<li>在 <span class="path">ssh_ch9_ex3</span> 里用两个浏览器各登录几次，观察 <code>loginCount</code> 是<strong>累加的全局值</strong>——application 作用域跨会话共享。</li>
+<li>把 <span class="path">ssh_ch9_ex1</span> 的 <code>LoginProcessor</code> 上的 <code>@RequestScope</code> 删掉（变成单例），然后用两个浏览器同时提交不同用户名。<strong>你会看到状态串了。</strong>这就是第 5 章那条“单例不能有状态”规则的实战演示。</li>
+</ol>
+</div>
+
+<h2>本章自测</h2>
+<details><summary>为什么单例 Controller 能安全地持有 request 作用域的 bean？</summary>
+<p>因为注入的不是真实实例，而是作用域代理（图 9-2）。代理在每次方法调用时，从当前线程绑定的 <code>RequestAttributes</code> 里取出属于本次请求的真实实例再转发。这样单例的字段是固定的（指向代理），而实际干活的对象是每请求一份。</p></details>
+<details><summary>session 作用域的 bean 存在哪里？</summary>
+<p>存在 Servlet 的 <code>HttpSession</code> 里，Spring 只是替你管理键名和生命周期。这意味着：① 它受 <code>server.servlet.session.timeout</code> 控制；② <strong>多实例部署时会出问题</strong>——用户下一次请求可能打到另一台机器，那台机器上没有这个 session。生产环境要么开启会话粘性，要么用 Spring Session 把会话放到 Redis。</p></details>
+<details><summary>什么时候该用 application 作用域，什么时候该用数据库？</summary>
+<p>判断标准是：这个数据丢了要紧吗、需要跨实例一致吗。缓存、限流计数器这类“丢了可重建、每实例一份也能接受”的，用 application 作用域没问题。像本章的“登录总次数”这种<strong>业务统计数据</strong>，应用一重启就归零、多实例还各算各的，正确做法是入库。</p></details>
+
+<div class="pager"><a class="prev" href="ch08.html"><span>上一章</span>8. 用 Boot + MVC 实现 Web 应用</a><a class="next" href="ch10.html"><span>下一章</span>10. 实现 REST 服务</a></div>
+</main></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/java.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/sql.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/properties.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+<script>
+(function(){ if(!window.hljs) return;
+  document.querySelectorAll('pre code[class^="language-"]').forEach(function(el){
+    try{ hljs.highlightElement(el); }catch(e){}
+  });
+})();
+</script>
+</body>
+</html>

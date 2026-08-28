@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第 5 章 Bean 作用域与生命周期 · Spring Start Here 学习手册</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+/* ── 令牌：浅色（默认，未标记状态也走这里） ───────────────── */
+:root{
+  --paper:#f4f7f3; --surface:#ffffff; --surface-2:#e9eee8;
+  --ink:#141f1a; --ink-2:#3c4a44; --ink-3:#6a7771;
+  --line:#d8e0d9; --line-strong:#b9c6bd;
+  --accent:#1b6b47; --accent-ink:#0f4a30; --accent-soft:#e0eee6;
+  --amber:#8a5712; --amber-soft:#f6ecd9;
+  --steel:#385a75; --steel-soft:#e2eaf1;
+  --code-bg:#eef2ec; --code-ink:#1d2b24;
+  --hl-key:#0f4a30; --hl-str:#8a5712; --hl-num:#385a75; --hl-com:#7d8a83; --hl-ann:#6b3a8a; --hl-type:#1d4f6b;
+  --shadow:0 1px 2px rgba(20,31,26,.05), 0 8px 24px -16px rgba(20,31,26,.28);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0d1411; --surface:#141d19; --surface-2:#1c2721;
+    --ink:#dde5df; --ink-2:#a9b5ae; --ink-3:#7f8d86;
+    --line:#26332c; --line-strong:#38483f;
+    --accent:#62b98d; --accent-ink:#8ed3ae; --accent-soft:#15291f;
+    --amber:#d9a44a; --amber-soft:#241d10;
+    --steel:#8fb6d4; --steel-soft:#14212b;
+    --code-bg:#101a15; --code-ink:#cfdad3;
+    --hl-key:#8ed3ae; --hl-str:#d9a44a; --hl-num:#8fb6d4; --hl-com:#6d7d75; --hl-ann:#c4a0dd; --hl-type:#7fc4d8;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -18px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0d1411; --surface:#141d19; --surface-2:#1c2721;
+  --ink:#dde5df; --ink-2:#a9b5ae; --ink-3:#7f8d86;
+  --line:#26332c; --line-strong:#38483f;
+  --accent:#62b98d; --accent-ink:#8ed3ae; --accent-soft:#15291f;
+  --amber:#d9a44a; --amber-soft:#241d10;
+  --steel:#8fb6d4; --steel-soft:#14212b;
+  --code-bg:#101a15; --code-ink:#cfdad3;
+  --hl-key:#8ed3ae; --hl-str:#d9a44a; --hl-num:#8fb6d4; --hl-com:#6d7d75; --hl-ann:#c4a0dd; --hl-type:#7fc4d8;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -18px rgba(0,0,0,.8);
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:"Noto Sans SC","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+  font-size:16.5px; line-height:1.78; font-feature-settings:"tnum" 0;
+}
+
+/* ── 版式骨架 ─────────────────────────────────────── */
+.wrap{max-width:1200px; margin:0 auto; padding:0 26px;
+      display:grid; grid-template-columns:236px minmax(0,1fr); gap:52px; align-items:start}
+.rail{position:sticky; top:0; max-height:100vh; overflow-y:auto; padding:34px 0 40px}
+.main{min-width:0; padding:34px 0 96px; max-width:78ch}
+@media (max-width:900px){
+  .wrap{grid-template-columns:minmax(0,1fr); gap:0}
+  .rail{position:static; max-height:none; padding:26px 0 0; border-bottom:1px solid var(--line); margin-bottom:26px}
+  .main{padding-top:14px}
+}
+
+/* ── 侧栏 ─────────────────────────────────────────── */
+.rail-brand{display:block; text-decoration:none; color:inherit; margin-bottom:22px}
+.rail-brand b{display:block; font-family:"Newsreader","Noto Serif SC",Georgia,serif;
+  font-size:21px; font-weight:600; line-height:1.25; letter-spacing:-.01em}
+.rail-brand span{display:block; font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); margin-top:5px}
+.rail-group{font-family:"JetBrains Mono",ui-monospace,monospace; font-size:10px; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--ink-3); margin:20px 0 8px; padding-left:2px}
+.rail nav{display:flex; flex-direction:column; gap:1px}
+.rail a.ch{display:grid; grid-template-columns:22px 1fr; gap:8px; align-items:baseline;
+  text-decoration:none; color:var(--ink-2); padding:4px 8px 4px 2px; border-radius:5px; font-size:13.5px; line-height:1.45}
+.rail a.ch i{font-style:normal; font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:11px; color:var(--ink-3); font-variant-numeric:tabular-nums}
+.rail a.ch:hover{background:var(--surface-2); color:var(--ink)}
+.rail a.ch[aria-current="page"]{background:var(--accent-soft); color:var(--accent-ink); font-weight:500}
+.rail a.ch[aria-current="page"] i{color:var(--accent)}
+a:focus-visible,summary:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:3px}
+
+/* ── 标题层级 ─────────────────────────────────────── */
+.eyebrow{font-family:"JetBrains Mono",ui-monospace,monospace; font-size:11px; letter-spacing:.18em;
+  text-transform:uppercase; color:var(--accent); margin:0 0 10px}
+h1{font-family:"Newsreader","Noto Serif SC",Georgia,serif; font-weight:600; font-size:clamp(30px,4.4vw,42px);
+  line-height:1.18; letter-spacing:-.015em; margin:0 0 14px; text-wrap:balance}
+h2{font-family:"Newsreader","Noto Serif SC",Georgia,serif; font-weight:600; font-size:26px; line-height:1.3;
+  margin:56px 0 16px; padding-top:20px; border-top:1px solid var(--line); text-wrap:balance; letter-spacing:-.01em}
+h3{font-size:18.5px; font-weight:700; margin:34px 0 10px; line-height:1.45; text-wrap:balance}
+h4{font-size:15px; font-weight:700; margin:22px 0 8px; color:var(--ink-2)}
+.lede{font-size:18px; line-height:1.72; color:var(--ink-2); margin:0 0 8px}
+p{margin:0 0 14px}
+ul,ol{margin:0 0 16px; padding-left:1.35em}
+li{margin:0 0 7px}
+li>ul,li>ol{margin-top:7px}
+strong{font-weight:700; color:var(--ink)}
+em{font-style:normal; background:linear-gradient(transparent 62%, var(--accent-soft) 62%); padding:0 1px}
+a{color:var(--accent-ink); text-underline-offset:2.5px; text-decoration-thickness:1px}
+hr{border:0; border-top:1px solid var(--line); margin:38px 0}
+
+/* ── 代码 ─────────────────────────────────────────── */
+code,kbd,.path{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+:not(pre)>code{font-size:.865em; background:var(--code-bg); color:var(--code-ink);
+  padding:.12em .38em; border-radius:4px; border:1px solid var(--line)}
+.path{font-size:.83em; background:var(--surface-2); color:var(--ink-2);
+  padding:.12em .42em; border-radius:4px; border:1px solid var(--line); white-space:nowrap}
+pre{margin:0 0 18px; background:var(--code-bg); border:1px solid var(--line); border-radius:9px;
+  padding:15px 17px; overflow-x:auto; line-height:1.62; box-shadow:var(--shadow)}
+pre code{font-size:13.2px; color:var(--code-ink); background:none; border:0; padding:0; white-space:pre}
+.codehead{display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;
+  font-family:"JetBrains Mono",ui-monospace,monospace; font-size:11px; color:var(--ink-3);
+  letter-spacing:.05em; margin:0 0 6px; padding:0 2px}
+.codehead b{color:var(--ink-2); font-weight:500}
+.hljs-keyword,.hljs-built_in,.hljs-literal{color:var(--hl-key)}
+.hljs-string,.hljs-attr{color:var(--hl-str)}
+.hljs-number{color:var(--hl-num)}
+.hljs-comment{color:var(--hl-com); font-style:italic}
+.hljs-meta{color:var(--hl-ann); font-weight:500}
+.hljs-title,.hljs-title.class_,.hljs-title.function_,.hljs-type{color:var(--hl-type)}
+.hljs-tag,.hljs-name{color:var(--hl-key)}
+
+/* ── 图 ───────────────────────────────────────────── */
+figure{margin:26px 0 28px; background:var(--surface); border:1px solid var(--line);
+  border-radius:11px; padding:20px 18px 14px; box-shadow:var(--shadow); overflow-x:auto}
+figure svg{display:block; width:100%; height:auto; max-width:100%; min-width:0}
+figcaption{margin-top:12px; font-size:13px; line-height:1.62; color:var(--ink-3); border-top:1px solid var(--line); padding-top:10px}
+figcaption b{color:var(--ink-2); font-weight:600}
+svg text{font-family:"Noto Sans SC","PingFang SC",system-ui,sans-serif}
+svg .mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+
+/* ── 对照卡：书里旧版 vs 仓库新版 ──────────────────── */
+.cmp{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:22px 0 24px}
+@media (max-width:660px){.cmp{grid-template-columns:1fr}}
+.cmp>div{border-radius:10px; padding:14px 15px; border:1px solid var(--line); background:var(--surface)}
+.cmp .old{border-left:3px solid var(--steel); background:var(--steel-soft)}
+.cmp .new{border-left:3px solid var(--accent); background:var(--accent-soft)}
+.cmp h5{margin:0 0 8px; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:10.5px;
+  letter-spacing:.14em; text-transform:uppercase; font-weight:500}
+.cmp .old h5{color:var(--steel)} .cmp .new h5{color:var(--accent)}
+.cmp p:last-child,.cmp ul:last-child,.cmp pre:last-child{margin-bottom:0}
+.cmp pre{background:transparent; border:0; padding:0; box-shadow:none; font-size:12.5px}
+.cmp code{background:transparent; border:0; padding:0}
+.why{margin:-8px 0 24px; padding:11px 15px; border-radius:9px; background:var(--surface-2);
+  border:1px solid var(--line); font-size:14.5px; line-height:1.7; color:var(--ink-2)}
+.why b{color:var(--ink)}
+
+/* ── 提示块 ───────────────────────────────────────── */
+.note,.warn,.tip{border-radius:9px; padding:13px 16px; margin:20px 0; font-size:15px; line-height:1.72;
+  border:1px solid var(--line); border-left-width:3px; background:var(--surface)}
+.note{border-left-color:var(--steel); background:var(--steel-soft)}
+.warn{border-left-color:var(--amber); background:var(--amber-soft)}
+.tip{border-left-color:var(--accent); background:var(--accent-soft)}
+.note>:last-child,.warn>:last-child,.tip>:last-child{margin-bottom:0}
+.note b:first-child,.warn b:first-child,.tip b:first-child{font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:11px; letter-spacing:.14em; text-transform:uppercase; display:block; margin-bottom:5px}
+.note b:first-child{color:var(--steel)} .warn b:first-child{color:var(--amber)} .tip b:first-child{color:var(--accent)}
+
+/* ── 表 ───────────────────────────────────────────── */
+.tablewrap{overflow-x:auto; margin:20px 0 24px; border:1px solid var(--line); border-radius:10px; background:var(--surface)}
+table{border-collapse:collapse; width:100%; font-size:14px; min-width:520px}
+th,td{text-align:left; padding:9px 13px; border-bottom:1px solid var(--line); vertical-align:top; line-height:1.6}
+thead th{font-family:"JetBrains Mono",ui-monospace,monospace; font-size:10.5px; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--ink-3); font-weight:500; background:var(--surface-2); white-space:nowrap}
+tbody tr:last-child td{border-bottom:0}
+td code{font-size:.84em; white-space:normal; overflow-wrap:break-word}
+th:last-child,td:last-child{padding-right:16px}
+.num{font-variant-numeric:tabular-nums}
+
+/* ── 实验 / 自测 ──────────────────────────────────── */
+.lab{border:1px solid var(--line); border-radius:11px; padding:16px 18px; margin:24px 0; background:var(--surface)}
+.lab>h4{margin-top:0; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:11px;
+  letter-spacing:.16em; text-transform:uppercase; color:var(--accent)}
+details{border:1px solid var(--line); border-radius:9px; padding:11px 15px; margin:0 0 9px; background:var(--surface)}
+details[open]{background:var(--surface-2)}
+summary{cursor:pointer; font-weight:600; font-size:15px; list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"?"; font-family:"JetBrains Mono",ui-monospace,monospace; color:var(--accent);
+  margin-right:9px; font-weight:700}
+details>*:not(summary){margin-top:10px}
+details>p:last-child{margin-bottom:0}
+
+/* ── 章节页脚导航 ─────────────────────────────────── */
+.pager{display:flex; justify-content:space-between; gap:14px; margin-top:60px; padding-top:22px; border-top:1px solid var(--line)}
+.pager a{display:block; text-decoration:none; color:var(--ink-2); font-size:14px; max-width:47%}
+.pager a span{display:block; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:10px;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); margin-bottom:3px}
+.pager a:hover{color:var(--accent-ink)}
+.pager .next{text-align:right; margin-left:auto}
+
+/* ── 首页卡片 ─────────────────────────────────────── */
+.cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(232px,1fr)); gap:13px; margin:22px 0 28px}
+.card{display:block; text-decoration:none; color:inherit; background:var(--surface); border:1px solid var(--line);
+  border-radius:11px; padding:14px 15px; box-shadow:var(--shadow); transition:border-color .15s, transform .15s}
+.card:hover{border-color:var(--accent); transform:translateY(-2px)}
+.card i{font-style:normal; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:11px;
+  letter-spacing:.1em; color:var(--accent); display:block; margin-bottom:5px}
+.card b{display:block; font-size:15.5px; line-height:1.4; margin-bottom:5px}
+.card p{margin:0; font-size:13px; color:var(--ink-3); line-height:1.6}
+@media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
+
+</style>
+</head>
+<body>
+<div class="wrap"><aside class="rail"><a class="rail-brand" href="index.html"><b>Spring Start Here<br>学习手册</b><span>Spring Boot 4 · Spring 7 · Java 25</span></a><div class="rail-group">第一部分 · 基础</div><nav><a class="ch" href="ch01.html"><i>01</i><span>真实世界中的 Spring</span></a><a class="ch" href="ch02.html"><i>02</i><span>Spring 上下文：定义 bean</span></a><a class="ch" href="ch03.html"><i>03</i><span>Spring 上下文：装配 bean</span></a><a class="ch" href="ch04.html"><i>04</i><span>Spring 上下文：使用抽象</span></a><a class="ch" href="ch05.html" aria-current="page"><i>05</i><span>Bean 作用域与生命周期</span></a><a class="ch" href="ch06.html"><i>06</i><span>用 Spring AOP 实现切面</span></a></nav><div class="rail-group">第二部分 · 实现</div><nav><a class="ch" href="ch07.html"><i>07</i><span>理解 Spring Boot 与 Spring MVC</span></a><a class="ch" href="ch08.html"><i>08</i><span>用 Boot + MVC 实现 Web 应用</span></a><a class="ch" href="ch09.html"><i>09</i><span>使用 Spring Web 作用域</span></a><a class="ch" href="ch10.html"><i>10</i><span>实现 REST 服务</span></a><a class="ch" href="ch11.html"><i>11</i><span>消费 REST 端点</span></a><a class="ch" href="ch12.html"><i>12</i><span>在 Spring 应用中使用数据源</span></a><a class="ch" href="ch13.html"><i>13</i><span>在 Spring 应用中使用事务</span></a><a class="ch" href="ch14.html"><i>14</i><span>用 Spring Data 实现持久化</span></a><a class="ch" href="ch15.html"><i>15</i><span>单元测试</span></a><a class="ch" href="ch16.html"><i>16</i><span>Spring 集成测试</span></a></nav><div class="rail-group">总览</div><nav><a class="ch" href="index.html"><i>◆</i><span>目录与版本对照</span></a></nav></aside><main class="main">
+<p class="eyebrow">第 5 章 · 第一部分 基础</p>
+<h1>Bean 作用域与生命周期</h1>
+<p class="lede">Spring 什么时候造这个对象？造几个？什么时候销毁？这三个问题的答案由<strong>作用域</strong>决定。本章只讲两个基础作用域（单例、原型），但要把最容易出事的那个组合——<em>单例里注入原型</em>——讲透。</p>
+
+<div class="note"><b>本章工程</b>
+<span class="path">ssh_ch5_ex1</span> 单例：同名 bean 同实例 · <span class="path">ex2</span> 两个 service 共享同一个 repository · <span class="path">ex3</span> 饥饿初始化 · <span class="path">ex4</span> @Lazy · <span class="path">ex5</span> @Bean + 原型 · <span class="path">ex6</span> @Component + 原型 · <span class="path">ex7</span> 原型的正确用法 · <span class="path">ex8</span> 原型的错误用法</div>
+
+<h2>5.1 单例：默认，也是最常用的</h2>
+
+<pre class="codehead"><b>ssh_ch5_ex1</b></pre>
+<pre><code class="language-java">@Bean
+public CommentService commentService() { return new CommentService(); }
+
+// Main
+var cs1 = c.getBean("commentService", CommentService.class);
+var cs2 = c.getBean("commentService", CommentService.class);
+System.out.println(cs1 == cs2);   // true</code></pre>
+
+<div class="warn"><b>“单例”这个词在 Spring 里被重新定义了</b>
+设计模式里的单例是“<strong>一个类</strong>只有一个实例”。Spring 的单例是“<strong>一个 bean 名字</strong>只有一个实例”。所以第 2 章 <span class="path">ssh_ch2_ex3</span> 里三个 <code>Parrot</code> bean 全是单例作用域——同一个类，三个实例，各自唯一。这个区别不搞清楚，后面读文档会一直别扭。</div>
+
+<figure>
+<svg viewBox="0 0 720 214" role="img" aria-label="单例作用域：每个 bean 名字对应一个实例">
+  <rect x="20" y="14" width="680" height="186" rx="10" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.5"/>
+  <text x="40" y="38" font-size="11" class="mono" fill="var(--accent-ink)">Spring context · scope = singleton</text>
+
+  <rect x="44" y="54" width="180" height="60" rx="8" fill="var(--surface)" stroke="var(--accent)"/>
+  <text x="134" y="76" font-size="11.5" text-anchor="middle" class="mono" fill="var(--ink)">"parrot1"</text>
+  <text x="134" y="97" font-size="11" text-anchor="middle" fill="var(--ink-3)">Parrot@1a2b（唯一）</text>
+
+  <rect x="240" y="54" width="180" height="60" rx="8" fill="var(--surface)" stroke="var(--accent)"/>
+  <text x="330" y="76" font-size="11.5" text-anchor="middle" class="mono" fill="var(--ink)">"parrot2"</text>
+  <text x="330" y="97" font-size="11" text-anchor="middle" fill="var(--ink-3)">Parrot@3c4d（唯一）</text>
+
+  <rect x="436" y="54" width="180" height="60" rx="8" fill="var(--surface)" stroke="var(--accent)"/>
+  <text x="526" y="76" font-size="11.5" text-anchor="middle" class="mono" fill="var(--ink)">"parrot3"</text>
+  <text x="526" y="97" font-size="11" text-anchor="middle" fill="var(--ink-3)">Parrot@5e6f（唯一）</text>
+
+  <text x="360" y="146" font-size="12" text-anchor="middle" fill="var(--ink-2)">同一个 <tspan class="mono">Parrot</tspan> 类 → 三个实例；但每个<tspan font-weight="700">名字</tspan>只有一个实例</text>
+  <text x="360" y="172" font-size="12" text-anchor="middle" fill="var(--ink-2)">→ <tspan class="mono">getBean("parrot2", …)</tspan> 无论调多少次，永远是 <tspan class="mono">Parrot@3c4d</tspan></text>
+</svg>
+<figcaption><b>图 5-1</b>　单例的粒度是 bean 名字，不是类。</figcaption>
+</figure>
+
+<h3>被多处注入时，拿到的是同一个</h3>
+
+<pre class="codehead"><b>ssh_ch5_ex2</b></pre>
+<pre><code class="language-java">@Repository public class CommentRepository { }
+
+@Service public class CommentService { @Autowired private CommentRepository commentRepository; ... }
+@Service public class UserService    { @Autowired private CommentRepository commentRepository; ... }
+
+// Main
+boolean b1 = commentService.getCommentRepository() == userService.getCommentRepository();
+System.out.println(b1);   // true —— 两个 service 共享同一个 repository 实例</code></pre>
+
+<div class="warn"><b>单例 bean 必须是无状态的</b>
+既然一个实例被全应用共享、还会被多个 HTTP 线程同时调用，那么<strong>在单例 bean 里放可变字段就是并发 bug</strong>。这是 Spring 应用里最常见的生产事故之一。<br>
+方法内的局部变量没问题（每个线程有自己的栈），有问题的是<code>private</code> 实例字段。第 9 章的 web 作用域就是为了给“确实需要状态”的场景提供正确出路。</div>
+
+<h3>饥饿 vs 懒加载</h3>
+
+<pre class="codehead"><b>ssh_ch5_ex3</b><span>默认：饥饿（eager）</span></pre>
+<pre><code class="language-java">@Service
+public class CommentService {
+    public CommentService() { System.out.println("CommentService instance created!"); }
+}
+
+// Main 里只创建上下文，什么都不取
+var c = new AnnotationConfigApplicationContext(ProjectConfig.class);
+// 输出： CommentService instance created!   ← 上下文一启动就造好了</code></pre>
+
+<pre class="codehead"><b>ssh_ch5_ex4</b><span>加 @Lazy 后</span></pre>
+<pre><code class="language-java">@Service
+@Lazy
+public class CommentService {
+    public CommentService() { System.out.println("CommentService instance created!"); }
+}
+
+// 输出顺序：
+// Before retrieving the CommentService
+// CommentService instance created!      ← 第一次 getBean 时才造
+// After retrieving the CommentService</code></pre>
+
+<figure>
+<svg viewBox="0 0 720 176" role="img" aria-label="饥饿初始化与懒加载的时间线对比">
+  <text x="16" y="22" font-size="11" class="mono" fill="var(--steel)">默认 · 饥饿（eager）</text>
+  <line x1="30" y1="52" x2="690" y2="52" stroke="var(--line-strong)" stroke-width="1.6"/>
+  <circle cx="120" cy="52" r="7" fill="var(--accent)"/>
+  <text x="120" y="42" font-size="10.5" text-anchor="middle" fill="var(--ink-2)">上下文启动</text>
+  <text x="120" y="72" font-size="10" text-anchor="middle" class="mono" fill="var(--accent)">此刻全部实例化</text>
+  <circle cx="480" cy="52" r="6" fill="var(--surface)" stroke="var(--line-strong)" stroke-width="1.8"/>
+  <text x="480" y="42" font-size="10.5" text-anchor="middle" fill="var(--ink-3)">getBean()</text>
+  <text x="480" y="72" font-size="10" text-anchor="middle" fill="var(--ink-3)">直接返回缓存</text>
+
+  <text x="16" y="112" font-size="11" class="mono" fill="var(--accent)">@Lazy · 懒加载</text>
+  <line x1="30" y1="142" x2="690" y2="142" stroke="var(--line-strong)" stroke-width="1.6"/>
+  <circle cx="120" cy="142" r="6" fill="var(--surface)" stroke="var(--line-strong)" stroke-width="1.8"/>
+  <text x="120" y="132" font-size="10.5" text-anchor="middle" fill="var(--ink-3)">上下文启动</text>
+  <text x="120" y="162" font-size="10" text-anchor="middle" fill="var(--ink-3)">只登记定义，不造实例</text>
+  <circle cx="480" cy="142" r="7" fill="var(--accent)"/>
+  <text x="480" y="132" font-size="10.5" text-anchor="middle" fill="var(--ink-2)">首次 getBean()</text>
+  <text x="480" y="162" font-size="10" text-anchor="middle" class="mono" fill="var(--accent)">此刻才实例化（仅一次）</text>
+</svg>
+<figcaption><b>图 5-2</b>　默认的饥饿初始化有个大优点：<strong>配置错误在启动时就暴露</strong>，而不是等到线上第一次调用。所以除非某个 bean 创建代价很高且很可能用不上，否则不要随手加 <code>@Lazy</code>。</figcaption>
+</figure>
+
+<h2>5.2 原型：每次要都给新的</h2>
+
+<pre class="codehead"><b>ssh_ch5_ex5</b></pre>
+<pre><code class="language-java">@Bean
+@Scope(BeanDefinition.SCOPE_PROTOTYPE)
+public CommentService commentService() { return new CommentService(); }
+
+// Main
+var cs1 = c.getBean("commentService", CommentService.class);
+var cs2 = c.getBean("commentService", CommentService.class);
+System.out.println(cs1 == cs2);   // false —— 两个不同实例</code></pre>
+
+<div class="cmp">
+<div class="old"><h5>书中</h5>
+<pre><code>import org.springframework.beans
+   .factory.config
+   .ConfigurableBeanFactory;
+
+@Scope(ConfigurableBeanFactory
+       .SCOPE_PROTOTYPE)</code></pre></div>
+<div class="new"><h5>仓库</h5>
+<pre><code>import org.springframework.beans
+   .factory.config
+   .BeanDefinition;
+
+@Scope(BeanDefinition
+       .SCOPE_PROTOTYPE)</code></pre></div>
+</div>
+<div class="why"><b>为什么变：</b>两个常量的值都是字符串 <code>"prototype"</code>，<strong>功能完全等价</strong>。<code>BeanDefinition</code> 是更贴近“bean 定义”这个概念的位置，也是现在 Spring 文档使用的写法。你也可以直接写 <code>@Scope("prototype")</code>，三者没有任何差别。</div>
+
+<h3>原型 bean 的正确用法</h3>
+
+<p><span class="path">ssh_ch5_ex7</span> 和 <span class="path">ex8</span> 是本章最重要的一对对照。场景是：<code>CommentProcessor</code> 处理评论时需要<strong>把评论存在自己的字段里</strong>，所以它有状态，必须是原型。</p>
+
+<pre class="codehead"><b>两个工程共用的 CommentProcessor</b></pre>
+<pre><code class="language-java">@Component
+@Scope(BeanDefinition.SCOPE_PROTOTYPE)
+public class CommentProcessor {
+
+    @Autowired private CommentRepository commentRepository;
+
+    private Comment comment;                        // ← 有状态！所以必须是原型
+
+    public void setComment(Comment comment) { this.comment = comment; }
+    public void processComment() { /* 修改 comment */ }
+    public void validateComment() { /* 校验 comment */ }
+}</code></pre>
+
+<div class="cmp">
+<div class="new"><h5>✓ ssh_ch5_ex7 · 正确</h5>
+<pre><code class="language-java">@Service
+public class CommentService {
+
+  @Autowired
+  private ApplicationContext context;
+
+  public void sendComment(Comment comment) {
+    CommentProcessor p =
+      context.getBean(CommentProcessor.class);
+    p.setComment(comment);
+    p.processComment();
+  }
+}</code></pre>
+<p style="font-size:13px;margin:8px 0 0;color:var(--ink-2)">每次调用都从上下文<strong>现取</strong>一个新的 processor。</p></div>
+<div class="old"><h5>✗ ssh_ch5_ex8 · 错误</h5>
+<pre><code class="language-java">@Service
+public class CommentService {
+
+  @Autowired
+  private CommentProcessor commentProcessor;
+
+  public void sendComment(Comment comment) {
+    commentProcessor.setComment(comment);
+    commentProcessor.processComment();
+  }
+}</code></pre>
+<p style="font-size:13px;margin:8px 0 0;color:var(--ink-2)">注入一次就固定了，<strong>所有调用共享同一个</strong> processor。</p></div>
+</div>
+
+<figure>
+<svg viewBox="0 0 720 336" role="img" aria-label="单例 bean 注入原型 bean 的陷阱">
+  <text x="16" y="20" font-size="11.5" class="mono" fill="var(--amber)">✗ ssh_ch5_ex8 —— 单例字段注入原型：只注入一次，就永远是那一个</text>
+  <rect x="16" y="30" width="688" height="128" rx="10" fill="var(--amber-soft)" stroke="var(--amber)" stroke-width="1.4"/>
+  <rect x="42" y="60" width="150" height="52" rx="8" fill="var(--surface)" stroke="var(--line-strong)"/>
+  <text x="117" y="82" font-size="11.5" text-anchor="middle" fill="var(--ink)" class="mono">CommentService</text>
+  <text x="117" y="99" font-size="10" text-anchor="middle" fill="var(--ink-3)">singleton · 全局唯一</text>
+  <path d="M194 86 L262 86" stroke="var(--amber)" stroke-width="1.8" marker-end="url(#i1)"/>
+  <text x="228" y="76" font-size="9.5" text-anchor="middle" class="mono" fill="var(--amber)">注入一次</text>
+  <rect x="264" y="60" width="150" height="52" rx="8" fill="var(--surface)" stroke="var(--amber)" stroke-width="1.6"/>
+  <text x="339" y="82" font-size="11.5" text-anchor="middle" fill="var(--ink)" class="mono">CommentProcessor</text>
+  <text x="339" y="99" font-size="10" text-anchor="middle" fill="var(--amber)">@1a2b · 从此不再变</text>
+
+  <g font-size="10.5" fill="var(--ink-2)">
+    <text x="440" y="66">线程 A：setComment(评论1)</text>
+    <text x="440" y="86">线程 B：setComment(评论2)  ← 覆盖了！</text>
+    <text x="440" y="106">线程 A：processComment()  → 处理的是评论2</text>
+    <text x="440" y="132" fill="var(--amber)" font-weight="700">原型作用域被彻底浪费，还引入了并发 bug</text>
+  </g>
+
+  <text x="16" y="192" font-size="11.5" class="mono" fill="var(--accent)">✓ ssh_ch5_ex7 —— 每次调用去上下文现取</text>
+  <rect x="16" y="202" width="688" height="126" rx="10" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/>
+  <rect x="42" y="232" width="150" height="52" rx="8" fill="var(--surface)" stroke="var(--line-strong)"/>
+  <text x="117" y="254" font-size="11.5" text-anchor="middle" fill="var(--ink)" class="mono">CommentService</text>
+  <text x="117" y="271" font-size="10" text-anchor="middle" fill="var(--ink-3)">singleton</text>
+  <path d="M194 258 L262 258" stroke="var(--accent)" stroke-width="1.8" marker-end="url(#i2)"/>
+  <text x="228" y="248" font-size="9.5" text-anchor="middle" class="mono" fill="var(--accent)">每次调用</text>
+  <rect x="264" y="216" width="150" height="34" rx="7" fill="var(--surface)" stroke="var(--accent)"/>
+  <text x="339" y="238" font-size="10.5" text-anchor="middle" fill="var(--ink)" class="mono">Processor@1a2b</text>
+  <rect x="264" y="256" width="150" height="34" rx="7" fill="var(--surface)" stroke="var(--accent)"/>
+  <text x="339" y="278" font-size="10.5" text-anchor="middle" fill="var(--ink)" class="mono">Processor@3c4d</text>
+  <rect x="264" y="296" width="150" height="26" rx="7" fill="var(--surface)" stroke="var(--accent)" stroke-dasharray="3 3"/>
+  <text x="339" y="313" font-size="10" text-anchor="middle" fill="var(--ink-3)" class="mono">…每次调用一个新的</text>
+
+  <g font-size="10.5" fill="var(--ink-2)">
+    <text x="440" y="240">线程 A 拿到 @1a2b，只有 A 用</text>
+    <text x="440" y="262">线程 B 拿到 @3c4d，只有 B 用</text>
+    <text x="440" y="290" fill="var(--accent-ink)" font-weight="700">状态天然隔离，没有竞争</text>
+  </g>
+  <defs>
+    <marker id="i1" markerWidth="8" markerHeight="8" refX="7" refY="3.6" orient="auto"><path d="M0 0 L8 3.6 L0 7.2 z" fill="var(--amber)"/></marker>
+    <marker id="i2" markerWidth="8" markerHeight="8" refX="7" refY="3.6" orient="auto"><path d="M0 0 L8 3.6 L0 7.2 z" fill="var(--accent)"/></marker>
+  </defs>
+</svg>
+<figcaption><b>图 5-3</b>　<strong>单例 bean 注入原型 bean，原型作用域会失效。</strong>因为注入只在单例创建时发生一次。运行 <span class="path">ssh_ch5_ex8</span> 会打印 <code>true</code>（两次拿到的 processor 是同一个），亲眼看一次比读十遍都管用。</figcaption>
+</figure>
+
+<div class="tip"><b>比 ApplicationContext 更优雅的写法</b>
+<span class="path">ssh_ch5_ex7</span> 注入 <code>ApplicationContext</code> 是书里的教学写法，缺点是业务代码依赖了容器 API。生产中更常用这两种：
+<pre style="margin:8px 0 0"><code class="language-java">// 方式一：注入工厂（Spring 4.3+，推荐）
+private final ObjectProvider&lt;CommentProcessor&gt; processorProvider;
+CommentProcessor p = processorProvider.getObject();
+
+// 方式二：作用域代理，注入点写法不变，实际每次调用转发到新实例
+@Component
+@Scope(value = BeanDefinition.SCOPE_PROTOTYPE, proxyMode = ScopedProxyMode.TARGET_CLASS)
+public class CommentProcessor { ... }</code></pre></div>
+
+<h2>两种作用域速查</h2>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th></th><th>singleton（默认）</th><th>prototype</th></tr></thead>
+<tbody>
+<tr><td>实例数</td><td>每个 bean 名字 1 个</td><td>每次请求一个新的</td></tr>
+<tr><td>创建时机</td><td>上下文启动时（除非 <code>@Lazy</code>）</td><td>每次 <code>getBean</code> / 注入时</td></tr>
+<tr><td>可变字段</td><td><strong>禁止</strong>（并发风险）</td><td>允许，这正是它存在的理由</td></tr>
+<tr><td>销毁回调</td><td>上下文关闭时调 <code>@PreDestroy</code></td><td><strong>不管</strong>，交出去就不负责了</td></tr>
+<tr><td>典型用途</td><td>Service / Repository / Controller / 配置</td><td>持有请求级状态的处理器</td></tr>
+<tr><td>使用频率</td><td>99%</td><td>1%</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="warn"><b>原型 bean 没有销毁回调</b>
+Spring 把原型实例交给你之后就不再持有引用，所以 <code>@PreDestroy</code> 不会被调用。如果原型 bean 持有需要关闭的资源（连接、文件句柄），必须由使用方自己关。</div>
+
+<h2>动手练习</h2>
+<div class="lab">
+<h4>练习 · 亲眼看到陷阱</h4>
+<ol style="margin-bottom:0">
+<li>依次运行 <span class="path">ssh_ch5_ex7</span> 和 <span class="path">ssh_ch5_ex8</span>。ex8 打印 <code>true</code>——两次拿到的是同一个原型 bean。</li>
+<li>把 <span class="path">ssh_ch5_ex8</span> 的字段注入改成 <code>ObjectProvider&lt;CommentProcessor&gt;</code>，再跑一次，应该变成 <code>false</code>。</li>
+<li>给 <span class="path">ssh_ch5_ex3</span> 的 <code>CommentService</code> 加 <code>@Lazy</code>，对比启动时的输出，验证图 5-2。</li>
+<li><strong>思考题：</strong>如果把 <span class="path">ssh_ch5_ex2</span> 的 <code>CommentRepository</code> 改成原型（这正是 <span class="path">ssh_ch5_ex6</span>），<code>b1</code> 会是什么？为什么？</li>
+</ol>
+</div>
+
+<h2>本章自测</h2>
+<details><summary>为什么单例 bean 不能有可变字段？</summary>
+<p>因为在 web 应用里，同一个单例 bean 会被多个 HTTP 请求线程<strong>并发</strong>调用。实例字段是共享的，一个线程写、另一个线程读，就会读到别人的数据（图 5-3 上半部分演示的正是这个）。方法内的局部变量在各自线程栈上，没有这个问题。真需要请求级状态，用第 9 章的 <code>@RequestScope</code>。</p></details>
+<details><summary>为什么给单例注入原型，原型就“失效”了？</summary>
+<p>因为依赖注入发生在<strong>单例被创建的那一刻</strong>，且只发生一次。那一次注入确实向上下文要了一个新的原型实例，但之后单例的字段就一直指着它。要让原型真正每次都新，就必须<strong>每次调用时重新去要</strong>——<code>ApplicationContext.getBean()</code>、<code>ObjectProvider</code>、或作用域代理，三条路都是在做这件事。</p></details>
+<details><summary><code>@Scope("prototype")</code>、<code>BeanDefinition.SCOPE_PROTOTYPE</code>、<code>ConfigurableBeanFactory.SCOPE_PROTOTYPE</code> 有区别吗？</summary>
+<p>没有。三者的值都是字符串 <code>"prototype"</code>。书里用第三种，仓库用第二种，纯粹是写法偏好。用常量而不是裸字符串的好处是防拼写错误。</p></details>
+
+<div class="pager"><a class="prev" href="ch04.html"><span>上一章</span>4. Spring 上下文：使用抽象</a><a class="next" href="ch06.html"><span>下一章</span>6. 用 Spring AOP 实现切面</a></div>
+</main></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/java.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/sql.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/properties.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+<script>
+(function(){ if(!window.hljs) return;
+  document.querySelectorAll('pre code[class^="language-"]').forEach(function(el){
+    try{ hljs.highlightElement(el); }catch(e){}
+  });
+})();
+</script>
+</body>
+</html>

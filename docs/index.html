@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spring Start Here 学习手册</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+/* ── 令牌：浅色（默认，未标记状态也走这里） ───────────────── */
+:root{
+  --paper:#f4f7f3; --surface:#ffffff; --surface-2:#e9eee8;
+  --ink:#141f1a; --ink-2:#3c4a44; --ink-3:#6a7771;
+  --line:#d8e0d9; --line-strong:#b9c6bd;
+  --accent:#1b6b47; --accent-ink:#0f4a30; --accent-soft:#e0eee6;
+  --amber:#8a5712; --amber-soft:#f6ecd9;
+  --steel:#385a75; --steel-soft:#e2eaf1;
+  --code-bg:#eef2ec; --code-ink:#1d2b24;
+  --hl-key:#0f4a30; --hl-str:#8a5712; --hl-num:#385a75; --hl-com:#7d8a83; --hl-ann:#6b3a8a; --hl-type:#1d4f6b;
+  --shadow:0 1px 2px rgba(20,31,26,.05), 0 8px 24px -16px rgba(20,31,26,.28);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0d1411; --surface:#141d19; --surface-2:#1c2721;
+    --ink:#dde5df; --ink-2:#a9b5ae; --ink-3:#7f8d86;
+    --line:#26332c; --line-strong:#38483f;
+    --accent:#62b98d; --accent-ink:#8ed3ae; --accent-soft:#15291f;
+    --amber:#d9a44a; --amber-soft:#241d10;
+    --steel:#8fb6d4; --steel-soft:#14212b;
+    --code-bg:#101a15; --code-ink:#cfdad3;
+    --hl-key:#8ed3ae; --hl-str:#d9a44a; --hl-num:#8fb6d4; --hl-com:#6d7d75; --hl-ann:#c4a0dd; --hl-type:#7fc4d8;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -18px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0d1411; --surface:#141d19; --surface-2:#1c2721;
+  --ink:#dde5df; --ink-2:#a9b5ae; --ink-3:#7f8d86;
+  --line:#26332c; --line-strong:#38483f;
+  --accent:#62b98d; --accent-ink:#8ed3ae; --accent-soft:#15291f;
+  --amber:#d9a44a; --amber-soft:#241d10;
+  --steel:#8fb6d4; --steel-soft:#14212b;
+  --code-bg:#101a15; --code-ink:#cfdad3;
+  --hl-key:#8ed3ae; --hl-str:#d9a44a; --hl-num:#8fb6d4; --hl-com:#6d7d75; --hl-ann:#c4a0dd; --hl-type:#7fc4d8;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -18px rgba(0,0,0,.8);
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:"Noto Sans SC","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+  font-size:16.5px; line-height:1.78; font-feature-settings:"tnum" 0;
+}
+
+/* ── 版式骨架 ─────────────────────────────────────── */
+.wrap{max-width:1200px; margin:0 auto; padding:0 26px;
+      display:grid; grid-template-columns:236px minmax(0,1fr); gap:52px; align-items:start}
+.rail{position:sticky; top:0; max-height:100vh; overflow-y:auto; padding:34px 0 40px}
+.main{min-width:0; padding:34px 0 96px; max-width:78ch}
+@media (max-width:900px){
+  .wrap{grid-template-columns:minmax(0,1fr); gap:0}
+  .rail{position:static; max-height:none; padding:26px 0 0; border-bottom:1px solid var(--line); margin-bottom:26px}
+  .main{padding-top:14px}
+}
+
+/* ── 侧栏 ─────────────────────────────────────────── */
+.rail-brand{display:block; text-decoration:none; color:inherit; margin-bottom:22px}
+.rail-brand b{display:block; font-family:"Newsreader","Noto Serif SC",Georgia,serif;
+  font-size:21px; font-weight:600; line-height:1.25; letter-spacing:-.01em}
+.rail-brand span{display:block; font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); margin-top:5px}
+.rail-group{font-family:"JetBrains Mono",ui-monospace,monospace; font-size:10px; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--ink-3); margin:20px 0 8px; padding-left:2px}
+.rail nav{display:flex; flex-direction:column; gap:1px}
+.rail a.ch{display:grid; grid-template-columns:22px 1fr; gap:8px; align-items:baseline;
+  text-decoration:none; color:var(--ink-2); padding:4px 8px 4px 2px; border-radius:5px; font-size:13.5px; line-height:1.45}
+.rail a.ch i{font-style:normal; font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:11px; color:var(--ink-3); font-variant-numeric:tabular-nums}
+.rail a.ch:hover{background:var(--surface-2); color:var(--ink)}
+.rail a.ch[aria-current="page"]{background:var(--accent-soft); color:var(--accent-ink); font-weight:500}
+.rail a.ch[aria-current="page"] i{color:var(--accent)}
+a:focus-visible,summary:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:3px}
+
+/* ── 标题层级 ─────────────────────────────────────── */
+.eyebrow{font-family:"JetBrains Mono",ui-monospace,monospace; font-size:11px; letter-spacing:.18em;
+  text-transform:uppercase; color:var(--accent); margin:0 0 10px}
+h1{font-family:"Newsreader","Noto Serif SC",Georgia,serif; font-weight:600; font-size:clamp(30px,4.4vw,42px);
+  line-height:1.18; letter-spacing:-.015em; margin:0 0 14px; text-wrap:balance}
+h2{font-family:"Newsreader","Noto Serif SC",Georgia,serif; font-weight:600; font-size:26px; line-height:1.3;
+  margin:56px 0 16px; padding-top:20px; border-top:1px solid var(--line); text-wrap:balance; letter-spacing:-.01em}
+h3{font-size:18.5px; font-weight:700; margin:34px 0 10px; line-height:1.45; text-wrap:balance}
+h4{font-size:15px; font-weight:700; margin:22px 0 8px; color:var(--ink-2)}
+.lede{font-size:18px; line-height:1.72; color:var(--ink-2); margin:0 0 8px}
+p{margin:0 0 14px}
+ul,ol{margin:0 0 16px; padding-left:1.35em}
+li{margin:0 0 7px}
+li>ul,li>ol{margin-top:7px}
+strong{font-weight:700; color:var(--ink)}
+em{font-style:normal; background:linear-gradient(transparent 62%, var(--accent-soft) 62%); padding:0 1px}
+a{color:var(--accent-ink); text-underline-offset:2.5px; text-decoration-thickness:1px}
+hr{border:0; border-top:1px solid var(--line); margin:38px 0}
+
+/* ── 代码 ─────────────────────────────────────────── */
+code,kbd,.path{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+:not(pre)>code{font-size:.865em; background:var(--code-bg); color:var(--code-ink);
+  padding:.12em .38em; border-radius:4px; border:1px solid var(--line)}
+.path{font-size:.83em; background:var(--surface-2); color:var(--ink-2);
+  padding:.12em .42em; border-radius:4px; border:1px solid var(--line); white-space:nowrap}
+pre{margin:0 0 18px; background:var(--code-bg); border:1px solid var(--line); border-radius:9px;
+  padding:15px 17px; overflow-x:auto; line-height:1.62; box-shadow:var(--shadow)}
+pre code{font-size:13.2px; color:var(--code-ink); background:none; border:0; padding:0; white-space:pre}
+.codehead{display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;
+  font-family:"JetBrains Mono",ui-monospace,monospace; font-size:11px; color:var(--ink-3);
+  letter-spacing:.05em; margin:0 0 6px; padding:0 2px}
+.codehead b{color:var(--ink-2); font-weight:500}
+.hljs-keyword,.hljs-built_in,.hljs-literal{color:var(--hl-key)}
+.hljs-string,.hljs-attr{color:var(--hl-str)}
+.hljs-number{color:var(--hl-num)}
+.hljs-comment{color:var(--hl-com); font-style:italic}
+.hljs-meta{color:var(--hl-ann); font-weight:500}
+.hljs-title,.hljs-title.class_,.hljs-title.function_,.hljs-type{color:var(--hl-type)}
+.hljs-tag,.hljs-name{color:var(--hl-key)}
+
+/* ── 图 ───────────────────────────────────────────── */
+figure{margin:26px 0 28px; background:var(--surface); border:1px solid var(--line);
+  border-radius:11px; padding:20px 18px 14px; box-shadow:var(--shadow); overflow-x:auto}
+figure svg{display:block; width:100%; height:auto; max-width:100%; min-width:0}
+figcaption{margin-top:12px; font-size:13px; line-height:1.62; color:var(--ink-3); border-top:1px solid var(--line); padding-top:10px}
+figcaption b{color:var(--ink-2); font-weight:600}
+svg text{font-family:"Noto Sans SC","PingFang SC",system-ui,sans-serif}
+svg .mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+
+/* ── 对照卡：书里旧版 vs 仓库新版 ──────────────────── */
+.cmp{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:22px 0 24px}
+@media (max-width:660px){.cmp{grid-template-columns:1fr}}
+.cmp>div{border-radius:10px; padding:14px 15px; border:1px solid var(--line); background:var(--surface)}
+.cmp .old{border-left:3px solid var(--steel); background:var(--steel-soft)}
+.cmp .new{border-left:3px solid var(--accent); background:var(--accent-soft)}
+.cmp h5{margin:0 0 8px; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:10.5px;
+  letter-spacing:.14em; text-transform:uppercase; font-weight:500}
+.cmp .old h5{color:var(--steel)} .cmp .new h5{color:var(--accent)}
+.cmp p:last-child,.cmp ul:last-child,.cmp pre:last-child{margin-bottom:0}
+.cmp pre{background:transparent; border:0; padding:0; box-shadow:none; font-size:12.5px}
+.cmp code{background:transparent; border:0; padding:0}
+.why{margin:-8px 0 24px; padding:11px 15px; border-radius:9px; background:var(--surface-2);
+  border:1px solid var(--line); font-size:14.5px; line-height:1.7; color:var(--ink-2)}
+.why b{color:var(--ink)}
+
+/* ── 提示块 ───────────────────────────────────────── */
+.note,.warn,.tip{border-radius:9px; padding:13px 16px; margin:20px 0; font-size:15px; line-height:1.72;
+  border:1px solid var(--line); border-left-width:3px; background:var(--surface)}
+.note{border-left-color:var(--steel); background:var(--steel-soft)}
+.warn{border-left-color:var(--amber); background:var(--amber-soft)}
+.tip{border-left-color:var(--accent); background:var(--accent-soft)}
+.note>:last-child,.warn>:last-child,.tip>:last-child{margin-bottom:0}
+.note b:first-child,.warn b:first-child,.tip b:first-child{font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:11px; letter-spacing:.14em; text-transform:uppercase; display:block; margin-bottom:5px}
+.note b:first-child{color:var(--steel)} .warn b:first-child{color:var(--amber)} .tip b:first-child{color:var(--accent)}
+
+/* ── 表 ───────────────────────────────────────────── */
+.tablewrap{overflow-x:auto; margin:20px 0 24px; border:1px solid var(--line); border-radius:10px; background:var(--surface)}
+table{border-collapse:collapse; width:100%; font-size:14px; min-width:520px}
+th,td{text-align:left; padding:9px 13px; border-bottom:1px solid var(--line); vertical-align:top; line-height:1.6}
+thead th{font-family:"JetBrains Mono",ui-monospace,monospace; font-size:10.5px; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--ink-3); font-weight:500; background:var(--surface-2); white-space:nowrap}
+tbody tr:last-child td{border-bottom:0}
+td code{font-size:.84em; white-space:normal; overflow-wrap:break-word}
+th:last-child,td:last-child{padding-right:16px}
+.num{font-variant-numeric:tabular-nums}
+
+/* ── 实验 / 自测 ──────────────────────────────────── */
+.lab{border:1px solid var(--line); border-radius:11px; padding:16px 18px; margin:24px 0; background:var(--surface)}
+.lab>h4{margin-top:0; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:11px;
+  letter-spacing:.16em; text-transform:uppercase; color:var(--accent)}
+details{border:1px solid var(--line); border-radius:9px; padding:11px 15px; margin:0 0 9px; background:var(--surface)}
+details[open]{background:var(--surface-2)}
+summary{cursor:pointer; font-weight:600; font-size:15px; list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"?"; font-family:"JetBrains Mono",ui-monospace,monospace; color:var(--accent);
+  margin-right:9px; font-weight:700}
+details>*:not(summary){margin-top:10px}
+details>p:last-child{margin-bottom:0}
+
+/* ── 章节页脚导航 ─────────────────────────────────── */
+.pager{display:flex; justify-content:space-between; gap:14px; margin-top:60px; padding-top:22px; border-top:1px solid var(--line)}
+.pager a{display:block; text-decoration:none; color:var(--ink-2); font-size:14px; max-width:47%}
+.pager a span{display:block; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:10px;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); margin-bottom:3px}
+.pager a:hover{color:var(--accent-ink)}
+.pager .next{text-align:right; margin-left:auto}
+
+/* ── 首页卡片 ─────────────────────────────────────── */
+.cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(232px,1fr)); gap:13px; margin:22px 0 28px}
+.card{display:block; text-decoration:none; color:inherit; background:var(--surface); border:1px solid var(--line);
+  border-radius:11px; padding:14px 15px; box-shadow:var(--shadow); transition:border-color .15s, transform .15s}
+.card:hover{border-color:var(--accent); transform:translateY(-2px)}
+.card i{font-style:normal; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:11px;
+  letter-spacing:.1em; color:var(--accent); display:block; margin-bottom:5px}
+.card b{display:block; font-size:15.5px; line-height:1.4; margin-bottom:5px}
+.card p{margin:0; font-size:13px; color:var(--ink-3); line-height:1.6}
+@media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
+
+</style>
+</head>
+<body>
+<div class="wrap"><aside class="rail"><a class="rail-brand" href="index.html"><b>Spring Start Here<br>学习手册</b><span>Spring Boot 4 · Spring 7 · Java 25</span></a><div class="rail-group">第一部分 · 基础</div><nav><a class="ch" href="ch01.html"><i>01</i><span>真实世界中的 Spring</span></a><a class="ch" href="ch02.html"><i>02</i><span>Spring 上下文：定义 bean</span></a><a class="ch" href="ch03.html"><i>03</i><span>Spring 上下文：装配 bean</span></a><a class="ch" href="ch04.html"><i>04</i><span>Spring 上下文：使用抽象</span></a><a class="ch" href="ch05.html"><i>05</i><span>Bean 作用域与生命周期</span></a><a class="ch" href="ch06.html"><i>06</i><span>用 Spring AOP 实现切面</span></a></nav><div class="rail-group">第二部分 · 实现</div><nav><a class="ch" href="ch07.html"><i>07</i><span>理解 Spring Boot 与 Spring MVC</span></a><a class="ch" href="ch08.html"><i>08</i><span>用 Boot + MVC 实现 Web 应用</span></a><a class="ch" href="ch09.html"><i>09</i><span>使用 Spring Web 作用域</span></a><a class="ch" href="ch10.html"><i>10</i><span>实现 REST 服务</span></a><a class="ch" href="ch11.html"><i>11</i><span>消费 REST 端点</span></a><a class="ch" href="ch12.html"><i>12</i><span>在 Spring 应用中使用数据源</span></a><a class="ch" href="ch13.html"><i>13</i><span>在 Spring 应用中使用事务</span></a><a class="ch" href="ch14.html"><i>14</i><span>用 Spring Data 实现持久化</span></a><a class="ch" href="ch15.html"><i>15</i><span>单元测试</span></a><a class="ch" href="ch16.html"><i>16</i><span>Spring 集成测试</span></a></nav><div class="rail-group">总览</div><nav><a class="ch" href="index.html" aria-current="page"><i>◆</i><span>目录与版本对照</span></a></nav></aside><main class="main">
+<p class="eyebrow">Spring Start Here · 第 2 版代码 · 中文精读手册</p>
+<h1>用 Spring Boot 4 重读<br>《Spring Start Here》</h1>
+<p class="lede">这份手册把 Laurenţiu Spilcă 那本 <em>Spring Start Here</em> 的 16 章内容，按<strong>本仓库里 66 个 Maven 工程的实际代码</strong>重讲了一遍。书出版于 2021 年（Spring 5.2 / Boot 2.3 / Java 11），仓库已经升级到 <strong>Spring Framework 7.0.1 / Spring Boot 4.x / Java 25</strong>——凡是两者对不上的地方，本手册一律<strong>以代码为准</strong>，并单独标出差异和背后的原因。</p>
+
+<h2>怎么用这份手册</h2>
+
+<div class="cards">
+  <a class="card" href="ch01.html"><i>建议路线</i><b>顺序读第 1–6 章</b><p>Spring Core 是地基。这六章占全书一半篇幅，跳过它们，后面每个特性都会像魔法。</p></a>
+  <a class="card" href="ch07.html"><i>建议路线</i><b>第 7 章起边跑边读</b><p>每章都有「动手练习」，给了可直接粘贴的 curl 和 mvnw 命令。看到现象再回头读原理，效率高得多。</p></a>
+  <a class="card" href="ch15.html"><i>建议路线</i><b>第 15–16 章随时可看</b><p>测试相关的类散落在 ch9、ch14 工程里。读完第 4 章（依赖注入）就可以提前看第 15 章。</p></a>
+</div>
+
+<div class="tip"><b>每章的固定结构</b>
+① 本章对应的仓库工程清单 → ② 概念讲解（配图）→ ③ 逐段读代码 → ④ <strong>与书中旧版的差异对照</strong> → ⑤ 动手练习 → ⑥ 自测问答。差异部分用<span style="color:var(--steel);font-weight:700">蓝色卡片</span>标"书中"、<span style="color:var(--accent-ink);font-weight:700">绿色卡片</span>标"仓库"，下面跟一段"为什么变"。</div>
+
+<h2>技术栈全局对照</h2>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th>维度</th><th>书中（2021）</th><th>本仓库（当前）</th><th>相关章节</th></tr></thead>
+<tbody>
+<tr><td>JDK</td><td>Java 11</td><td><strong>Java 25</strong></td><td>全部</td></tr>
+<tr><td>Spring Framework</td><td>5.2.6 / 5.2.7 / 5.2.8.RELEASE</td><td><strong>7.0.1</strong></td><td>2–6</td></tr>
+<tr><td>Spring Boot</td><td>2.3.4.RELEASE</td><td><strong>4.0.4 / 4.0.5 / 4.0.6 / 4.1.0</strong></td><td>7–16</td></tr>
+<tr><td>注解命名空间</td><td><code>javax.*</code></td><td><strong><code>jakarta.*</code></strong></td><td>2</td></tr>
+<tr><td>main 方法</td><td><code>public static void main(String[] args)</code></td><td><code>static void main()</code></td><td>2–6</td></tr>
+<tr><td>Web starter</td><td><code>spring-boot-starter-web</code></td><td><code>spring-boot-starter-webmvc</code></td><td>7–14</td></tr>
+<tr><td>测试 starter</td><td><code>spring-boot-starter-test</code></td><td><code>-webmvc-test</code> / <code>-jdbc-test</code> / <code>-data-jdbc-test</code></td><td>7–16</td></tr>
+<tr><td>原型作用域常量</td><td><code>ConfigurableBeanFactory.SCOPE_PROTOTYPE</code></td><td><code>BeanDefinition.SCOPE_PROTOTYPE</code></td><td>5</td></tr>
+<tr><td>循环依赖</td><td>字段注入时默认允许</td><td><strong>默认全部禁止</strong></td><td>3</td></tr>
+<tr><td>HTTP 客户端</td><td>OpenFeign / RestTemplate / WebClient</td><td>新增 <strong>RestClient</strong> 并排在第一位</td><td>11</td></tr>
+<tr><td>MySQL 驱动</td><td><code>mysql:mysql-connector-java</code></td><td><code>com.mysql:mysql-connector-j</code></td><td>12</td></tr>
+<tr><td>示例数据库</td><td>MySQL（要自己装，见附录 E）</td><td><strong>H2 内存库</strong>，克隆即可跑</td><td>12–14</td></tr>
+<tr><td>测试 mock 注解</td><td><code>@MockBean</code></td><td><strong><code>@MockitoBean</code></strong>（Boot 4 已移除旧的）</td><td>15–16</td></tr>
+<tr><td>章节数</td><td>15 章</td><td><strong>16 章</strong>（测试拆成单元 + 集成两章）</td><td>15–16</td></tr>
+<tr><td>工程命名</td><td><code>sq-ch2-ex1</code></td><td><code>ssh_ch2_ex1</code></td><td>全部</td></tr>
+<tr><td>新增工程</td><td>—</td><td><span class="path">ssh_ch10_openapi</span>：OpenAPI 契约先行 + Swagger UI</td><td>10</td></tr>
+<tr><td>测试代码</td><td>只在第 15 章出现</td><td><strong>几乎每个工程都带测试</strong></td><td>全部</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="warn"><b>照书抄代码时最容易被绊倒的四处</b>
+<ol style="margin:6px 0 0">
+<li><code>javax.annotation.PostConstruct</code> → <code>jakarta.annotation.PostConstruct</code>（第 2 章）</li>
+<li><code>spring-boot-starter-web</code> → <code>spring-boot-starter-webmvc</code>（第 7 章起）</li>
+<li><code>@MockBean</code> → <code>@MockitoBean</code>（第 15–16 章，<strong>不改会直接编译失败</strong>）</li>
+<li>第 2–6 章的 <code>static void main()</code> <strong>必须 JDK 25</strong>，低版本会报"找不到 main 方法"</li>
+</ol></div>
+
+<h2>十六章导航</h2>
+
+<div class="cards">
+  <a class="card" href="ch01.html"><i>01 · 基础</i><b>真实世界中的 Spring</b><p>为什么用框架、生态全景、什么时候不该用。无代码工程。</p></a>
+  <a class="card" href="ch02.html"><i>02 · 基础</i><b>Spring 上下文：定义 bean</b><p>@Bean、@Component + @ComponentScan、registerBean 三种方式。</p></a>
+  <a class="card" href="ch03.html"><i>03 · 基础</i><b>Spring 上下文：装配 bean</b><p>五种注入方式、@Configuration 的 CGLIB 代理、循环依赖、@Qualifier。</p></a>
+  <a class="card" href="ch04.html"><i>04 · 基础</i><b>Spring 上下文：使用抽象</b><p>面向接口解耦、哪些类该进上下文、@Service / @Repository。</p></a>
+  <a class="card" href="ch05.html"><i>05 · 基础</i><b>Bean 作用域与生命周期</b><p>单例 vs 原型、饥饿与懒加载、"单例注入原型"这个经典陷阱。</p></a>
+  <a class="card" href="ch06.html"><i>06 · 基础</i><b>用 Spring AOP 实现切面</b><p>代理机制、切点表达式、切面链与 @Order。理解后面所有注解的钥匙。</p></a>
+  <a class="card" href="ch07.html"><i>07 · 实现</i><b>理解 Spring Boot 与 Spring MVC</b><p>Servlet 容器、DispatcherServlet、starter、自动配置、第一个网页。</p></a>
+  <a class="card" href="ch08.html"><i>08 · 实现</i><b>用 Boot + MVC 实现 Web 应用</b><p>Thymeleaf 动态视图、@RequestParam / @PathVariable、GET 与 POST。</p></a>
+  <a class="card" href="ch09.html"><i>09 · 实现</i><b>使用 Spring Web 作用域</b><p>request / session / application，以及作用域代理如何工作。</p></a>
+  <a class="card" href="ch10.html"><i>10 · 实现</i><b>实现 REST 服务</b><p>@RestController、ResponseEntity、@RestControllerAdvice、OpenAPI。</p></a>
+  <a class="card" href="ch11.html"><i>11 · 实现</i><b>消费 REST 端点</b><p>RestClient（新）、OpenFeign、RestTemplate、WebClient 四选一。</p></a>
+  <a class="card" href="ch12.html"><i>12 · 实现</i><b>在 Spring 应用中使用数据源</b><p>DataSource 与连接池、JdbcTemplate、三种配置数据源的方式。</p></a>
+  <a class="card" href="ch13.html"><i>13 · 实现</i><b>在 Spring 应用中使用事务</b><p>@Transactional 的代理机制，以及三个必踩的坑。</p></a>
+  <a class="card" href="ch14.html"><i>14 · 实现</i><b>用 Spring Data 实现持久化</b><p>Repository 接口、派生查询、@Query / @Modifying。</p></a>
+  <a class="card" href="ch15.html"><i>15 · 实现</i><b>单元测试</b><p>Mockito、@Mock / @InjectMocks。本章没有 Spring。</p></a>
+  <a class="card" href="ch16.html"><i>16 · 实现</i><b>Spring 集成测试</b><p>@SpringBootTest、@MockitoBean、MockMvc 与断言速查。</p></a>
+</div>
+
+<h2>66 个工程速查</h2>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th>工程</th><th>章</th><th>演示的是什么</th></tr></thead>
+<tbody>
+<tr><td><code>ssh_ch2_ex1</code></td><td>2</td><td>空上下文，对象不是 bean</td></tr>
+<tr><td><code>ssh_ch2_ex2</code></td><td>2</td><td><code>@Bean</code> 注册多个不同类型的 bean</td></tr>
+<tr><td><code>ssh_ch2_ex3</code></td><td>2</td><td>同类型多个 bean，按名字取</td></tr>
+<tr><td><code>ssh_ch2_ex4</code></td><td>2</td><td><code>@Primary</code></td></tr>
+<tr><td><code>ssh_ch2_ex5</code></td><td>2</td><td><code>@Component</code> + <code>@ComponentScan</code> + <code>@PostConstruct</code></td></tr>
+<tr><td><code>ssh_ch2_ex6</code></td><td>2</td><td><code>registerBean()</code> 编程式注册</td></tr>
+<tr><td><code>ssh_ch3_ex1</code></td><td>3</td><td>反例：两个 bean 之间没有关系</td></tr>
+<tr><td><code>ssh_ch3_ex2</code></td><td>3</td><td>在 <code>@Bean</code> 方法里直接调另一个 <code>@Bean</code> 方法</td></tr>
+<tr><td><code>ssh_ch3_ex3</code></td><td>3</td><td>用 <code>@Bean</code> 方法参数注入</td></tr>
+<tr><td><code>ssh_ch3_ex4/5/6</code></td><td>3</td><td><code>@Autowired</code> 字段 / 构造器 / setter</td></tr>
+<tr><td><code>ssh_ch3_ex7</code></td><td>3</td><td>循环依赖（启动会失败）</td></tr>
+<tr><td><code>ssh_ch3_ex8/9</code></td><td>3</td><td><code>@Qualifier</code> 的两种用法</td></tr>
+<tr><td><code>ssh_ch4_ex1</code></td><td>4</td><td>纯 Java 无框架版本（基线）</td></tr>
+<tr><td><code>ssh_ch4_ex2/3/4</code></td><td>4</td><td>构造器注入 / 字段注入 / <code>@Bean</code> 配置</td></tr>
+<tr><td><code>ssh_ch4_ex5/6</code></td><td>4</td><td>多实现：<code>@Primary</code> / <code>@Qualifier</code> 标签</td></tr>
+<tr><td><code>ssh_ch4_ex7</code></td><td>4</td><td><code>@Service</code> / <code>@Repository</code></td></tr>
+<tr><td><code>ssh_ch5_ex1/2</code></td><td>5</td><td>单例：同名同实例、多处注入共享</td></tr>
+<tr><td><code>ssh_ch5_ex3/4</code></td><td>5</td><td>饥饿初始化 vs <code>@Lazy</code></td></tr>
+<tr><td><code>ssh_ch5_ex5/6</code></td><td>5</td><td>原型作用域（<code>@Bean</code> / <code>@Component</code> 两种写法）</td></tr>
+<tr><td><code>ssh_ch5_ex7/8</code></td><td>5</td><td><strong>原型的正确用法 vs 错误用法</strong></td></tr>
+<tr><td><code>ssh_ch6_ex1/2/3</code></td><td>6</td><td>最简切面 → 读参数返回值 → 篡改参数返回值</td></tr>
+<tr><td><code>ssh_ch6_ex4/5</code></td><td>6</td><td>自定义注解做切点、<code>@AfterReturning</code></td></tr>
+<tr><td><code>ssh_ch6_ex6/7</code></td><td>6</td><td>多切面、<code>@Order</code> 控制顺序</td></tr>
+<tr><td><code>ssh_ch7_ex1</code></td><td>7</td><td>第一个 Boot 工程 + 静态页面</td></tr>
+<tr><td><code>ssh_ch8_ex1…ex4</code></td><td>8</td><td>Thymeleaf、<code>@RequestParam</code>、<code>@PathVariable</code></td></tr>
+<tr><td><code>ssh_ch8_ex5/6</code></td><td>8</td><td>商品列表 GET+POST，逐参数 vs 对象绑定</td></tr>
+<tr><td><code>ssh_ch9_ex1/2/3</code></td><td>9</td><td>request / session / application 三种作用域</td></tr>
+<tr><td><code>ssh_ch10_ex1…ex7</code></td><td>10</td><td>REST 全套：<code>@RestController</code> 到 <code>@RequestBody</code></td></tr>
+<tr><td><code>ssh_ch10_openapi</code></td><td>10</td><td><strong>书中没有</strong>：OpenAPI 契约先行 + Swagger UI</td></tr>
+<tr><td><code>ssh_ch11_payments</code></td><td>11</td><td>被调用的服务端（先启动它）</td></tr>
+<tr><td><code>ssh_ch11_ex1</code></td><td>11</td><td><strong>书中没有</strong>：RestClient</td></tr>
+<tr><td><code>ssh_ch11_ex2/3/4</code></td><td>11</td><td>OpenFeign / RestTemplate / WebClient</td></tr>
+<tr><td><code>ssh_ch12_ex1</code></td><td>12</td><td>H2 + JdbcTemplate，零配置</td></tr>
+<tr><td><code>ssh_ch12_ex2/3</code></td><td>12</td><td>MySQL properties 配置 / 自定义 DataSource bean</td></tr>
+<tr><td><code>ssh_ch13_ex1/2</code></td><td>13</td><td>转账成功 / 抛异常回滚</td></tr>
+<tr><td><code>ssh_ch14_ex1</code></td><td>14·15·16</td><td>Spring Data JDBC 改写，外加<strong>四个测试类</strong></td></tr>
+</tbody>
+</table>
+</div>
+
+<h2>环境准备</h2>
+
+<div class="lab">
+<h4>开跑前确认</h4>
+<pre><code class="language-bash">java -version     # 必须是 JDK 25（第 2–6 章的 static void main() 依赖它）
+mvn -version      # 3.9+；也可以直接用各工程自带的 ./mvnw
+
+# Spring Core 工程（第 2–6 章）：IDE 里直接运行 Main 类
+# Boot 工程（第 7 章起）：
+cd ssh_ch7_ex1 &amp;&amp; ./mvnw spring-boot:run</code></pre>
+<p style="margin-bottom:0">第 12–14 章默认用 H2 内存库，<strong>不需要安装 MySQL</strong>；只有 <span class="path">ssh_ch12_ex2</span> 和 <span class="path">ssh_ch12_ex3</span> 需要本地 MySQL 并建库 <code>spring_start_here</code>。</p>
+</div>
+
+<div class="note"><b>关于本仓库的两处版本不一致</b>
+① <span class="path">ssh_ch10_ex5</span> 的父 POM 还停在 <code>spring-boot-starter-parent 3.4.1</code>，依赖也还是旧名 <code>spring-boot-starter-web</code> / <code>-test</code>——照样能跑，想统一的话改这三处即可，代码不用动。<br>
+② <span class="path">ssh_ch11_ex4</span> 没有配 <code>server.port</code>，默认 8080 会和 <span class="path">ssh_ch11_payments</span> 冲突，跑之前先加一行 <code>server.port=9090</code>。<br>
+③ <span class="path">ssh_ch11_payments</span> 的 <code>spring.application.name</code> 写成了 <code>ssh_ch1_payments</code>（少了个 1），无害的笔误。</div>
+
+
+</main></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/java.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/sql.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/properties.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+<script>
+(function(){ if(!window.hljs) return;
+  document.querySelectorAll('pre code[class^="language-"]').forEach(function(el){
+    try{ hljs.highlightElement(el); }catch(e){}
+  });
+})();
+</script>
+</body>
+</html>
