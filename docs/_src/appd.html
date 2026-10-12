@@ -1,0 +1,85 @@
+<p class="eyebrow">附录 D · 对应书中附录 E、F、G</p>
+<h1>环境、工具与进阶路线</h1>
+<p class="lede">三件收尾的事：把仓库里唯二需要 MySQL 的工程跑起来，备齐顺手的工具，以及读完这 16 章之后往哪走。</p>
+
+<h2>D.1 给 ssh_ch12_ex2 / ex3 准备 MySQL</h2>
+
+<p>仓库里只有这两个工程需要真实的 MySQL，其余涉及数据库的工程都用 H2 内存库。它们的配置写死了三件事：连 <code>localhost</code> 默认端口、库名 <code>spring_start_here</code>、用户 <code>root</code> 且<strong>密码为空</strong>。书的附录 E 用了八页截图讲安装 MySQL 和 MySQL Workbench；有 Docker 的话一条命令就够。</p>
+
+<pre class="codehead"><b>用 Docker 起一个符合上述配置的 MySQL</b></pre>
+<pre><code class="language-bash">docker run --name ssh-mysql -d -p 3306:3306 \
+       -e MYSQL_ALLOW_EMPTY_PASSWORD=yes \
+       -e MYSQL_DATABASE=spring_start_here \
+       mysql:8
+
+# 等十几秒让它初始化完，然后：
+cd ssh_ch12_ex2 &amp;&amp; ./mvnw spring-boot:run
+
+# 用完删除
+docker rm -f ssh-mysql</code></pre>
+
+<p>已经装了本地 MySQL 的话，登录后执行 <code>CREATE DATABASE spring_start_here;</code> 即可。如果你的 root 有密码，改这两个工程 <span class="path">application.properties</span> 里的 <code>…datasource.password</code>。表不用手工建，<span class="path">schema.sql</span> 会在启动时执行。</p>
+
+<div class="note"><b>书里的库名不一样</b>
+书的附录 E 建的库叫 <code>spring_quickly</code>，仓库的配置里用的是 <code>spring_start_here</code>。以仓库为准。</div>
+
+<h2>D.2 工具</h2>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th>用途</th><th>书里推荐的</th><th>补充说明</th></tr></thead>
+<tbody>
+<tr><td>IDE</td><td>IntelliJ IDEA（作者用的）；Eclipse + Spring Tools</td><td>IDEA 社区版足够跑完全书。注意把项目 SDK 设成 JDK 25。VS Code 装 Java 和 Spring Boot 扩展包也可以</td></tr>
+<tr><td>调 REST 接口</td><td>Postman；cURL</td><td>本手册的练习全部用 curl，写法见<a href="appa.html">附录 A</a>。IDEA 自带的 HTTP Client（<code>.http</code> 文件）也很方便</td></tr>
+<tr><td>看数据库</td><td>MySQL Workbench、SQLYog；pgAdmin</td><td>H2 的工程直接用浏览器访问 <code>/h2-console</code>（第 12 章）</td></tr>
+<tr><td>生成新工程</td><td>start.spring.io</td><td>想自己从零建一个 Boot 工程时用它，勾选依赖后下载即可，得到的结构和仓库第 7 章起的工程一样</td></tr>
+<tr><td>看接口文档</td><td>—</td><td><span class="path">ssh_ch10_openapi</span> 启动后访问 <code>/swagger-ui.html</code></td></tr>
+</tbody>
+</table>
+</div>
+
+<h2>D.3 学完这 16 章，你会了什么、还不会什么</h2>
+
+<p>本书的定位是“入门并且学扎实”。读完之后，你能读懂一个典型 Spring Boot 后端项目的大部分代码，能独立写带数据库的 REST 服务并给它写测试。下面这些是真实项目里常见、而本书没有覆盖或只是一笔带过的主题，按建议的学习顺序排列。</p>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th>顺序</th><th>主题</th><th>为什么要学</th><th>本书里的伏笔</th></tr></thead>
+<tbody>
+<tr><td>1</td><td><strong>参数校验</strong><br>Bean Validation，<code>@Valid</code></td><td>任何接收外部输入的接口都需要。几个注解就能把校验规则声明在对象上，校验失败自动返回 400</td><td>第 8 章提到的 <code>@Valid</code>；第 10 章的 <code>@RestControllerAdvice</code> 用来统一校验错误的格式</td></tr>
+<tr><td>2</td><td><strong>Spring Security</strong></td><td>第 9 章的手写登录不能用于生产。认证、授权、CSRF、密码加密都由它负责</td><td>第 9 章的登录示例；第 6 章说的“方法级鉴权也是 AOP”</td></tr>
+<tr><td>3</td><td><strong>Spring Data JPA</strong><br>Hibernate</td><td>业界使用最广的持久层方案，处理对象之间的关联关系比 Spring Data JDBC 强得多</td><td>第 14 章的 Repository 接口、派生查询，编程模型相同</td></tr>
+<tr><td>4</td><td><strong>数据库版本管理</strong><br>Flyway / Liquibase</td><td>生产库不能靠 <code>schema.sql</code> 每次重建。迁移工具让表结构的每次变更都有版本、可追溯</td><td>第 12 章的 <code>schema.sql</code></td></tr>
+<tr><td>5</td><td><strong>配置进阶</strong></td><td>多环境、密钥管理、<code>@ConfigurationProperties</code>、条件装配</td><td>第 7 章 7.4 节</td></tr>
+<tr><td>6</td><td><strong>可观测性</strong><br>Actuator、日志、指标</td><td>应用上线后要能回答“它还活着吗、慢在哪、错在哪”</td><td>第 6 章用切面打日志</td></tr>
+<tr><td>7</td><td><strong>测试进阶</strong><br>Testcontainers、切片测试</td><td>用真实数据库的容器跑集成测试；<code>@WebMvcTest</code> 这类只启动一部分上下文的测试更快</td><td>第 12 章自测、第 16 章</td></tr>
+<tr><td>8</td><td><strong>打包与部署</strong><br>可执行 jar、容器镜像</td><td>把应用送上服务器</td><td>第 7 章 7.4 节的 <code>java -jar</code></td></tr>
+<tr><td>9</td><td><strong>异步与消息</strong><br><code>@Async</code>、<code>@Scheduled</code>、Kafka / RabbitMQ</td><td>不是所有事都该在一次 HTTP 请求里同步做完</td><td>第 4 章的“发通知”就是典型的该异步化的操作</td></tr>
+<tr><td>10</td><td><strong>Spring Cloud 与响应式</strong></td><td>服务多了之后的服务发现、网关、熔断；以及 WebFlux</td><td>第 11 章的 OpenFeign 与 WebClient；<a href="appb.html">附录 B</a></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="tip"><b>怎么学最省力</b>
+挑仓库里现成的工程往上加。比如在 <span class="path">ssh_ch14_ex1</span> 上：先给转账请求加 <code>@Valid</code> 校验金额大于 0，再用 <code>@RestControllerAdvice</code> 把 <code>AccountNotFoundException</code> 变成 404，再加 Spring Security 保护 <code>/transfer</code>，最后把 Spring Data JDBC 换成 JPA。每一步都有现成的测试帮你确认没改坏。</div>
+
+<h2>D.4 书里推荐的延伸阅读</h2>
+
+<p>书的附录 G 列的书单，按作者建议的用途整理。出版信息是原书（2021 年）给的版本，多数已有更新的版次，买之前查一下。</p>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th>书</th><th>作者</th><th>读它是为了</th></tr></thead>
+<tbody>
+<tr><td><em>Spring in Action</em>, 6th ed.</td><td>Craig Walls</td><td>作者建议的下一本。先复习本书内容，再往外扩到 Security、异步通信、Reactor、Actuator</td></tr>
+<tr><td><em>Spring Security in Action</em></td><td>Laurenţiu Spilcă</td><td>本书作者的另一本，专讲认证与授权</td></tr>
+<tr><td><em>Spring Boot: Up and Running</em></td><td>Mark Heckler</td><td>深入 Spring Boot 本身</td></tr>
+<tr><td><em>Reactive Spring</em></td><td>Josh Long</td><td>响应式编程，建议在 <em>Spring in Action</em> 之后读</td></tr>
+<tr><td><em>JUnit in Action</em></td><td>Cătălin Tudose</td><td>把第 15–16 章的测试知识系统化</td></tr>
+<tr><td><em>Learning SQL</em>, 3rd ed.</td><td>Alan Beaulieu</td><td>第 12–14 章默认你会 SQL，不熟的话补这本</td></tr>
+<tr><td><em>OCP Java SE 11 Developer Complete Study Guide</em></td><td>Jeanne Boyarsky, Scott Selikoff</td><td>Java 语言基础的查漏补缺</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>官方资料同样值得放进书签：<a href="https://docs.spring.io/spring-framework/reference/">Spring Framework Reference</a> 和 <a href="https://docs.spring.io/spring-boot/">Spring Boot Reference</a>。本手册里凡是说“Spring 6 起”“Boot 4 起”的行为变化，都能在这两份文档和对应版本的 release notes 里查到出处。</p>

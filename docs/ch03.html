@@ -202,13 +202,13 @@ details>p:last-child{margin-bottom:0}
 </style>
 </head>
 <body>
-<div class="wrap"><aside class="rail"><a class="rail-brand" href="index.html"><b>Spring Start Here<br>学习手册</b><span>Spring Boot 4 · Spring 7 · Java 25</span></a><div class="rail-group">第一部分 · 基础</div><nav><a class="ch" href="ch01.html"><i>01</i><span>真实世界中的 Spring</span></a><a class="ch" href="ch02.html"><i>02</i><span>Spring 上下文：定义 bean</span></a><a class="ch" href="ch03.html" aria-current="page"><i>03</i><span>Spring 上下文：装配 bean</span></a><a class="ch" href="ch04.html"><i>04</i><span>Spring 上下文：使用抽象</span></a><a class="ch" href="ch05.html"><i>05</i><span>Bean 作用域与生命周期</span></a><a class="ch" href="ch06.html"><i>06</i><span>用 Spring AOP 实现切面</span></a></nav><div class="rail-group">第二部分 · 实现</div><nav><a class="ch" href="ch07.html"><i>07</i><span>理解 Spring Boot 与 Spring MVC</span></a><a class="ch" href="ch08.html"><i>08</i><span>用 Boot + MVC 实现 Web 应用</span></a><a class="ch" href="ch09.html"><i>09</i><span>使用 Spring Web 作用域</span></a><a class="ch" href="ch10.html"><i>10</i><span>实现 REST 服务</span></a><a class="ch" href="ch11.html"><i>11</i><span>消费 REST 端点</span></a><a class="ch" href="ch12.html"><i>12</i><span>在 Spring 应用中使用数据源</span></a><a class="ch" href="ch13.html"><i>13</i><span>在 Spring 应用中使用事务</span></a><a class="ch" href="ch14.html"><i>14</i><span>用 Spring Data 实现持久化</span></a><a class="ch" href="ch15.html"><i>15</i><span>单元测试</span></a><a class="ch" href="ch16.html"><i>16</i><span>Spring 集成测试</span></a></nav><div class="rail-group">总览</div><nav><a class="ch" href="index.html"><i>◆</i><span>目录与版本对照</span></a></nav></aside><main class="main">
+<div class="wrap"><aside class="rail"><a class="rail-brand" href="index.html"><b>Spring Start Here<br>学习手册</b><span>Spring Boot 4 · Spring 7 · Java 25</span></a><div class="rail-group">第一部分 · 基础</div><nav><a class="ch" href="ch01.html"><i>01</i><span>真实世界中的 Spring</span></a><a class="ch" href="ch02.html"><i>02</i><span>Spring 上下文：定义 bean</span></a><a class="ch" href="ch03.html" aria-current="page"><i>03</i><span>Spring 上下文：装配 bean</span></a><a class="ch" href="ch04.html"><i>04</i><span>Spring 上下文：使用抽象</span></a><a class="ch" href="ch05.html"><i>05</i><span>Bean 作用域与生命周期</span></a><a class="ch" href="ch06.html"><i>06</i><span>用 Spring AOP 实现切面</span></a></nav><div class="rail-group">第二部分 · 实现</div><nav><a class="ch" href="ch07.html"><i>07</i><span>理解 Spring Boot 与 Spring MVC</span></a><a class="ch" href="ch08.html"><i>08</i><span>用 Boot + MVC 实现 Web 应用</span></a><a class="ch" href="ch09.html"><i>09</i><span>使用 Spring Web 作用域</span></a><a class="ch" href="ch10.html"><i>10</i><span>实现 REST 服务</span></a><a class="ch" href="ch11.html"><i>11</i><span>消费 REST 端点</span></a><a class="ch" href="ch12.html"><i>12</i><span>在 Spring 应用中使用数据源</span></a><a class="ch" href="ch13.html"><i>13</i><span>在 Spring 应用中使用事务</span></a><a class="ch" href="ch14.html"><i>14</i><span>用 Spring Data 实现持久化</span></a><a class="ch" href="ch15.html"><i>15</i><span>单元测试</span></a><a class="ch" href="ch16.html"><i>16</i><span>Spring 集成测试</span></a></nav><div class="rail-group">附录</div><nav><a class="ch" href="appa.html"><i>A</i><span>HTTP 与 JSON 入门</span></a><a class="ch" href="appb.html"><i>B</i><span>架构风格与 XML 配置</span></a><a class="ch" href="appc.html"><i>C</i><span>速查：注解、报错、术语</span></a><a class="ch" href="appd.html"><i>D</i><span>环境、工具与进阶路线</span></a></nav><div class="rail-group">总览</div><nav><a class="ch" href="index.html"><i>◆</i><span>目录与版本对照</span></a></nav></aside><main class="main">
 <p class="eyebrow">第 3 章 · 第一部分 基础</p>
 <h1>Spring 上下文：装配 bean</h1>
 <p class="lede">上一章把对象放进了池子，但它们互不相识。这一章解决“怎么让 A 拿到 B”——也就是依赖注入。方式有五种，看起来很多，其实只有两大类：<strong>在配置类里连线</strong>，和<strong>让 Spring 自己连线</strong>。</p>
 
 <div class="note"><b>本章工程</b>
-<span class="path">ssh_ch3_ex1</span> 没连线（反例）· <span class="path">ex2</span> 方法直接调用 · <span class="path">ex3</span> @Bean 方法参数 · <span class="path">ex4</span> @Autowired 字段 · <span class="path">ex5</span> @Autowired 构造器 · <span class="path">ex6</span> @Autowired setter · <span class="path">ex7</span> 循环依赖（会崩）· <span class="path">ex8</span> @Qualifier 在 @Bean 参数上 · <span class="path">ex9</span> @Qualifier 在构造器参数上</div>
+<span class="path">ssh_ch3_ex1</span> 没连线（反例）· <span class="path">ex2</span> 方法直接调用 · <span class="path">ex3</span> @Bean 方法参数 · <span class="path">ex4</span> @Autowired 字段 · <span class="path">ex5</span> @Autowired 构造器 · <span class="path">ex6</span> @Autowired setter · <span class="path">ex7</span> 构造器循环依赖（会崩）· <span class="path">ex8</span> @Qualifier 在 @Bean 参数上 · <span class="path">ex9</span> @Qualifier 在构造器参数上</div>
 
 <h2>3.1 先看反例：不连线会怎样</h2>
 
@@ -394,8 +394,10 @@ public class Parrot {
 <figcaption><b>图 3-3</b>　构造器注入的循环依赖是<strong>无解</strong>的：造 A 必须先有 B，造 B 必须先有 A，鸡生蛋。Spring 只能报错退出。</figcaption>
 </figure>
 
-<div class="warn"><b>Spring 6 起的行为变化</b>
-书里（Spring 5）默认允许<strong>字段/setter</strong>注入的循环依赖（Spring 用三级缓存暴露半成品对象绕过去）。<strong>Spring Boot 2.6 起默认禁止了所有循环依赖</strong>，需要显式在配置里写 <code>spring.main.allow-circular-references=true</code> 才放行。所以在这个仓库的 Boot 4 环境下，即使改成字段注入，循环依赖依然会启动失败。
+<div class="warn"><b>纯 Spring 和 Spring Boot 在这里不一样</b>
+<strong>Spring Framework 本身（包括 7.0）仍然允许字段 / setter 注入的循环依赖</strong>：容器先用构造器把对象造出来，把这个“半成品”的引用提前暴露（三级缓存），再回头填字段，于是环被解开。只有<strong>构造器 ↔ 构造器</strong>的环无解，这正是 <span class="path">ssh_ch3_ex7</span> 演示的情况。<br>
+<strong>Spring Boot 2.6 起默认禁止了所有循环依赖</strong>，字段注入的环也会启动失败，除非显式写 <code>spring.main.allow-circular-references=true</code>。所以同样的代码，放在第 3 章这种纯 <code>spring-context</code> 工程里能跑，搬到第 7 章以后的 Boot 工程里就会报错。<br>
+还有一个顺序细节：一边构造器、一边字段的“混合环”能不能解开，取决于<strong>谁先被创建</strong>。先创建的那个 bean 必须是字段注入的一方（它能先造出半成品）；如果先创建的是构造器注入的一方，照样报 <code>BeanCurrentlyInCreationException</code>。下面的练习 2 会让你两种都看到。
 <p style="margin-bottom:0">正确做法从来不是打开开关，而是<strong>重新设计</strong>：抽出第三个类承担共同职责，或者把其中一个方向改成事件/回调。</p></div>
 
 <h2>3.5 多个候选 bean 时，Spring 怎么选</h2>
@@ -490,7 +492,7 @@ public class Person {
 </ul></div>
 <div class="new"><h5>仓库</h5>
 <ul style="margin:0;font-size:14px">
-<li>Spring 7，循环依赖默认<strong>全部禁止</strong></li>
+<li>Spring 7，字段/setter 循环依赖<strong>仍然允许</strong>（只有 Boot 工程默认禁止）</li>
 <li><code>static void main()</code>（Java 25）</li>
 <li>工程名 <code>ssh_ch3_ex1</code>，每个工程带 JUnit 5 测试</li>
 </ul></div>
@@ -502,7 +504,7 @@ public class Person {
 <h4>练习 · 让循环依赖真的报错</h4>
 <ol style="margin-bottom:0">
 <li>运行 <span class="path">ssh_ch3_ex7</span>，完整读一遍堆栈，找到 <code>BeanCurrentlyInCreationException</code> 那一行。</li>
-<li>把 <code>Parrot</code> 的构造器注入改成 <code>@Autowired</code> 字段注入，再跑一次——<strong>在 Spring 7 下它依然失败</strong>，这与书里描述的 Spring 5 行为不同。</li>
+<li>把 <code>Parrot</code> 的构造器注入改成 <code>@Autowired</code> 字段注入，再跑一次——<strong>这次能正常启动</strong>并打印 <code>Person's parrot: Parrot: Koko</code>：Spring 先造出 Parrot 的半成品，再拿它去构造 Person。然后把 Parrot 改回构造器注入、换成给 <code>Person</code> 用字段注入——<strong>又失败了</strong>，因为扫描时先创建的是 Parrot，它的构造器在等一个还造不出来的 Person。</li>
 <li>把 <span class="path">ssh_ch3_ex8</span> 里的 <code>@Qualifier("parrot2")</code> 删掉，观察 Spring 如何按参数名 <code>parrot2</code> 兜底匹配成功；再把参数名改成 <code>p</code>，观察它开始报错。</li>
 </ol>
 </div>
@@ -515,7 +517,7 @@ public class Person {
 <details><summary>为什么构造器注入比字段注入好？</summary>
 <p>四个理由：① 字段能声明成 <code>final</code>，对象不可变；② 对象构造完成即处于完整可用状态，不存在依赖为 null 的中间态；③ 单元测试里可以直接 <code>new Service(mockRepo)</code>，不需要反射或 Spring 容器（第 15 章会用到）；④ 构造器参数一多就很刺眼，天然提醒你这个类职责过重。</p></details>
 
-<div class="pager"><a class="prev" href="ch02.html"><span>上一章</span>2. Spring 上下文：定义 bean</a><a class="next" href="ch04.html"><span>下一章</span>4. Spring 上下文：使用抽象</a></div>
+<div class="pager"><a class="prev" href="ch02.html"><span>上一篇</span>2. Spring 上下文：定义 bean</a><a class="next" href="ch04.html"><span>下一篇</span>4. Spring 上下文：使用抽象</a></div>
 </main></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/java.min.js"></script>

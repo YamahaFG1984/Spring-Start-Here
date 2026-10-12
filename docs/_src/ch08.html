@@ -205,6 +205,9 @@ public class ProductsController {
 <figcaption><b>图 8-3</b>　同一个 URL，靠 HTTP 方法区分。<strong>注意 POST 之后直接渲染页面会导致刷新重复提交</strong>——第 9 章的 <span class="path">ssh_ch9_ex2</span> 会用 <code>return "redirect:/main"</code> 解决它（这个模式叫 POST-Redirect-GET）。</figcaption>
 </figure>
 
+<div class="note"><b>HTML 表单只会发 GET 和 POST</b>
+本章只出现这两个方法，是因为浏览器的 <code>&lt;form&gt;</code> 只支持它们。HTTP 还有 PUT、PATCH、DELETE，在第 10 章的 REST 接口里才派得上用场，那里有一张完整的对照表。HTTP 本身不熟的话，先读<a href="appa.html">附录 A</a>。</div>
+
 <h3>更省事的写法：直接绑定成对象</h3>
 
 <pre class="codehead"><b>ssh_ch8_ex6</b><span>对比 ex5</span></pre>

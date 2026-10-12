@@ -202,7 +202,7 @@ details>p:last-child{margin-bottom:0}
 </style>
 </head>
 <body>
-<div class="wrap"><aside class="rail"><a class="rail-brand" href="index.html"><b>Spring Start Here<br>学习手册</b><span>Spring Boot 4 · Spring 7 · Java 25</span></a><div class="rail-group">第一部分 · 基础</div><nav><a class="ch" href="ch01.html"><i>01</i><span>真实世界中的 Spring</span></a><a class="ch" href="ch02.html" aria-current="page"><i>02</i><span>Spring 上下文：定义 bean</span></a><a class="ch" href="ch03.html"><i>03</i><span>Spring 上下文：装配 bean</span></a><a class="ch" href="ch04.html"><i>04</i><span>Spring 上下文：使用抽象</span></a><a class="ch" href="ch05.html"><i>05</i><span>Bean 作用域与生命周期</span></a><a class="ch" href="ch06.html"><i>06</i><span>用 Spring AOP 实现切面</span></a></nav><div class="rail-group">第二部分 · 实现</div><nav><a class="ch" href="ch07.html"><i>07</i><span>理解 Spring Boot 与 Spring MVC</span></a><a class="ch" href="ch08.html"><i>08</i><span>用 Boot + MVC 实现 Web 应用</span></a><a class="ch" href="ch09.html"><i>09</i><span>使用 Spring Web 作用域</span></a><a class="ch" href="ch10.html"><i>10</i><span>实现 REST 服务</span></a><a class="ch" href="ch11.html"><i>11</i><span>消费 REST 端点</span></a><a class="ch" href="ch12.html"><i>12</i><span>在 Spring 应用中使用数据源</span></a><a class="ch" href="ch13.html"><i>13</i><span>在 Spring 应用中使用事务</span></a><a class="ch" href="ch14.html"><i>14</i><span>用 Spring Data 实现持久化</span></a><a class="ch" href="ch15.html"><i>15</i><span>单元测试</span></a><a class="ch" href="ch16.html"><i>16</i><span>Spring 集成测试</span></a></nav><div class="rail-group">总览</div><nav><a class="ch" href="index.html"><i>◆</i><span>目录与版本对照</span></a></nav></aside><main class="main">
+<div class="wrap"><aside class="rail"><a class="rail-brand" href="index.html"><b>Spring Start Here<br>学习手册</b><span>Spring Boot 4 · Spring 7 · Java 25</span></a><div class="rail-group">第一部分 · 基础</div><nav><a class="ch" href="ch01.html"><i>01</i><span>真实世界中的 Spring</span></a><a class="ch" href="ch02.html" aria-current="page"><i>02</i><span>Spring 上下文：定义 bean</span></a><a class="ch" href="ch03.html"><i>03</i><span>Spring 上下文：装配 bean</span></a><a class="ch" href="ch04.html"><i>04</i><span>Spring 上下文：使用抽象</span></a><a class="ch" href="ch05.html"><i>05</i><span>Bean 作用域与生命周期</span></a><a class="ch" href="ch06.html"><i>06</i><span>用 Spring AOP 实现切面</span></a></nav><div class="rail-group">第二部分 · 实现</div><nav><a class="ch" href="ch07.html"><i>07</i><span>理解 Spring Boot 与 Spring MVC</span></a><a class="ch" href="ch08.html"><i>08</i><span>用 Boot + MVC 实现 Web 应用</span></a><a class="ch" href="ch09.html"><i>09</i><span>使用 Spring Web 作用域</span></a><a class="ch" href="ch10.html"><i>10</i><span>实现 REST 服务</span></a><a class="ch" href="ch11.html"><i>11</i><span>消费 REST 端点</span></a><a class="ch" href="ch12.html"><i>12</i><span>在 Spring 应用中使用数据源</span></a><a class="ch" href="ch13.html"><i>13</i><span>在 Spring 应用中使用事务</span></a><a class="ch" href="ch14.html"><i>14</i><span>用 Spring Data 实现持久化</span></a><a class="ch" href="ch15.html"><i>15</i><span>单元测试</span></a><a class="ch" href="ch16.html"><i>16</i><span>Spring 集成测试</span></a></nav><div class="rail-group">附录</div><nav><a class="ch" href="appa.html"><i>A</i><span>HTTP 与 JSON 入门</span></a><a class="ch" href="appb.html"><i>B</i><span>架构风格与 XML 配置</span></a><a class="ch" href="appc.html"><i>C</i><span>速查：注解、报错、术语</span></a><a class="ch" href="appd.html"><i>D</i><span>环境、工具与进阶路线</span></a></nav><div class="rail-group">总览</div><nav><a class="ch" href="index.html"><i>◆</i><span>目录与版本对照</span></a></nav></aside><main class="main">
 <p class="eyebrow">第 2 章 · 第一部分 基础</p>
 <h1>Spring 上下文：定义 bean</h1>
 <p class="lede">上下文（context）是 Spring 的核心数据结构：一块由框架管理的对象池。你要做的第一件事，就是学会用三种方式往里面放东西——因为只有进了池子的对象，Spring 才能对它做任何事。</p>
@@ -216,7 +216,9 @@ details>p:last-child{margin-bottom:0}
 
 <pre class="codehead"><b>ssh_ch2_ex1/pom.xml</b><span>唯一的依赖</span></pre>
 <pre><code class="language-xml">&lt;properties&gt;
-    &lt;java.version&gt;25&lt;/java.version&gt;
+    &lt;maven.compiler.source&gt;25&lt;/maven.compiler.source&gt;
+    &lt;maven.compiler.target&gt;25&lt;/maven.compiler.target&gt;
+    &lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;
 &lt;/properties&gt;
 
 &lt;dependencies&gt;
@@ -234,6 +236,44 @@ spring-context 5.2.6.RELEASE</code></pre></div>
 spring-context 7.0.1</code></pre></div>
 </div>
 <div class="why"><b>为什么变：</b>Spring 6 起最低要求 Java 17，Spring 7 要求 Java 17+ 并全面适配新 JDK。<code>spring-context</code> 会自动传递引入 <code>spring-core</code>、<code>spring-beans</code>、<code>spring-aop</code>、<code>spring-expression</code>，所以只写一个依赖就够了——这一点书里和仓库一致。</div>
+
+<h3>读懂 pom.xml：Maven 最小必要知识</h3>
+
+<p>书的 2.1 节花了几页讲怎么建 Maven 工程。仓库里工程都建好了，你不用再建，但后面每一章都要读 <span class="path">pom.xml</span>，所以先把它看懂。</p>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th>pom 里的东西</th><th>是什么</th><th>在本仓库里的样子</th></tr></thead>
+<tbody>
+<tr><td><code>groupId</code> / <code>artifactId</code> / <code>version</code></td><td>一个工程（或一个依赖）的“坐标”，三者合起来全球唯一</td><td><code>com.example</code> / <code>ssh_ch2_ex1</code> / <code>1.0-SNAPSHOT</code></td></tr>
+<tr><td><code>&lt;properties&gt;</code></td><td>全局变量，最常用来定 Java 版本</td><td>第 2–6 章写 <code>maven.compiler.source/target</code>；第 7 章起写 <code>java.version</code>（Boot 父 POM 认这个名字）</td></tr>
+<tr><td><code>&lt;dependencies&gt;</code></td><td>这个工程要用哪些库</td><td>第 2 章只有 <code>spring-context</code> 一个</td></tr>
+<tr><td><code>&lt;scope&gt;</code></td><td>依赖在什么阶段可见。不写就是 <code>compile</code>（编译、运行都要）</td><td><code>test</code>：只在测试里用，如 <code>spring-test</code>、JUnit<br><code>runtime</code>：编译不需要、运行才需要，如第 12 章的 H2 和 MySQL 驱动</td></tr>
+<tr><td><code>&lt;parent&gt;</code></td><td>继承另一份 pom 里的配置和版本表</td><td>第 7 章起的 <code>spring-boot-starter-parent</code>；第 2–6 章没有</td></tr>
+<tr><td><code>&lt;build&gt;&lt;plugins&gt;</code></td><td>参与构建过程的插件</td><td>第 7 章起的 <code>spring-boot-maven-plugin</code>，第 10 章的 OpenAPI 生成插件</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="note"><b>传递依赖</b>
+你只写了 <code>spring-context</code>，Maven 会把它依赖的 <code>spring-core</code>、<code>spring-beans</code>、<code>spring-aop</code>、<code>spring-expression</code> 一并下载。想看一个工程到底带进了哪些 jar，在工程目录下跑 <code>mvn dependency:tree</code>。遇到“类找不到”或版本冲突时，这是第一条该敲的命令。</div>
+
+<pre class="codehead"><b>目录约定与常用命令</b></pre>
+<pre><code class="language-bash">src/main/java        # 业务代码
+src/main/resources   # 配置文件、模板、SQL 脚本（第 7 章起会用到）
+src/test/java        # 测试代码
+target/              # 构建产物，可以随时删
+
+mvn compile          # 编译 src/main
+mvn test             # 编译并运行 src/test 里的测试
+mvn package          # 打成 jar，放在 target/ 下
+mvn dependency:tree  # 打印依赖树</code></pre>
+
+<div class="warn"><b>第 2–6 章的工程没有 mvnw</b>
+<code>./mvnw</code>（Maven Wrapper）是 Spring Boot 工程脚手架生成的，仓库里第 7 章起的工程才带。第 2–6 章的工程只有一份 <span class="path">pom.xml</span>，要用你本机装的 <code>mvn</code>，或者直接在 IDE 里运行 <code>Main</code>。想在命令行里跑 <code>Main</code>：
+<pre><code class="language-bash">cd ssh_ch2_ex2
+mvn -q compile dependency:build-classpath -Dmdep.outputFile=cp.txt
+java -cp target/classes:$(cat cp.txt) com.example.Main      # Windows 把冒号换成分号</code></pre></div>
 
 <h3>上下文长什么样</h3>
 
@@ -542,7 +582,7 @@ public class AppTests {
 <details><summary>为什么 <code>@PostConstruct</code> 需要额外加依赖？</summary>
 <p>因为它不属于 Spring，而是 Jakarta Annotations 规范的一部分。Java 11 之前这些注解在 JDK 里，之后被移出，所以要显式加 <code>jakarta.annotation-api</code>（书里是 <code>javax.annotation-api</code>）。仓库里只有 <span class="path">ssh_ch2_ex5</span> 加了这个依赖，因为只有它用到。</p></details>
 
-<div class="pager"><a class="prev" href="ch01.html"><span>上一章</span>1. 真实世界中的 Spring</a><a class="next" href="ch03.html"><span>下一章</span>3. Spring 上下文：装配 bean</a></div>
+<div class="pager"><a class="prev" href="ch01.html"><span>上一篇</span>1. 真实世界中的 Spring</a><a class="next" href="ch03.html"><span>下一篇</span>3. Spring 上下文：装配 bean</a></div>
 </main></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/java.min.js"></script>

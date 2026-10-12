@@ -11,7 +11,9 @@
 
 <pre class="codehead"><b>ssh_ch2_ex1/pom.xml</b><span>唯一的依赖</span></pre>
 <pre><code class="language-xml">&lt;properties&gt;
-    &lt;java.version&gt;25&lt;/java.version&gt;
+    &lt;maven.compiler.source&gt;25&lt;/maven.compiler.source&gt;
+    &lt;maven.compiler.target&gt;25&lt;/maven.compiler.target&gt;
+    &lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;
 &lt;/properties&gt;
 
 &lt;dependencies&gt;
@@ -29,6 +31,44 @@ spring-context 5.2.6.RELEASE</code></pre></div>
 spring-context 7.0.1</code></pre></div>
 </div>
 <div class="why"><b>为什么变：</b>Spring 6 起最低要求 Java 17，Spring 7 要求 Java 17+ 并全面适配新 JDK。<code>spring-context</code> 会自动传递引入 <code>spring-core</code>、<code>spring-beans</code>、<code>spring-aop</code>、<code>spring-expression</code>，所以只写一个依赖就够了——这一点书里和仓库一致。</div>
+
+<h3>读懂 pom.xml：Maven 最小必要知识</h3>
+
+<p>书的 2.1 节花了几页讲怎么建 Maven 工程。仓库里工程都建好了，你不用再建，但后面每一章都要读 <span class="path">pom.xml</span>，所以先把它看懂。</p>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th>pom 里的东西</th><th>是什么</th><th>在本仓库里的样子</th></tr></thead>
+<tbody>
+<tr><td><code>groupId</code> / <code>artifactId</code> / <code>version</code></td><td>一个工程（或一个依赖）的“坐标”，三者合起来全球唯一</td><td><code>com.example</code> / <code>ssh_ch2_ex1</code> / <code>1.0-SNAPSHOT</code></td></tr>
+<tr><td><code>&lt;properties&gt;</code></td><td>全局变量，最常用来定 Java 版本</td><td>第 2–6 章写 <code>maven.compiler.source/target</code>；第 7 章起写 <code>java.version</code>（Boot 父 POM 认这个名字）</td></tr>
+<tr><td><code>&lt;dependencies&gt;</code></td><td>这个工程要用哪些库</td><td>第 2 章只有 <code>spring-context</code> 一个</td></tr>
+<tr><td><code>&lt;scope&gt;</code></td><td>依赖在什么阶段可见。不写就是 <code>compile</code>（编译、运行都要）</td><td><code>test</code>：只在测试里用，如 <code>spring-test</code>、JUnit<br><code>runtime</code>：编译不需要、运行才需要，如第 12 章的 H2 和 MySQL 驱动</td></tr>
+<tr><td><code>&lt;parent&gt;</code></td><td>继承另一份 pom 里的配置和版本表</td><td>第 7 章起的 <code>spring-boot-starter-parent</code>；第 2–6 章没有</td></tr>
+<tr><td><code>&lt;build&gt;&lt;plugins&gt;</code></td><td>参与构建过程的插件</td><td>第 7 章起的 <code>spring-boot-maven-plugin</code>，第 10 章的 OpenAPI 生成插件</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="note"><b>传递依赖</b>
+你只写了 <code>spring-context</code>，Maven 会把它依赖的 <code>spring-core</code>、<code>spring-beans</code>、<code>spring-aop</code>、<code>spring-expression</code> 一并下载。想看一个工程到底带进了哪些 jar，在工程目录下跑 <code>mvn dependency:tree</code>。遇到“类找不到”或版本冲突时，这是第一条该敲的命令。</div>
+
+<pre class="codehead"><b>目录约定与常用命令</b></pre>
+<pre><code class="language-bash">src/main/java        # 业务代码
+src/main/resources   # 配置文件、模板、SQL 脚本（第 7 章起会用到）
+src/test/java        # 测试代码
+target/              # 构建产物，可以随时删
+
+mvn compile          # 编译 src/main
+mvn test             # 编译并运行 src/test 里的测试
+mvn package          # 打成 jar，放在 target/ 下
+mvn dependency:tree  # 打印依赖树</code></pre>
+
+<div class="warn"><b>第 2–6 章的工程没有 mvnw</b>
+<code>./mvnw</code>（Maven Wrapper）是 Spring Boot 工程脚手架生成的，仓库里第 7 章起的工程才带。第 2–6 章的工程只有一份 <span class="path">pom.xml</span>，要用你本机装的 <code>mvn</code>，或者直接在 IDE 里运行 <code>Main</code>。想在命令行里跑 <code>Main</code>：
+<pre><code class="language-bash">cd ssh_ch2_ex2
+mvn -q compile dependency:build-classpath -Dmdep.outputFile=cp.txt
+java -cp target/classes:$(cat cp.txt) com.example.Main      # Windows 把冒号换成分号</code></pre></div>
 
 <h3>上下文长什么样</h3>
 

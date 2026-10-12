@@ -202,7 +202,7 @@ details>p:last-child{margin-bottom:0}
 </style>
 </head>
 <body>
-<div class="wrap"><aside class="rail"><a class="rail-brand" href="index.html"><b>Spring Start Here<br>学习手册</b><span>Spring Boot 4 · Spring 7 · Java 25</span></a><div class="rail-group">第一部分 · 基础</div><nav><a class="ch" href="ch01.html"><i>01</i><span>真实世界中的 Spring</span></a><a class="ch" href="ch02.html"><i>02</i><span>Spring 上下文：定义 bean</span></a><a class="ch" href="ch03.html"><i>03</i><span>Spring 上下文：装配 bean</span></a><a class="ch" href="ch04.html"><i>04</i><span>Spring 上下文：使用抽象</span></a><a class="ch" href="ch05.html"><i>05</i><span>Bean 作用域与生命周期</span></a><a class="ch" href="ch06.html"><i>06</i><span>用 Spring AOP 实现切面</span></a></nav><div class="rail-group">第二部分 · 实现</div><nav><a class="ch" href="ch07.html"><i>07</i><span>理解 Spring Boot 与 Spring MVC</span></a><a class="ch" href="ch08.html"><i>08</i><span>用 Boot + MVC 实现 Web 应用</span></a><a class="ch" href="ch09.html"><i>09</i><span>使用 Spring Web 作用域</span></a><a class="ch" href="ch10.html"><i>10</i><span>实现 REST 服务</span></a><a class="ch" href="ch11.html"><i>11</i><span>消费 REST 端点</span></a><a class="ch" href="ch12.html"><i>12</i><span>在 Spring 应用中使用数据源</span></a><a class="ch" href="ch13.html" aria-current="page"><i>13</i><span>在 Spring 应用中使用事务</span></a><a class="ch" href="ch14.html"><i>14</i><span>用 Spring Data 实现持久化</span></a><a class="ch" href="ch15.html"><i>15</i><span>单元测试</span></a><a class="ch" href="ch16.html"><i>16</i><span>Spring 集成测试</span></a></nav><div class="rail-group">总览</div><nav><a class="ch" href="index.html"><i>◆</i><span>目录与版本对照</span></a></nav></aside><main class="main">
+<div class="wrap"><aside class="rail"><a class="rail-brand" href="index.html"><b>Spring Start Here<br>学习手册</b><span>Spring Boot 4 · Spring 7 · Java 25</span></a><div class="rail-group">第一部分 · 基础</div><nav><a class="ch" href="ch01.html"><i>01</i><span>真实世界中的 Spring</span></a><a class="ch" href="ch02.html"><i>02</i><span>Spring 上下文：定义 bean</span></a><a class="ch" href="ch03.html"><i>03</i><span>Spring 上下文：装配 bean</span></a><a class="ch" href="ch04.html"><i>04</i><span>Spring 上下文：使用抽象</span></a><a class="ch" href="ch05.html"><i>05</i><span>Bean 作用域与生命周期</span></a><a class="ch" href="ch06.html"><i>06</i><span>用 Spring AOP 实现切面</span></a></nav><div class="rail-group">第二部分 · 实现</div><nav><a class="ch" href="ch07.html"><i>07</i><span>理解 Spring Boot 与 Spring MVC</span></a><a class="ch" href="ch08.html"><i>08</i><span>用 Boot + MVC 实现 Web 应用</span></a><a class="ch" href="ch09.html"><i>09</i><span>使用 Spring Web 作用域</span></a><a class="ch" href="ch10.html"><i>10</i><span>实现 REST 服务</span></a><a class="ch" href="ch11.html"><i>11</i><span>消费 REST 端点</span></a><a class="ch" href="ch12.html"><i>12</i><span>在 Spring 应用中使用数据源</span></a><a class="ch" href="ch13.html" aria-current="page"><i>13</i><span>在 Spring 应用中使用事务</span></a><a class="ch" href="ch14.html"><i>14</i><span>用 Spring Data 实现持久化</span></a><a class="ch" href="ch15.html"><i>15</i><span>单元测试</span></a><a class="ch" href="ch16.html"><i>16</i><span>Spring 集成测试</span></a></nav><div class="rail-group">附录</div><nav><a class="ch" href="appa.html"><i>A</i><span>HTTP 与 JSON 入门</span></a><a class="ch" href="appb.html"><i>B</i><span>架构风格与 XML 配置</span></a><a class="ch" href="appc.html"><i>C</i><span>速查：注解、报错、术语</span></a><a class="ch" href="appd.html"><i>D</i><span>环境、工具与进阶路线</span></a></nav><div class="rail-group">总览</div><nav><a class="ch" href="index.html"><i>◆</i><span>目录与版本对照</span></a></nav></aside><main class="main">
 <p class="eyebrow">第 13 章 · 第二部分 实现</p>
 <h1>在 Spring 应用中使用事务</h1>
 <p class="lede">转账要扣一边、加一边。如果中间崩了，钱就凭空消失了。事务的作用是：<strong>要么两步都成功，要么一步都不算数。</strong>Spring 把这件事简化成了一个注解——但注解背后的机制，正是第 6 章的 AOP。</p>
@@ -243,6 +243,24 @@ details>p:last-child{margin-bottom:0}
 </svg>
 <figcaption><b>图 13-1</b>　事务保证的是<strong>原子性</strong>——一组操作作为一个不可分割的整体。这正是 <span class="path">ssh_ch13_ex1</span> 和 <span class="path">ex2</span> 要演示的：ex2 在两次转账操作后故意抛异常，你会看到数据库里余额<strong>没有变化</strong>。</figcaption>
 </figure>
+
+<h3>ACID：事务承诺的四件事</h3>
+
+<p>原子性只是事务四个特性中的一个。面试和数据库文档里它们总是一起出现，合称 ACID：</p>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th>特性</th><th>承诺</th><th>放到转账例子里</th></tr></thead>
+<tbody>
+<tr><td><strong>A</strong>tomicity 原子性</td><td>一组操作要么全做，要么全不做</td><td>不会出现 Helen 扣了钱而 Peter 没收到</td></tr>
+<tr><td><strong>C</strong>onsistency 一致性</td><td>事务前后，数据都满足业务规则和数据库约束</td><td>两人余额之和始终是 2000；余额不为负（需要你用约束或代码来定义规则）</td></tr>
+<tr><td><strong>I</strong>solation 隔离性</td><td>并发的事务互不干扰，效果如同一个接一个执行</td><td>两笔转账同时发生，不会互相读到对方改了一半的余额</td></tr>
+<tr><td><strong>D</strong>urability 持久性</td><td>一旦提交，结果不会因为崩溃或断电而丢失</td><td>接口返回成功后服务器立刻断电，重启后余额仍是转账后的值</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>本章的两个工程只演示了原子性。持久性由数据库负责，你不用写代码。<strong>隔离性是最容易被忽略的一个</strong>，它有级别之分，见后面“常用属性”一节。</p>
 
 <h2>13.2 Spring 事务的工作机制</h2>
 
@@ -374,7 +392,7 @@ public class TransferService {
 <div class="warn"><b>原因和第 6 章一模一样</b>
 事务逻辑在<strong>代理对象</strong>上。<code>this.transferMoney()</code> 是目标对象内部的普通方法调用，压根没经过代理（回看图 13-2 最右边那个框）。<br>
 <strong>解法：</strong>把带 <code>@Transactional</code> 的方法移到另一个 bean 里，从外部调它。<br>
-<strong>同理，<code>private</code> 方法上的 <code>@Transactional</code> 永远不生效</strong>——代理只能拦截 public 方法。</div>
+<strong>同理，<code>private</code> 方法上的 <code>@Transactional</code> 永远不生效</strong>——代理是靠“生成子类并重写方法”来拦截的，private 方法无法被重写。</div>
 
 <h3>坑三：异常被自己 catch 掉了</h3>
 
@@ -404,6 +422,31 @@ public void transferMoney(...) {
 </table>
 </div>
 
+<h3>隔离级别：并发事务能互相看到多少</h3>
+
+<p>完全隔离代价很高（事务要排队），所以数据库提供了四个级别，让你在正确性和并发性能之间选。级别越高，能防住的并发问题越多，也越慢。</p>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th><code>isolation =</code></th><th>脏读</th><th>不可重复读</th><th>幻读</th><th>谁的默认值</th></tr></thead>
+<tbody>
+<tr><td><code>READ_UNCOMMITTED</code></td><td>会</td><td>会</td><td>会</td><td>—</td></tr>
+<tr><td><code>READ_COMMITTED</code></td><td>不会</td><td>会</td><td>会</td><td>PostgreSQL、Oracle、H2</td></tr>
+<tr><td><code>REPEATABLE_READ</code></td><td>不会</td><td>不会</td><td>标准上会</td><td>MySQL（InnoDB）</td></tr>
+<tr><td><code>SERIALIZABLE</code></td><td>不会</td><td>不会</td><td>不会</td><td>—</td></tr>
+</tbody>
+</table>
+</div>
+
+<ul>
+<li><strong>脏读</strong>：读到别的事务<strong>还没提交</strong>的数据，而对方后来回滚了。</li>
+<li><strong>不可重复读</strong>：同一个事务里两次读同一行，结果不一样，因为中间有别的事务改了它并提交了。</li>
+<li><strong>幻读</strong>：同一个事务里两次按条件查询，第二次多出或少了几行，因为中间有别的事务插入或删除了数据。</li>
+</ul>
+
+<div class="warn"><b>本章的转账代码在并发下其实不安全</b>
+<code>transferMoney</code> 先读余额、在 Java 里算出新值、再写回去。两笔从 Helen 转出的转账同时进来，可能都读到 1000，各自写回 900，<strong>Helen 只被扣了一次</strong>。<code>@Transactional</code> 默认的隔离级别挡不住这种“丢失更新”。常见解法有三种：把计算交给数据库（<code>UPDATE account SET amount = amount - ? WHERE id = ?</code>）；读的时候加行锁（<code>SELECT … FOR UPDATE</code>）；或者用版本号做乐观锁。书里为了突出事务本身没有展开，但写真实的金额逻辑时必须考虑。</div>
+
 <div class="tip"><b>放在哪一层</b>
 <code>@Transactional</code> 应该标在 <strong>Service 层</strong>，因为业务上“一个事务”对应的是一个完整用例（转账），而不是一次数据库操作。标在 Repository 上，每个方法一个事务，转账的两步就分成了两个事务——完全失去意义。</div>
 
@@ -428,7 +471,8 @@ public void transferMoney(...) {
 <h4>动手 · 亲眼看到回滚</h4>
 <pre><code class="language-bash"># ─── 先跑正常版本 ssh_ch13_ex1 ───
 curl http://localhost:8080/accounts
-# [{"id":1,"name":"Helen Down","amount":1000},{"id":2,"name":"Peter Read","amount":1000}]
+# [{"amount":1000.0,"id":1,"name":"Helen Down"},{"amount":1000.0,"id":2,"name":"Peter Read"}]
+# （字段按字母序输出——这是 Jackson 3 的默认行为，见第 10 章）
 
 curl -X POST http://localhost:8080/transfer \
      -H "Content-Type: application/json" \
@@ -449,14 +493,14 @@ curl http://localhost:8080/accounts
 </div>
 
 <h2>本章自测</h2>
-<details><summary><code>@Transactional</code> 为什么必须标在 public 方法上？</summary>
-<p>因为 Spring AOP 通过代理实现事务，而代理（无论是 JDK 动态代理还是 CGLIB 子类）都只能拦截 public 方法——private 方法不可重写，protected/包级方法 CGLIB 虽能拦截但 Spring 默认不处理。标在 private 方法上不会报错，只是<strong>静悄悄地不生效</strong>，这比报错更危险。</p></details>
+<details><summary><code>@Transactional</code> 能标在哪些可见性的方法上？</summary>
+<p>取决于代理类型。Spring AOP 通过代理实现事务：<strong>private 方法永远不行</strong>——它不能被子类重写，代理拦不到，而且不会报错，只是<strong>静悄悄地不生效</strong>，这比报错更危险。<strong>public 方法永远可以</strong>。中间的 protected / 包级方法：书里那个年代（Spring 5）一律不处理；<strong>Spring 6 起</strong>，只要用的是基于类的代理（CGLIB，Boot 的默认方式）就也能生效，基于接口的 JDK 动态代理则仍然只认 public。稳妥的习惯没变：事务方法写成 public，并且从别的 bean 调它。</p></details>
 <details><summary>为什么默认只对非受检异常回滚？</summary>
 <p>历史约定，继承自 EJB 的默认行为。背后的假设是：受检异常代表“预期内、调用方应该处理的业务情况”（比如“余额不足”），既然是预期内的，事务可能仍应提交；非受检异常代表“意料之外的故障”，应该回滚。这个假设在现代代码里往往不成立，所以很多团队直接约定所有 <code>@Transactional</code> 都写 <code>rollbackFor = Exception.class</code>。</p></details>
 <details><summary>事务和第 6 章的 AOP 是什么关系？</summary>
-<p>事务<strong>就是</strong>用 AOP 实现的。<code>@EnableTransactionManagement</code>（Boot 自动开启）会注册一个事务拦截器，它本质上是一个 <code>@Around</code> 通知：前置逻辑开事务、调用 <code>proceed()</code>、正常返回则提交、抛非受检异常则回滚。所以 AOP 的所有限制（自调用失效、只拦 public 方法、目标必须是 bean）在事务上原样成立。</p></details>
+<p>事务<strong>就是</strong>用 AOP 实现的。<code>@EnableTransactionManagement</code>（Boot 自动开启）会注册一个事务拦截器，它本质上是一个 <code>@Around</code> 通知：前置逻辑开事务、调用 <code>proceed()</code>、正常返回则提交、抛非受检异常则回滚。所以 AOP 的所有限制（自调用失效、private 方法拦不到、目标必须是 bean）在事务上原样成立。</p></details>
 
-<div class="pager"><a class="prev" href="ch12.html"><span>上一章</span>12. 在 Spring 应用中使用数据源</a><a class="next" href="ch14.html"><span>下一章</span>14. 用 Spring Data 实现持久化</a></div>
+<div class="pager"><a class="prev" href="ch12.html"><span>上一篇</span>12. 在 Spring 应用中使用数据源</a><a class="next" href="ch14.html"><span>下一篇</span>14. 用 Spring Data 实现持久化</a></div>
 </main></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/java.min.js"></script>

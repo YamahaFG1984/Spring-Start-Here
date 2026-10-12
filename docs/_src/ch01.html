@@ -186,6 +186,7 @@ spring-boot-starter-webmvc-test
 <tr><td>main 方法</td><td><code>public static void main(String[] args)</code></td><td><code>static void main()</code>（Java 25 紧凑 main）</td><td>2–6</td></tr>
 <tr><td>作用域常量</td><td><code>ConfigurableBeanFactory.SCOPE_PROTOTYPE</code></td><td><code>BeanDefinition.SCOPE_PROTOTYPE</code></td><td>5</td></tr>
 <tr><td>HTTP 客户端</td><td>OpenFeign / RestTemplate / WebClient</td><td>额外新增 <strong>RestClient</strong>，且它排在第一位</td><td>11</td></tr>
+<tr><td>JSON 库</td><td>Jackson 2（<code>com.fasterxml.jackson</code>）</td><td>Jackson 3（<code>tools.jackson</code>），输出字段按字母序</td><td>10–14</td></tr>
 <tr><td>数据库</td><td>MySQL（要自己装）</td><td>H2 内存库（<code>spring-boot-h2console</code>），开箱即跑</td><td>12–14</td></tr>
 <tr><td>Mock 注解</td><td><code>@MockBean</code></td><td><code>@MockitoBean</code></td><td>15–16</td></tr>
 <tr><td>章节数</td><td>15 章</td><td>16 章（测试拆成单元测试 + 集成测试两章）</td><td>15–16</td></tr>
@@ -204,10 +205,10 @@ spring-boot-starter-webmvc-test
 <h4>动手 · 验证环境</h4>
 <pre class="codehead"><b>终端</b></pre>
 <pre><code class="language-bash">java -version          # 需要 JDK 25（Java 25 的紧凑 main 方法是必需的）
-mvn -version           # Maven 3.9+；也可以直接用工程里的 ./mvnw
+mvn -version           # Maven 3.9+（第 2–6 章的工程没有 mvnw，必须用它）
 
 cd ssh_ch2_ex1
-./mvnw compile         # 第一次会下载依赖，之后很快
+mvn compile            # 第一次会下载依赖，之后很快
 </code></pre>
 <p style="margin-bottom:0">Spring Core 的工程（第 2–6 章）没有 <code>spring-boot-maven-plugin</code>，直接在 IDE 里运行 <code>Main</code> 类即可；Boot 工程（第 7 章起）用 <code>./mvnw spring-boot:run</code>。</p>
 </div>

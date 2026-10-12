@@ -210,7 +210,7 @@ public class AccountRepository {
 @Query("UPDATE account SET amount = :amount WHERE id = :id")
 void changeAmount(long id, BigDecimal amount);</code></pre>
 
-<p>不加 <code>@Modifying</code>，Spring Data 会把它当查询执行，UPDATE 不会生效。</p>
+<p>不加 <code>@Modifying</code>，Spring Data 会把这条 UPDATE 当成查询、用 <code>executeQuery</code> 去执行，数据库驱动会直接拒绝：H2 下报 <code>Method is only allowed for a query. Use execute or executeUpdate instead of executeQuery</code>，Spring 把它包成 <code>UncategorizedSQLException</code>，接口返回 500，余额不变。</p>
 
 <h3>Service 层的变化</h3>
 
@@ -265,7 +265,7 @@ curl -X POST http://localhost:8080/transfer \
 <li>并排打开 <span class="path">ssh_ch13_ex1</span> 和 <span class="path">ssh_ch14_ex1</span> 的 <code>repositories</code> 包，数一数少了多少行代码。</li>
 <li>把 <code>findAccountsByName</code> 的 <code>@Query</code> 删掉，只留方法名 <code>List&lt;Account&gt; findByName(String name)</code>——派生查询照样能跑。</li>
 <li>试一个不存在的账户：<code>{"senderAccountId":99,...}</code>，观察 <code>AccountNotFoundException</code>。想想第 10 章的 <code>@RestControllerAdvice</code> 怎么把它变成一个体面的 404。</li>
-<li>故意把 <code>changeAmount</code> 上的 <code>@Modifying</code> 删掉，观察 UPDATE 不生效——余额没变但也不报错，是个很隐蔽的坑。</li>
+<li>故意把 <code>changeAmount</code> 上的 <code>@Modifying</code> 删掉，再发一次转账请求——接口返回 500，控制台里能找到 <code>Method is only allowed for a query</code>。记住这条报错长什么样，以后一眼就能认出“忘了加 <code>@Modifying</code>”。</li>
 </ol>
 </div>
 

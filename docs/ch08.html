@@ -202,7 +202,7 @@ details>p:last-child{margin-bottom:0}
 </style>
 </head>
 <body>
-<div class="wrap"><aside class="rail"><a class="rail-brand" href="index.html"><b>Spring Start Here<br>学习手册</b><span>Spring Boot 4 · Spring 7 · Java 25</span></a><div class="rail-group">第一部分 · 基础</div><nav><a class="ch" href="ch01.html"><i>01</i><span>真实世界中的 Spring</span></a><a class="ch" href="ch02.html"><i>02</i><span>Spring 上下文：定义 bean</span></a><a class="ch" href="ch03.html"><i>03</i><span>Spring 上下文：装配 bean</span></a><a class="ch" href="ch04.html"><i>04</i><span>Spring 上下文：使用抽象</span></a><a class="ch" href="ch05.html"><i>05</i><span>Bean 作用域与生命周期</span></a><a class="ch" href="ch06.html"><i>06</i><span>用 Spring AOP 实现切面</span></a></nav><div class="rail-group">第二部分 · 实现</div><nav><a class="ch" href="ch07.html"><i>07</i><span>理解 Spring Boot 与 Spring MVC</span></a><a class="ch" href="ch08.html" aria-current="page"><i>08</i><span>用 Boot + MVC 实现 Web 应用</span></a><a class="ch" href="ch09.html"><i>09</i><span>使用 Spring Web 作用域</span></a><a class="ch" href="ch10.html"><i>10</i><span>实现 REST 服务</span></a><a class="ch" href="ch11.html"><i>11</i><span>消费 REST 端点</span></a><a class="ch" href="ch12.html"><i>12</i><span>在 Spring 应用中使用数据源</span></a><a class="ch" href="ch13.html"><i>13</i><span>在 Spring 应用中使用事务</span></a><a class="ch" href="ch14.html"><i>14</i><span>用 Spring Data 实现持久化</span></a><a class="ch" href="ch15.html"><i>15</i><span>单元测试</span></a><a class="ch" href="ch16.html"><i>16</i><span>Spring 集成测试</span></a></nav><div class="rail-group">总览</div><nav><a class="ch" href="index.html"><i>◆</i><span>目录与版本对照</span></a></nav></aside><main class="main">
+<div class="wrap"><aside class="rail"><a class="rail-brand" href="index.html"><b>Spring Start Here<br>学习手册</b><span>Spring Boot 4 · Spring 7 · Java 25</span></a><div class="rail-group">第一部分 · 基础</div><nav><a class="ch" href="ch01.html"><i>01</i><span>真实世界中的 Spring</span></a><a class="ch" href="ch02.html"><i>02</i><span>Spring 上下文：定义 bean</span></a><a class="ch" href="ch03.html"><i>03</i><span>Spring 上下文：装配 bean</span></a><a class="ch" href="ch04.html"><i>04</i><span>Spring 上下文：使用抽象</span></a><a class="ch" href="ch05.html"><i>05</i><span>Bean 作用域与生命周期</span></a><a class="ch" href="ch06.html"><i>06</i><span>用 Spring AOP 实现切面</span></a></nav><div class="rail-group">第二部分 · 实现</div><nav><a class="ch" href="ch07.html"><i>07</i><span>理解 Spring Boot 与 Spring MVC</span></a><a class="ch" href="ch08.html" aria-current="page"><i>08</i><span>用 Boot + MVC 实现 Web 应用</span></a><a class="ch" href="ch09.html"><i>09</i><span>使用 Spring Web 作用域</span></a><a class="ch" href="ch10.html"><i>10</i><span>实现 REST 服务</span></a><a class="ch" href="ch11.html"><i>11</i><span>消费 REST 端点</span></a><a class="ch" href="ch12.html"><i>12</i><span>在 Spring 应用中使用数据源</span></a><a class="ch" href="ch13.html"><i>13</i><span>在 Spring 应用中使用事务</span></a><a class="ch" href="ch14.html"><i>14</i><span>用 Spring Data 实现持久化</span></a><a class="ch" href="ch15.html"><i>15</i><span>单元测试</span></a><a class="ch" href="ch16.html"><i>16</i><span>Spring 集成测试</span></a></nav><div class="rail-group">附录</div><nav><a class="ch" href="appa.html"><i>A</i><span>HTTP 与 JSON 入门</span></a><a class="ch" href="appb.html"><i>B</i><span>架构风格与 XML 配置</span></a><a class="ch" href="appc.html"><i>C</i><span>速查：注解、报错、术语</span></a><a class="ch" href="appd.html"><i>D</i><span>环境、工具与进阶路线</span></a></nav><div class="rail-group">总览</div><nav><a class="ch" href="index.html"><i>◆</i><span>目录与版本对照</span></a></nav></aside><main class="main">
 <p class="eyebrow">第 8 章 · 第二部分 实现</p>
 <h1>用 Boot + MVC 实现 Web 应用</h1>
 <p class="lede">上一章的页面是死的。这一章让它动起来：控制器把数据交给模板引擎，模板引擎渲染成 HTML；再学会从请求里取数据——查询参数、路径变量、表单提交。</p>
@@ -410,6 +410,9 @@ public class ProductsController {
 <figcaption><b>图 8-3</b>　同一个 URL，靠 HTTP 方法区分。<strong>注意 POST 之后直接渲染页面会导致刷新重复提交</strong>——第 9 章的 <span class="path">ssh_ch9_ex2</span> 会用 <code>return "redirect:/main"</code> 解决它（这个模式叫 POST-Redirect-GET）。</figcaption>
 </figure>
 
+<div class="note"><b>HTML 表单只会发 GET 和 POST</b>
+本章只出现这两个方法，是因为浏览器的 <code>&lt;form&gt;</code> 只支持它们。HTTP 还有 PUT、PATCH、DELETE，在第 10 章的 REST 接口里才派得上用场，那里有一张完整的对照表。HTTP 本身不熟的话，先读<a href="appa.html">附录 A</a>。</div>
+
 <h3>更省事的写法：直接绑定成对象</h3>
 
 <pre class="codehead"><b>ssh_ch8_ex6</b><span>对比 ex5</span></pre>
@@ -463,7 +466,7 @@ Spring 看到一个既不是 <code>Model</code>、也没有任何注解的自定
 <details><summary>为什么 <code>@PostMapping</code> 之后刷新会重复提交？</summary>
 <p>因为浏览器记住的“当前页面”是一次 POST 请求，刷新就是把这次 POST 再发一遍。标准解法是 POST-Redirect-GET：POST 处理完不直接渲染，而是返回 <code>redirect:</code> 让浏览器发起一次新的 GET。<span class="path">ssh_ch9_ex2</span> 的 <code>return "redirect:/main"</code> 就是这个模式。</p></details>
 
-<div class="pager"><a class="prev" href="ch07.html"><span>上一章</span>7. 理解 Spring Boot 与 Spring MVC</a><a class="next" href="ch09.html"><span>下一章</span>9. 使用 Spring Web 作用域</a></div>
+<div class="pager"><a class="prev" href="ch07.html"><span>上一篇</span>7. 理解 Spring Boot 与 Spring MVC</a><a class="next" href="ch09.html"><span>下一篇</span>9. 使用 Spring Web 作用域</a></div>
 </main></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/java.min.js"></script>

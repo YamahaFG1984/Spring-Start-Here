@@ -221,6 +221,53 @@ public ResponseEntity&lt;PaymentDetails&gt; makePayment(
 <div class="warn"><b>GET 不该带请求体</b>
 HTTP 规范上 GET 可以有 body，但绝大多数中间件、代理、客户端库都不支持。<strong>需要传复杂查询条件时，要么改用 POST，要么把条件拍平成查询参数。</strong></div>
 
+<h3>HTTP 方法全家与幂等性</h3>
+
+<p>仓库第 10 章的工程只用了 GET 和 POST，但设计 REST 接口时五个方法都要会选。书的 10.1 节和附录 C 讲了这部分。</p>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th>方法</th><th>语义</th><th>Spring 注解</th><th>安全</th><th>幂等</th><th>成功时常用状态码</th></tr></thead>
+<tbody>
+<tr><td>GET</td><td>读取资源</td><td><code>@GetMapping</code></td><td>是</td><td>是</td><td>200</td></tr>
+<tr><td>POST</td><td>新建资源，或触发一个动作</td><td><code>@PostMapping</code></td><td>否</td><td><strong>否</strong></td><td>201 Created / 202 Accepted</td></tr>
+<tr><td>PUT</td><td>整体替换一个资源</td><td><code>@PutMapping</code></td><td>否</td><td>是</td><td>200 / 204 No Content</td></tr>
+<tr><td>PATCH</td><td>修改资源的一部分字段</td><td><code>@PatchMapping</code></td><td>否</td><td>不保证</td><td>200 / 204</td></tr>
+<tr><td>DELETE</td><td>删除资源</td><td><code>@DeleteMapping</code></td><td>否</td><td>是</td><td>204 No Content</td></tr>
+</tbody>
+</table>
+</div>
+
+<p><strong>安全</strong>指不改变服务端状态。<strong>幂等</strong>指同一个请求发一次和发多次，服务端最终状态相同：把余额“设为 900”是幂等的，“减 100”不是。</p>
+
+<pre class="codehead"><b>仓库里没有对应工程</b><span>把第 8 章的商品补成完整的增删改查会长这样</span></pre>
+<pre><code class="language-java">@RestController
+@RequestMapping("/products")
+public class ProductController {
+
+    @GetMapping("/{id}")
+    public Product find(@PathVariable long id) { ... }
+
+    @PostMapping
+    public ResponseEntity&lt;Product&gt; create(@RequestBody Product p) {
+        Product saved = productService.add(p);
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);   // 201
+    }
+
+    @PutMapping("/{id}")
+    public Product replace(@PathVariable long id, @RequestBody Product p) { ... }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity&lt;Void&gt; delete(@PathVariable long id) {
+        productService.delete(id);
+        return ResponseEntity.noContent().build();                      // 204
+    }
+}</code></pre>
+
+<div class="warn"><b>幂等性为什么重要：网络会让你不知道请求到底成功没有</b>
+书在 10.1 节提醒过：REST 调用走的是网络，会慢、会断。客户端发出“转账 100”后超时了，它<strong>无法区分</strong>“请求没到”和“请求到了但响应丢了”。如果接口是幂等的，客户端可以放心重试；如果不是（比如本章和第 13 章的 <code>POST /payment</code>、<code>POST /transfer</code>），重试就可能扣两次钱。<br>
+真实系统的常见做法是让客户端在请求里带一个唯一的请求号，服务端记录处理过的请求号，重复的直接返回上次结果。第 11 章 <span class="path">ssh_ch11_payments</span> 里那个 <code>requestId</code> 请求头就是这种设计的雏形。</div>
+
 <h2>10.6 仓库新增：OpenAPI 契约先行</h2>
 
 <p><span class="path">ssh_ch10_openapi</span> 是<strong>书里完全没有的一个工程</strong>，展示了当代 REST 开发的主流做法：先写 API 契约，再由工具生成接口代码。</p>
@@ -336,11 +383,17 @@ public class PaymentController implements PaymentApi {     // ← PaymentApi 是
 <tr><td>Boot 版本</td><td>2.3.4.RELEASE</td><td>4.0.6（<strong>ex5 例外，仍是 3.4.1</strong>）</td></tr>
 <tr><td>Web starter</td><td><code>spring-boot-starter-web</code></td><td><code>spring-boot-starter-webmvc</code>（ex5 仍是旧名）</td></tr>
 <tr><td>OpenAPI</td><td>无</td><td>新增 <span class="path">ssh_ch10_openapi</span> 整个工程</td></tr>
+<tr><td>JSON 库</td><td>Jackson 2（<code>com.fasterxml.jackson</code>）</td><td><strong>Jackson 3</strong>（<code>tools.jackson</code>），ex5 因为还在 Boot 3.4.1 所以仍是 Jackson 2</td></tr>
 <tr><td>测试</td><td>无</td><td>每个工程带 MockMvc + <code>jsonPath</code> 断言</td></tr>
 <tr><td>REST 注解</td><td colspan="2" style="color:var(--ink-3)">完全相同——<code>@RestController</code>、<code>ResponseEntity</code>、<code>@RequestBody</code>、<code>@RestControllerAdvice</code> 从 Spring 4/5 至今没有变化</td></tr>
 </tbody>
 </table>
 </div>
+
+<div class="why"><b>Jackson 2 → 3 对你意味着什么：</b>Spring Boot 4 把默认 JSON 库换成了 Jackson 3。本仓库的代码一行都不用改，因为它只是让 Spring 自动做序列化，没有直接用 Jackson 的 API。但有三点会碰到：<br>
+① <strong>包名变了</strong>：<code>ObjectMapper</code> 等核心类从 <code>com.fasterxml.jackson.databind</code> 搬到 <code>tools.jackson.databind</code>。照书或旧博客手写 <code>import com.fasterxml.jackson.databind.ObjectMapper</code> 会找不到类。注解（<code>@JsonProperty</code>、<code>@JsonIgnore</code>）例外，仍在 <code>com.fasterxml.jackson.annotation</code>。<br>
+② <strong>输出字段按字母序排列</strong>：第 13、14 章的 <code>Account</code> 输出是 <code>{"amount":…,"id":…,"name":…}</code>，不是字段声明的顺序。JSON 对象本来就不保证顺序，客户端不该依赖它。<br>
+③ <strong>未知字段默认被忽略</strong>：请求体里多出对象上没有的字段不会报错（下面的动手练习会验证）。</div>
 
 <div class="note"><b>ssh_ch10_ex5 的版本掉队</b>
 这个工程的父 POM 还停在 <code>spring-boot-starter-parent 3.4.1</code>，依赖也还是 <code>spring-boot-starter-web</code> / <code>spring-boot-starter-test</code>。它照样能跑，但如果你想让整个仓库版本一致，把它的 parent 改成 <code>4.0.6</code>、starter 改成 <code>-webmvc</code> / <code>-webmvc-test</code> 即可——代码本身不用改。</div>
@@ -362,7 +415,7 @@ curl -i -X POST http://localhost:8080/payment \
      -H "Content-Type: application/json" -d '{"amount":1000.0}'</code></pre>
 <ol style="margin-bottom:0">
 <li>在 <span class="path">ssh_ch10_ex6</span> 里再加一个业务异常和对应的 <code>@ExceptionHandler</code>，验证一个 advice 类能处理多种异常。</li>
-<li>给 <span class="path">ssh_ch10_ex7</span> 的 <code>PaymentDetails</code> 加一个 <code>String currency</code> 字段，然后<strong>故意</strong>发一个带未知字段的 JSON，看 Jackson 的默认行为（默认会报错，可用 <code>spring.jackson.deserialization.fail-on-unknown-properties=false</code> 改变）。</li>
+<li>给 <span class="path">ssh_ch10_ex7</span> 的 <code>PaymentDetails</code> 加一个 <code>String currency</code> 字段，然后<strong>故意</strong>发一个带未知字段的 JSON，看 Jackson 的默认行为：<strong>未知字段被悄悄忽略</strong>，请求照样返回 202。想让它严格校验、遇到未知字段就返回 400，加一行 <code>spring.jackson.deserialization.fail-on-unknown-properties=true</code>。</li>
 <li>在 <span class="path">ssh_ch10_openapi</span> 里改一下 <code>openapi.yml</code>（比如给 <code>PaymentDetails</code> 加个字段），重新 <code>./mvnw compile</code>，看生成的模型类跟着变了。</li>
 </ol>
 </div>
@@ -371,6 +424,6 @@ curl -i -X POST http://localhost:8080/payment \
 <details><summary>为什么推荐用 <code>@RestControllerAdvice</code> 而不是在控制器里 try/catch？</summary>
 <p>三个理由：① 控制器方法能保持精确的返回类型（<code>ResponseEntity&lt;PaymentDetails&gt;</code> 而不是 <code>ResponseEntity&lt;?&gt;</code>）；② 异常到响应的映射规则集中在一处，不会每个控制器写一份还各不相同；③ 业务代码只描述正常流程，可读性大幅提升。这是典型的横切关注点分离——和第 6 章 AOP 是同一个道理。</p></details>
 <details><summary>Jackson 是从哪里来的？我没加过这个依赖。</summary>
-<p><code>spring-boot-starter-webmvc</code> 传递引入了 <code>jackson-databind</code>，Boot 的自动配置又注册了一个 <code>MappingJackson2HttpMessageConverter</code>。DispatcherServlet 发现返回值需要写成响应体、且客户端接受 <code>application/json</code> 时，就用这个转换器。整条链路你一行配置都没写——这就是第 7 章说的自动配置。</p></details>
+<p><code>spring-boot-starter-webmvc</code> 传递引入了 <code>jackson-databind</code>（Boot 4 里是 <strong>Jackson 3</strong>，见上面的差异表），Boot 的自动配置又注册了一个基于它的 JSON 消息转换器 <code>JacksonJsonHttpMessageConverter</code>（书里那个年代叫 <code>MappingJackson2HttpMessageConverter</code>）。DispatcherServlet 发现返回值需要写成响应体、且客户端接受 <code>application/json</code> 时，就用这个转换器。整条链路你一行配置都没写——这就是第 7 章说的自动配置。</p></details>
 <details><summary>契约先行（OpenAPI）值得在真实项目里用吗？</summary>
 <p>取决于团队边界。如果 API 只给自己的前端用、且前后端同一个人写，代码优先 + springdoc 自动生成文档就够了。<strong>如果 API 要给别的团队/外部客户用，契约先行的价值很大</strong>：契约成为可评审、可版本化的交付物，双方能并行开发，还能自动生成各语言的客户端 SDK。</p></details>

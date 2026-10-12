@@ -1,0 +1,190 @@
+<p class="eyebrow">附录 C · 本手册新增</p>
+<h1>速查：注解、报错、术语</h1>
+<p class="lede">三张可以随时翻回来查的表。注解表按“它解决什么问题”分组；报错表按“你在控制台里看到的那行字”组织；术语表给出每个词在本手册里的确切含义和首次出现的章节。</p>
+
+<h2>C.1 注解速查</h2>
+
+<h3>把对象放进上下文、连起来（第 2–5 章）</h3>
+<div class="tablewrap">
+<table>
+<thead><tr><th>注解</th><th>标在哪</th><th>作用</th><th>章</th></tr></thead>
+<tbody>
+<tr><td><code>@Configuration</code></td><td>类</td><td>声明配置类，里面的 <code>@Bean</code> 方法会被代理</td><td>2、3</td></tr>
+<tr><td><code>@Bean</code></td><td>方法</td><td>把返回值注册成 bean，方法名即 bean 名</td><td>2</td></tr>
+<tr><td><code>@Component</code></td><td>类</td><td>让组件扫描把这个类注册成 bean</td><td>2</td></tr>
+<tr><td><code>@Service</code> / <code>@Repository</code></td><td>类</td><td>带语义的 <code>@Component</code>；<code>@Repository</code> 另有异常翻译</td><td>4、12</td></tr>
+<tr><td><code>@ComponentScan</code></td><td>配置类</td><td>指定去哪些包里找上面这些注解</td><td>2</td></tr>
+<tr><td><code>@Autowired</code></td><td>构造器 / 字段 / setter</td><td>请 Spring 注入依赖；唯一构造器上可省略</td><td>3</td></tr>
+<tr><td><code>@Primary</code></td><td>类 / <code>@Bean</code> 方法</td><td>同类型多个 bean 时的默认选择</td><td>2、4</td></tr>
+<tr><td><code>@Qualifier</code></td><td>注入点；也可标在类上当标签</td><td>同类型多个 bean 时点名要哪个</td><td>3、4</td></tr>
+<tr><td><code>@PostConstruct</code></td><td>方法</td><td>依赖注入完成后执行一次（<code>jakarta.annotation</code>）</td><td>2</td></tr>
+<tr><td><code>@Scope</code></td><td>类 / <code>@Bean</code> 方法</td><td>改作用域，最常见是改成原型</td><td>5</td></tr>
+<tr><td><code>@Lazy</code></td><td>类 / <code>@Bean</code> 方法</td><td>第一次用到时才创建</td><td>5</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>切面（第 6 章）</h3>
+<div class="tablewrap">
+<table>
+<thead><tr><th>注解</th><th>标在哪</th><th>作用</th></tr></thead>
+<tbody>
+<tr><td><code>@EnableAspectJAutoProxy</code></td><td>配置类</td><td>开启切面机制。纯 Spring 工程必须写；Boot 工程引入 AOP starter 后自动开启</td></tr>
+<tr><td><code>@Aspect</code></td><td>类</td><td>声明切面。它<strong>不会</strong>把类变成 bean，还得另外注册</td></tr>
+<tr><td><code>@Around</code></td><td>方法</td><td>包住目标方法，要自己调 <code>proceed()</code> 并返回结果</td></tr>
+<tr><td><code>@Before</code> / <code>@After</code> / <code>@AfterReturning</code> / <code>@AfterThrowing</code></td><td>方法</td><td>在目标方法之前 / 之后 / 正常返回后 / 抛异常后执行</td></tr>
+<tr><td><code>@Order</code></td><td>切面类</td><td>多个切面的嵌套顺序，数字小的在外层</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Web（第 7–11 章）</h3>
+<div class="tablewrap">
+<table>
+<thead><tr><th>注解</th><th>标在哪</th><th>作用</th><th>章</th></tr></thead>
+<tbody>
+<tr><td><code>@SpringBootApplication</code></td><td>主类</td><td>配置类 + 组件扫描 + 自动配置</td><td>7</td></tr>
+<tr><td><code>@Controller</code></td><td>类</td><td>方法返回值是视图名</td><td>7</td></tr>
+<tr><td><code>@RestController</code></td><td>类</td><td>方法返回值直接写进响应体</td><td>10</td></tr>
+<tr><td><code>@ResponseBody</code></td><td>方法</td><td>单个方法的返回值写进响应体</td><td>10</td></tr>
+<tr><td><code>@RequestMapping</code></td><td>类 / 方法</td><td>映射路径，可限定 HTTP 方法</td><td>7、8</td></tr>
+<tr><td><code>@GetMapping</code> / <code>@PostMapping</code></td><td>方法</td><td>限定了方法的 <code>@RequestMapping</code>；另有 Put / Patch / Delete</td><td>7、8、10</td></tr>
+<tr><td><code>@RequestParam</code></td><td>参数</td><td>取查询参数或表单字段</td><td>8</td></tr>
+<tr><td><code>@PathVariable</code></td><td>参数</td><td>取路径里的 <code>{变量}</code></td><td>8</td></tr>
+<tr><td><code>@RequestBody</code></td><td>参数</td><td>把请求体的 JSON 反序列化成对象</td><td>10</td></tr>
+<tr><td><code>@RequestHeader</code></td><td>参数</td><td>取请求头</td><td>11</td></tr>
+<tr><td><code>@RestControllerAdvice</code> + <code>@ExceptionHandler</code></td><td>类 + 方法</td><td>全局把异常映射成 HTTP 响应</td><td>10</td></tr>
+<tr><td><code>@RequestScope</code> / <code>@SessionScope</code> / <code>@ApplicationScope</code></td><td>类</td><td>每请求 / 每会话 / 全应用一个实例</td><td>9</td></tr>
+<tr><td><code>@Value</code></td><td>字段 / 参数</td><td>注入配置属性，<code>${key:默认值}</code></td><td>7、11、12</td></tr>
+<tr><td><code>@EnableFeignClients</code> + <code>@FeignClient</code></td><td>主类 + 接口</td><td>声明式 HTTP 客户端</td><td>11</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>数据与事务（第 12–14 章）</h3>
+<div class="tablewrap">
+<table>
+<thead><tr><th>注解</th><th>标在哪</th><th>作用</th><th>章</th></tr></thead>
+<tbody>
+<tr><td><code>@Transactional</code></td><td>Service 的方法或类</td><td>方法在一个事务里执行，抛非受检异常则回滚</td><td>13</td></tr>
+<tr><td><code>@Id</code></td><td>实体字段</td><td>主键。用 <code>org.springframework.data.annotation.Id</code></td><td>14</td></tr>
+<tr><td><code>@Query</code></td><td>Repository 方法</td><td>手写 SQL，<code>:name</code> 对应同名参数</td><td>14</td></tr>
+<tr><td><code>@Modifying</code></td><td>Repository 方法</td><td>声明 <code>@Query</code> 是写操作。UPDATE / DELETE / INSERT 必须加</td><td>14</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>测试（第 15–16 章）</h3>
+<div class="tablewrap">
+<table>
+<thead><tr><th>注解</th><th>来自</th><th>作用</th><th>章</th></tr></thead>
+<tbody>
+<tr><td><code>@Test</code> / <code>@BeforeEach</code> / <code>@DisplayName</code></td><td>JUnit 5</td><td>测试方法 / 每个测试前执行 / 报告里显示的名字</td><td>15</td></tr>
+<tr><td><code>@ExtendWith(MockitoExtension.class)</code></td><td>JUnit 5 + Mockito</td><td>让 <code>@Mock</code>、<code>@InjectMocks</code> 生效</td><td>15</td></tr>
+<tr><td><code>@Mock</code> / <code>@InjectMocks</code></td><td>Mockito</td><td>造替身 / 造被测对象并把替身注进去</td><td>15</td></tr>
+<tr><td><code>@SpringBootTest</code></td><td>Spring Boot</td><td>启动完整上下文</td><td>16</td></tr>
+<tr><td><code>@MockitoBean</code></td><td>Spring Framework</td><td>把上下文里的某个 bean 换成替身（旧名 <code>@MockBean</code> 已移除）</td><td>16</td></tr>
+<tr><td><code>@ExtendWith(SpringExtension.class)</code> + <code>@ContextConfiguration</code></td><td>Spring Framework</td><td>不用 Boot 时启动上下文的写法</td><td>2</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2>C.2 常见报错速查</h2>
+
+<p>在控制台输出里搜下面第一列的关键词。Spring 的堆栈很长，<strong>从下往上找最后一个 <code>Caused by:</code></strong>，那一行通常才是真正的原因。</p>
+
+<h3>启动阶段</h3>
+<div class="tablewrap">
+<table>
+<thead><tr><th>你看到的</th><th>原因</th><th>怎么办</th><th>章</th></tr></thead>
+<tbody>
+<tr><td>找不到 main 方法 / <code>main</code> 相关的编译错误</td><td>第 2–6 章的 <code>static void main()</code> 需要 JDK 25</td><td>升级 JDK，或改回 <code>public static void main(String[] args)</code></td><td>1、2</td></tr>
+<tr><td><code>NoSuchBeanDefinitionException</code></td><td>要的类型在上下文里一个都没有：类上忘了加注解、不在扫描范围内、或者 <code>@Bean</code> 方法没写</td><td>检查注解和 <code>@ComponentScan</code> 的包；Boot 工程检查类是否在主类所在包之下</td><td>2、7</td></tr>
+<tr><td><code>NoUniqueBeanDefinitionException</code></td><td>要的类型有多个 bean，Spring 不知道选谁</td><td><code>@Primary</code>、<code>@Qualifier</code>，或按名字取</td><td>2、3、4</td></tr>
+<tr><td><code>UnsatisfiedDependencyException</code></td><td>创建某个 bean 时它的依赖解决不了。这是一层包装</td><td>看它的 <code>Caused by</code>，里面多半是上面两个之一</td><td>3</td></tr>
+<tr><td><code>BeanCurrentlyInCreationException</code></td><td>循环依赖</td><td>重新设计依赖方向，见第 3 章 3.4 节</td><td>3</td></tr>
+<tr><td>Boot 启动时提示 <code>The dependencies of some of the beans in the application context form a cycle</code></td><td>同上。Boot 工程连字段注入的环也禁止</td><td>同上</td><td>3</td></tr>
+<tr><td><code>Port 8080 was already in use</code></td><td>另一个应用占着端口，常见于上一个示例没关</td><td>关掉它，或加 <code>server.port=9090</code></td><td>7、11</td></tr>
+<tr><td><code>Failed to configure a DataSource</code> / <code>Failed to determine a suitable driver class</code></td><td>引入了 JDBC starter，但 classpath 上没有数据库驱动，也没配 <code>spring.datasource.url</code></td><td>加上 H2 或 MySQL 驱动依赖，或补全连接配置</td><td>12</td></tr>
+<tr><td><code>Communications link failure</code></td><td>连不上 MySQL：没启动、端口不对</td><td>只有 <span class="path">ssh_ch12_ex2 / ex3</span> 会遇到，见<a href="appd.html">附录 D</a></td><td>12</td></tr>
+<tr><td>提示无法解析占位符 <code>${…}</code></td><td><code>@Value</code> 引用的属性没配，也没给默认值</td><td>在 <span class="path">application.properties</span> 里补上，或写成 <code>${key:默认值}</code></td><td>7</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>请求阶段</h3>
+<div class="tablewrap">
+<table>
+<thead><tr><th>你看到的</th><th>原因</th><th>怎么办</th><th>章</th></tr></thead>
+<tbody>
+<tr><td>404，或一个写着 Whitelabel Error Page 的页面</td><td>路径没匹配到任何控制器方法；控制器类不在扫描范围内；模板或静态文件放错了目录</td><td>核对路径拼写；确认类在主类包下；静态页放 <span class="path">static/</span>，Thymeleaf 模板放 <span class="path">templates/</span></td><td>7、8</td></tr>
+<tr><td>页面上原样显示 <code>${username}</code></td><td>模板没经过 Thymeleaf：文件放在了 <span class="path">static/</span>，或缺 Thymeleaf starter</td><td>挪到 <span class="path">templates/</span></td><td>8</td></tr>
+<tr><td>405 Method Not Allowed</td><td>路径对了但 HTTP 方法不对</td><td>核对 <code>@GetMapping</code> / <code>@PostMapping</code> 和你发的方法</td><td>8、10</td></tr>
+<tr><td>415 Unsupported Media Type</td><td>POST JSON 时没带 <code>Content-Type: application/json</code></td><td>补上请求头</td><td>10</td></tr>
+<tr><td>400，日志里有 <code>HttpMessageNotReadableException</code></td><td>请求体不是合法 JSON，或类型对不上</td><td>检查引号、逗号；见<a href="appa.html">附录 A</a></td><td>10</td></tr>
+<tr><td>400，提示缺少必需的请求参数</td><td><code>@RequestParam</code> 默认必填，而请求里没有</td><td>补上参数，或声明 <code>required = false</code></td><td>8、9</td></tr>
+<tr><td>调用方报 <code>ResourceAccessException</code> / <code>Connection refused</code></td><td>被调用的服务没启动或地址不对</td><td>第 11 章要先启动 <span class="path">ssh_ch11_payments</span></td><td>11</td></tr>
+<tr><td><code>EmptyResultDataAccessException</code></td><td><code>jdbc.queryForObject()</code> 期望恰好一行，结果查到零行</td><td>先确认数据存在；或改用返回 <code>Optional</code> 的写法</td><td>13、14</td></tr>
+<tr><td><code>Method is only allowed for a query</code></td><td>Spring Data 的 <code>@Query</code> 写了 UPDATE / DELETE 却没加 <code>@Modifying</code></td><td>加上 <code>@Modifying</code></td><td>14</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>不报错，但行为不对</h3>
+<div class="tablewrap">
+<table>
+<thead><tr><th>现象</th><th>先查这几样</th><th>章</th></tr></thead>
+<tbody>
+<tr><td>切面没有执行</td><td>① 切面类是不是 bean；② 纯 Spring 工程有没有 <code>@EnableAspectJAutoProxy</code>；③ 切点表达式的包名对不对；④ 是不是同一个类内部的自调用</td><td>6</td></tr>
+<tr><td>事务没有回滚</td><td>① 抛的是不是受检异常；② 异常是不是被自己 catch 了；③ 是不是自调用；④ 方法是不是 private</td><td>13</td></tr>
+<tr><td>原型 bean 每次拿到的是同一个</td><td>它是不是被注入进了一个单例</td><td>5</td></tr>
+<tr><td>不同用户的数据串了</td><td>单例 bean 里是不是有可变的实例字段</td><td>5、9</td></tr>
+<tr><td>被拦截的方法返回了 null</td><td><code>@Around</code> 通知有没有把 <code>proceed()</code> 的结果 return 出去</td><td>6</td></tr>
+<tr><td>JSON 里少了某个字段</td><td>那个字段有没有 getter</td><td>10</td></tr>
+<tr><td><code>@InjectMocks</code> 的对象里依赖是 null</td><td>mock 的类型和被测类的构造器参数对不对得上</td><td>15</td></tr>
+<tr><td>照书写的 <code>@MockBean</code>、<code>javax.*</code> 编译不过</td><td>见首页“最容易被绊倒的四处”</td><td>首页</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2>C.3 术语表</h2>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th>术语</th><th>含义</th><th>章</th></tr></thead>
+<tbody>
+<tr><td>上下文 / 容器<br>Context / IoC container</td><td>Spring 管理的那一池对象，以及管理它们的那个对象（<code>ApplicationContext</code>）。两个词在本手册里同义</td><td>1、2</td></tr>
+<tr><td>bean</td><td>引用被上下文持有的对象。不是一种特殊的类</td><td>2</td></tr>
+<tr><td>控制反转 IoC</td><td>对象的创建和组装由框架决定，而不是由你的代码决定</td><td>1</td></tr>
+<tr><td>依赖注入 DI</td><td>IoC 的具体做法：一个对象需要的其他对象由容器递给它</td><td>3</td></tr>
+<tr><td>装配 Wiring</td><td>在 bean 之间建立引用关系的过程</td><td>3</td></tr>
+<tr><td>构造型注解 Stereotype</td><td><code>@Component</code> 及其变体 <code>@Service</code>、<code>@Repository</code>、<code>@Controller</code></td><td>2、4</td></tr>
+<tr><td>作用域 Scope</td><td>决定一个 bean 有几个实例、活多久</td><td>5、9</td></tr>
+<tr><td>饥饿 / 懒 初始化</td><td>上下文启动时就创建 / 第一次用到才创建</td><td>5</td></tr>
+<tr><td>代理 Proxy</td><td>Spring 生成的、包在你的对象外面的对象，用来在方法调用前后插入逻辑。AOP、事务、web 作用域都靠它</td><td>3、6、9、13</td></tr>
+<tr><td>切面、通知、切点、连接点、织入</td><td>见第 6 章 6.1 节的术语表</td><td>6</td></tr>
+<tr><td>横切关注点</td><td>日志、事务、鉴权这类散布在许多业务方法里、又与业务本身无关的逻辑</td><td>6</td></tr>
+<tr><td>starter</td><td>Boot 提供的依赖包，把做某件事需要的一组库打包成一个依赖</td><td>7</td></tr>
+<tr><td>自动配置</td><td>Boot 根据 classpath 上有什么、你配了什么，自动注册相应的 bean</td><td>7、12</td></tr>
+<tr><td>Servlet 容器</td><td>负责监听端口、解析 HTTP、把请求交给应用的服务器程序。本仓库用内嵌的 Tomcat</td><td>7</td></tr>
+<tr><td>DispatcherServlet</td><td>Spring MVC 的总入口，把每个请求分发给对应的控制器方法</td><td>7</td></tr>
+<tr><td>视图 / 模板</td><td>服务端渲染成 HTML 的文件。本仓库用 Thymeleaf</td><td>8</td></tr>
+<tr><td>端点 Endpoint</td><td>一个“HTTP 方法 + 路径”的组合，对应一个控制器方法</td><td>10</td></tr>
+<tr><td>序列化 / 反序列化</td><td>Java 对象转成 JSON / JSON 转成 Java 对象</td><td>10</td></tr>
+<tr><td>DTO</td><td>只用来在层与层、服务与服务之间传数据的对象，没有业务逻辑。<code>PaymentDetails</code>、<code>TransferRequest</code> 都是</td><td>10、13</td></tr>
+<tr><td>幂等</td><td>同一个请求执行一次和执行多次，最终状态相同</td><td>10</td></tr>
+<tr><td>契约先行</td><td>先写 API 描述文件（OpenAPI），再由它生成代码</td><td>10</td></tr>
+<tr><td>阻塞 / 非阻塞</td><td>等待 I/O 时线程是停下来等，还是先去做别的</td><td>11</td></tr>
+<tr><td>数据源 DataSource</td><td>提供数据库连接的对象，通常背后是一个连接池</td><td>12</td></tr>
+<tr><td>连接池</td><td>预先建好并反复复用的一批数据库连接。Boot 默认用 HikariCP</td><td>12</td></tr>
+<tr><td>事务</td><td>一组要么全部成功、要么全部撤销的数据库操作</td><td>13</td></tr>
+<tr><td>提交 / 回滚</td><td>让事务里的修改生效 / 全部撤销</td><td>13</td></tr>
+<tr><td>传播行为 Propagation</td><td>一个事务方法调用另一个事务方法时，是加入现有事务还是另开一个</td><td>13</td></tr>
+<tr><td>受检 / 非受检异常</td><td>必须声明或捕获的异常（<code>Exception</code> 的子类）/ 不必声明的异常（<code>RuntimeException</code> 的子类）。事务默认只对后者回滚</td><td>13</td></tr>
+<tr><td>派生查询</td><td>Spring Data 根据方法名（如 <code>findByName</code>）自动生成的查询</td><td>14</td></tr>
+<tr><td>被测单元 SUT</td><td>一个测试里唯一用真实实现的那个类</td><td>15</td></tr>
+<tr><td>替身 / mock</td><td>代替真实依赖的假对象，行为由测试指定，并能记录自己被怎样调用</td><td>15</td></tr>
+<tr><td>单元测试 / 集成测试</td><td>只测一个类、不启动 Spring / 启动上下文、测多个部件装在一起的行为</td><td>15、16</td></tr>
+</tbody>
+</table>
+</div>

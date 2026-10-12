@@ -202,7 +202,7 @@ details>p:last-child{margin-bottom:0}
 </style>
 </head>
 <body>
-<div class="wrap"><aside class="rail"><a class="rail-brand" href="index.html"><b>Spring Start Here<br>学习手册</b><span>Spring Boot 4 · Spring 7 · Java 25</span></a><div class="rail-group">第一部分 · 基础</div><nav><a class="ch" href="ch01.html" aria-current="page"><i>01</i><span>真实世界中的 Spring</span></a><a class="ch" href="ch02.html"><i>02</i><span>Spring 上下文：定义 bean</span></a><a class="ch" href="ch03.html"><i>03</i><span>Spring 上下文：装配 bean</span></a><a class="ch" href="ch04.html"><i>04</i><span>Spring 上下文：使用抽象</span></a><a class="ch" href="ch05.html"><i>05</i><span>Bean 作用域与生命周期</span></a><a class="ch" href="ch06.html"><i>06</i><span>用 Spring AOP 实现切面</span></a></nav><div class="rail-group">第二部分 · 实现</div><nav><a class="ch" href="ch07.html"><i>07</i><span>理解 Spring Boot 与 Spring MVC</span></a><a class="ch" href="ch08.html"><i>08</i><span>用 Boot + MVC 实现 Web 应用</span></a><a class="ch" href="ch09.html"><i>09</i><span>使用 Spring Web 作用域</span></a><a class="ch" href="ch10.html"><i>10</i><span>实现 REST 服务</span></a><a class="ch" href="ch11.html"><i>11</i><span>消费 REST 端点</span></a><a class="ch" href="ch12.html"><i>12</i><span>在 Spring 应用中使用数据源</span></a><a class="ch" href="ch13.html"><i>13</i><span>在 Spring 应用中使用事务</span></a><a class="ch" href="ch14.html"><i>14</i><span>用 Spring Data 实现持久化</span></a><a class="ch" href="ch15.html"><i>15</i><span>单元测试</span></a><a class="ch" href="ch16.html"><i>16</i><span>Spring 集成测试</span></a></nav><div class="rail-group">总览</div><nav><a class="ch" href="index.html"><i>◆</i><span>目录与版本对照</span></a></nav></aside><main class="main">
+<div class="wrap"><aside class="rail"><a class="rail-brand" href="index.html"><b>Spring Start Here<br>学习手册</b><span>Spring Boot 4 · Spring 7 · Java 25</span></a><div class="rail-group">第一部分 · 基础</div><nav><a class="ch" href="ch01.html" aria-current="page"><i>01</i><span>真实世界中的 Spring</span></a><a class="ch" href="ch02.html"><i>02</i><span>Spring 上下文：定义 bean</span></a><a class="ch" href="ch03.html"><i>03</i><span>Spring 上下文：装配 bean</span></a><a class="ch" href="ch04.html"><i>04</i><span>Spring 上下文：使用抽象</span></a><a class="ch" href="ch05.html"><i>05</i><span>Bean 作用域与生命周期</span></a><a class="ch" href="ch06.html"><i>06</i><span>用 Spring AOP 实现切面</span></a></nav><div class="rail-group">第二部分 · 实现</div><nav><a class="ch" href="ch07.html"><i>07</i><span>理解 Spring Boot 与 Spring MVC</span></a><a class="ch" href="ch08.html"><i>08</i><span>用 Boot + MVC 实现 Web 应用</span></a><a class="ch" href="ch09.html"><i>09</i><span>使用 Spring Web 作用域</span></a><a class="ch" href="ch10.html"><i>10</i><span>实现 REST 服务</span></a><a class="ch" href="ch11.html"><i>11</i><span>消费 REST 端点</span></a><a class="ch" href="ch12.html"><i>12</i><span>在 Spring 应用中使用数据源</span></a><a class="ch" href="ch13.html"><i>13</i><span>在 Spring 应用中使用事务</span></a><a class="ch" href="ch14.html"><i>14</i><span>用 Spring Data 实现持久化</span></a><a class="ch" href="ch15.html"><i>15</i><span>单元测试</span></a><a class="ch" href="ch16.html"><i>16</i><span>Spring 集成测试</span></a></nav><div class="rail-group">附录</div><nav><a class="ch" href="appa.html"><i>A</i><span>HTTP 与 JSON 入门</span></a><a class="ch" href="appb.html"><i>B</i><span>架构风格与 XML 配置</span></a><a class="ch" href="appc.html"><i>C</i><span>速查：注解、报错、术语</span></a><a class="ch" href="appd.html"><i>D</i><span>环境、工具与进阶路线</span></a></nav><div class="rail-group">总览</div><nav><a class="ch" href="index.html"><i>◆</i><span>目录与版本对照</span></a></nav></aside><main class="main">
 <p class="eyebrow">第 1 章 · 第一部分 基础</p>
 <h1>真实世界中的 Spring</h1>
 <p class="lede">这一章不写代码，但它决定了你后面 15 章能不能“看懂为什么”。我们先弄清三件事：框架到底替我们扛了什么、Spring 生态里那一堆名字各管什么、以及这个仓库用的技术栈跟书里差多远。</p>
@@ -391,6 +391,7 @@ spring-boot-starter-webmvc-test
 <tr><td>main 方法</td><td><code>public static void main(String[] args)</code></td><td><code>static void main()</code>（Java 25 紧凑 main）</td><td>2–6</td></tr>
 <tr><td>作用域常量</td><td><code>ConfigurableBeanFactory.SCOPE_PROTOTYPE</code></td><td><code>BeanDefinition.SCOPE_PROTOTYPE</code></td><td>5</td></tr>
 <tr><td>HTTP 客户端</td><td>OpenFeign / RestTemplate / WebClient</td><td>额外新增 <strong>RestClient</strong>，且它排在第一位</td><td>11</td></tr>
+<tr><td>JSON 库</td><td>Jackson 2（<code>com.fasterxml.jackson</code>）</td><td>Jackson 3（<code>tools.jackson</code>），输出字段按字母序</td><td>10–14</td></tr>
 <tr><td>数据库</td><td>MySQL（要自己装）</td><td>H2 内存库（<code>spring-boot-h2console</code>），开箱即跑</td><td>12–14</td></tr>
 <tr><td>Mock 注解</td><td><code>@MockBean</code></td><td><code>@MockitoBean</code></td><td>15–16</td></tr>
 <tr><td>章节数</td><td>15 章</td><td>16 章（测试拆成单元测试 + 集成测试两章）</td><td>15–16</td></tr>
@@ -409,10 +410,10 @@ spring-boot-starter-webmvc-test
 <h4>动手 · 验证环境</h4>
 <pre class="codehead"><b>终端</b></pre>
 <pre><code class="language-bash">java -version          # 需要 JDK 25（Java 25 的紧凑 main 方法是必需的）
-mvn -version           # Maven 3.9+；也可以直接用工程里的 ./mvnw
+mvn -version           # Maven 3.9+（第 2–6 章的工程没有 mvnw，必须用它）
 
 cd ssh_ch2_ex1
-./mvnw compile         # 第一次会下载依赖，之后很快
+mvn compile            # 第一次会下载依赖，之后很快
 </code></pre>
 <p style="margin-bottom:0">Spring Core 的工程（第 2–6 章）没有 <code>spring-boot-maven-plugin</code>，直接在 IDE 里运行 <code>Main</code> 类即可；Boot 工程（第 7 章起）用 <code>./mvnw spring-boot:run</code>。</p>
 </div>
@@ -428,7 +429,7 @@ cd ssh_ch2_ex1
 <details><summary>本仓库为什么把书里 15 章的内容拆成了 16 章？</summary>
 <p>第 2 版把原第 15 章“测试你的 Spring 应用”拆成了两章：第 15 章讲纯单元测试（不启动 Spring，用 Mockito 手工装配），第 16 章讲 Spring 集成测试（启动上下文、<code>@SpringBootTest</code>、<code>@MockitoBean</code>、MockMvc）。仓库里对应的 commit 就叫 <code>CH15</code> 和 <code>CH16</code>，它们没有新建工程，而是往 <span class="path">ssh_ch14_ex1</span> 和 <span class="path">ssh_ch9_ex1</span> 里加了测试类。</p></details>
 
-<div class="pager"><a class="next" href="ch02.html"><span>下一章</span>2. Spring 上下文：定义 bean</a></div>
+<div class="pager"><a class="next" href="ch02.html"><span>下一篇</span>2. Spring 上下文：定义 bean</a></div>
 </main></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/java.min.js"></script>

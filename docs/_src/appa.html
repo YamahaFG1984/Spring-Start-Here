@@ -1,0 +1,180 @@
+<p class="eyebrow">附录 A · 对应书中附录 C、D</p>
+<h1>HTTP 与 JSON 入门</h1>
+<p class="lede">第 7–11 章默认你已经知道 HTTP 请求长什么样、JSON 怎么写。如果这两样不熟，先花二十分钟读完这一页，后面的 <code>@GetMapping</code>、<code>ResponseEntity</code>、<code>@RequestBody</code> 就都有了着落。</p>
+
+<div class="note"><b>什么时候读</b>
+读第 7 章之前，或者在第 10 章被状态码、请求头绊住的时候。全部示例都可以对着仓库里的工程用 <code>curl -v</code> 复现。</div>
+
+<h2>A.1 HTTP 是什么</h2>
+
+<p>HTTP 是浏览器（或任何客户端）和服务器之间的对话规则。规则只有一条主线：<strong>客户端发一个请求，服务器回一个响应</strong>，一问一答，服务器从不主动开口。请求和响应都是纯文本，结构也一样：一行起始行、若干行头、一个空行、可选的正文。</p>
+
+<pre class="codehead"><b>一次完整的对话</b><span>启动 ssh_ch10_ex7 后执行 curl -v 看到的内容（有删节）</span></pre>
+<pre><code class="language-bash">$ curl -v -X POST http://localhost:8080/payment \
+       -H "Content-Type: application/json" -d '{"amount":1000.0}'
+
+&gt; POST /payment HTTP/1.1              ← 请求行：方法 + 路径 + 协议版本
+&gt; Host: localhost:8080                ← 请求头，每行一个“名字: 值”
+&gt; Content-Type: application/json
+&gt; Content-Length: 17
+&gt;                                     ← 空行，表示头结束
+&gt; {"amount":1000.0}                   ← 请求体
+
+&lt; HTTP/1.1 202                        ← 状态行：协议版本 + 状态码
+&lt; Content-Type: application/json      ← 响应头
+&lt;
+&lt; {"amount":1000.0}                   ← 响应体</code></pre>
+
+<h3>请求的五个组成部分，以及 Spring 用什么接</h3>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th>部分</th><th>例子</th><th>Spring 里怎么拿</th><th>章节</th></tr></thead>
+<tbody>
+<tr><td>方法</td><td><code>GET</code>、<code>POST</code></td><td><code>@GetMapping</code> / <code>@PostMapping</code> 决定方法匹配</td><td>7、8、10</td></tr>
+<tr><td>路径</td><td><code>/home/red</code></td><td>注解里的路径；可变部分用 <code>@PathVariable</code></td><td>8</td></tr>
+<tr><td>查询参数</td><td><code>?name=Katy&amp;color=blue</code></td><td><code>@RequestParam</code></td><td>8</td></tr>
+<tr><td>请求头</td><td><code>requestId: 123</code></td><td><code>@RequestHeader</code></td><td>11</td></tr>
+<tr><td>请求体</td><td><code>{"amount":1000.0}</code></td><td><code>@RequestBody</code>（JSON）；表单提交用 <code>@RequestParam</code> 或对象绑定</td><td>8、10</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>URL 怎么拆</h3>
+
+<pre><code class="language-bash">http://localhost:8080/accounts?name=Helen%20Down
+└─┬─┘  └───┬───┘ └┬─┘└───┬───┘ └───────┬───────┘
+ 协议     主机    端口   路径        查询参数（%20 是空格的编码）</code></pre>
+
+<p>端口不写时 http 默认 80、https 默认 443。Boot 内嵌的 Tomcat 默认监听 8080，用 <code>server.port</code> 改。</p>
+
+<h2>A.2 状态码：三位数说清结果</h2>
+
+<p>第一位数字决定大类，记住大类比记住具体数字重要。</p>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th>范围</th><th>含义</th><th>仓库里出现的</th><th>出现在哪</th></tr></thead>
+<tbody>
+<tr><td>2xx</td><td>成功</td><td>200 OK<br>202 Accepted</td><td>直接返回对象时的默认值<br><span class="path">ssh_ch10_ex4</span> 起用 <code>ResponseEntity.status(HttpStatus.ACCEPTED)</code></td></tr>
+<tr><td>3xx</td><td>去别处</td><td>302 Found</td><td><span class="path">ssh_ch9_ex2</span> 的 <code>return "redirect:/main"</code></td></tr>
+<tr><td>4xx</td><td><strong>客户端</strong>的请求有问题</td><td>400 Bad Request<br>404 Not Found<br>405 Method Not Allowed<br>415 Unsupported Media Type</td><td><span class="path">ssh_ch10_ex6</span> 余额不足；JSON 格式错<br>路径写错<br>对只有 <code>@PostMapping</code> 的路径发了 GET<br>POST JSON 时忘了 <code>Content-Type</code> 头</td></tr>
+<tr><td>5xx</td><td><strong>服务端</strong>出错了</td><td>500 Internal Server Error</td><td>控制器抛了没人处理的异常，如 <span class="path">ssh_ch13_ex2</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="tip"><b>4xx 还是 5xx，判断标准是“谁该去修”</b>
+客户端换个请求就能好的，用 4xx；客户端怎么改都没用、得服务端修的，用 5xx。第 10 章用 <code>@RestControllerAdvice</code> 把 <code>NotEnoughMoneyException</code> 映射成 400，就是在表达“这是你的请求有问题，不是我崩了”。</div>
+
+<h2>A.3 两个最常打交道的头</h2>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th>头</th><th>谁发的</th><th>意思</th><th>写错的后果</th></tr></thead>
+<tbody>
+<tr><td><code>Content-Type</code></td><td>有正文的一方</td><td>“我发的正文是这种格式”</td><td>POST JSON 时不带它，Spring 返回 415</td></tr>
+<tr><td><code>Accept</code></td><td>客户端</td><td>“我希望收到这种格式”</td><td>要了服务端给不出的格式，返回 406</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>头也可以自己定义，<span class="path">ssh_ch10_ex4</span> 往响应里塞的 <code>continent</code>、<code>capital</code>，第 11 章来回传递的 <code>requestId</code>，都是自定义头。</p>
+
+<h2>A.4 HTTP 是无状态的，那登录是怎么记住的</h2>
+
+<p>协议本身不记得上一次请求是谁发的，每个请求都是独立的。第 9 章的“登录后记住用户”靠的是在这之上加的一层约定：</p>
+
+<ol>
+<li>第一次请求时，服务器创建一个会话，并在响应里带一个头 <code>Set-Cookie: JSESSIONID=…</code>。</li>
+<li>浏览器记下这个 cookie，之后对同一网站的每个请求都自动带上 <code>Cookie: JSESSIONID=…</code>。</li>
+<li>服务器凭这个 ID 找到对应的会话，<code>@SessionScope</code> 的 bean 就存在里面。</li>
+</ol>
+
+<p>这也解释了第 9 章练习里“换一个浏览器就要重新登录”：另一个浏览器没有那个 cookie。用 curl 测第 9 章的工程时，要加 <code>-c cookies.txt -b cookies.txt</code> 让它像浏览器一样保存并回传 cookie。</p>
+
+<h2>A.5 JSON：十分钟学会</h2>
+
+<p>JSON 是一种表示数据的文本格式，REST 接口的请求体和响应体几乎都用它。语法只有两种结构和四种基本值：</p>
+
+<pre class="codehead"><b>一个覆盖全部语法的例子</b></pre>
+<pre><code class="language-json">{
+  "id": 1,
+  "name": "Helen Down",
+  "amount": 1000.50,
+  "active": true,
+  "nickname": null,
+  "tags": ["vip", "early-user"],
+  "address": { "city": "Paris", "zip": "75001" }
+}</code></pre>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th>JSON</th><th>写法</th><th>对应的 Java 类型</th></tr></thead>
+<tbody>
+<tr><td>对象</td><td><code>{ "键": 值, … }</code></td><td>一个有 getter/setter 的类，或 <code>Map</code></td></tr>
+<tr><td>数组</td><td><code>[ 值, 值, … ]</code></td><td><code>List</code>、数组</td></tr>
+<tr><td>字符串</td><td><code>"text"</code></td><td><code>String</code>，以及日期、枚举等</td></tr>
+<tr><td>数字</td><td><code>42</code>、<code>3.14</code></td><td><code>int</code>、<code>long</code>、<code>double</code>、<code>BigDecimal</code></td></tr>
+<tr><td>布尔</td><td><code>true</code> / <code>false</code></td><td><code>boolean</code></td></tr>
+<tr><td>空</td><td><code>null</code></td><td><code>null</code></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="warn"><b>手写 JSON 最常犯的四个错</b>
+① 键必须用<strong>双引号</strong>，<code>{name: "x"}</code> 和 <code>{'name': 'x'}</code> 都不合法。<br>
+② 最后一个元素后面<strong>不能有逗号</strong>。<br>
+③ 不支持注释。<br>
+④ 在 shell 里用 curl 发 JSON，整段要用<strong>单引号</strong>包起来，否则里面的双引号会被 shell 吃掉。<br>
+这四种错服务端都会回 400，日志里是 <code>HttpMessageNotReadableException</code>。</div>
+
+<h3>Java 对象和 JSON 是怎么互相变的</h3>
+
+<p>Spring 把这件事交给 Jackson。规则在第 10 章讲过，这里并排放一遍：</p>
+
+<div class="cmp">
+<div class="old"><h5>Java</h5><pre><code>public class Country {
+  private String name;
+  private int population;
+
+  public String getName() {…}
+  public int getPopulation() {…}
+  public void setName(…) {…}
+  public void setPopulation(…) {…}
+}</code></pre></div>
+<div class="new"><h5>JSON</h5><pre><code>{
+  "name": "France",
+  "population": 67
+}
+
+
+// 属性名来自 getter：
+// getName() → "name"</code></pre></div>
+</div>
+
+<p>对象里嵌对象就是 JSON 里嵌 <code>{}</code>，<code>List&lt;Country&gt;</code> 就是 <code>[ {…}, {…} ]</code>，<span class="path">ssh_ch10_ex3</span> 的 <code>/all</code> 端点返回的正是后者。</p>
+
+<h2>A.6 curl 速查</h2>
+
+<pre><code class="language-bash">curl http://localhost:8080/home                 # GET，只看响应体
+curl -i http://localhost:8080/france            # 加 -i：同时看状态码和响应头
+curl -v http://localhost:8080/france            # 加 -v：连发出去的请求也打印出来
+
+curl -X POST http://localhost:8080/payment \
+     -H "Content-Type: application/json" \
+     -d '{"amount":1000.0}'                     # POST 一段 JSON
+
+curl -X POST http://localhost:8080/products \
+     -d "name=Beer" -d "price=5.5"              # 模拟 HTML 表单提交（第 8 章）
+
+curl -H "requestId: 42" http://localhost:8080/…  # 带自定义请求头
+curl -c c.txt -b c.txt -L http://localhost:8080/ # 保存并回传 cookie，跟随重定向（第 9 章）</code></pre>
+
+<h2>自测</h2>
+<details><summary>为什么 POST JSON 时不写 <code>Content-Type</code> 会得到 415？</summary>
+<p>curl 的 <code>-d</code> 默认把 <code>Content-Type</code> 设成 <code>application/x-www-form-urlencoded</code>（表单格式）。Spring 看到 <code>@RequestBody</code> 要一个对象，去找“能把表单格式读成这个对象”的转换器，找不到，于是回答 415：你发的这种媒体类型我处理不了。</p></details>
+<details><summary>400 和 500 都是“出错了”，客户端该怎么区别对待？</summary>
+<p>收到 4xx 说明请求本身有问题，原样重试没有意义，应该修正请求或把错误提示给用户。收到 5xx 说明服务端出了故障，请求本身可能没错，可以稍后重试（前提是接口幂等，见第 10 章）。</p></details>
+<details><summary>JSON 里的数字 <code>1000.0</code> 到了 Java 里会不会丢精度？</summary>
+<p>取决于你用什么类型接。字段声明成 <code>double</code> 就按浮点数解析，有精度问题；声明成 <code>BigDecimal</code>，Jackson 会按十进制精确解析。这就是第 12–14 章金额字段都用 <code>BigDecimal</code> 的原因。</p></details>

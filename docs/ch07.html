@@ -202,7 +202,7 @@ details>p:last-child{margin-bottom:0}
 </style>
 </head>
 <body>
-<div class="wrap"><aside class="rail"><a class="rail-brand" href="index.html"><b>Spring Start Here<br>学习手册</b><span>Spring Boot 4 · Spring 7 · Java 25</span></a><div class="rail-group">第一部分 · 基础</div><nav><a class="ch" href="ch01.html"><i>01</i><span>真实世界中的 Spring</span></a><a class="ch" href="ch02.html"><i>02</i><span>Spring 上下文：定义 bean</span></a><a class="ch" href="ch03.html"><i>03</i><span>Spring 上下文：装配 bean</span></a><a class="ch" href="ch04.html"><i>04</i><span>Spring 上下文：使用抽象</span></a><a class="ch" href="ch05.html"><i>05</i><span>Bean 作用域与生命周期</span></a><a class="ch" href="ch06.html"><i>06</i><span>用 Spring AOP 实现切面</span></a></nav><div class="rail-group">第二部分 · 实现</div><nav><a class="ch" href="ch07.html" aria-current="page"><i>07</i><span>理解 Spring Boot 与 Spring MVC</span></a><a class="ch" href="ch08.html"><i>08</i><span>用 Boot + MVC 实现 Web 应用</span></a><a class="ch" href="ch09.html"><i>09</i><span>使用 Spring Web 作用域</span></a><a class="ch" href="ch10.html"><i>10</i><span>实现 REST 服务</span></a><a class="ch" href="ch11.html"><i>11</i><span>消费 REST 端点</span></a><a class="ch" href="ch12.html"><i>12</i><span>在 Spring 应用中使用数据源</span></a><a class="ch" href="ch13.html"><i>13</i><span>在 Spring 应用中使用事务</span></a><a class="ch" href="ch14.html"><i>14</i><span>用 Spring Data 实现持久化</span></a><a class="ch" href="ch15.html"><i>15</i><span>单元测试</span></a><a class="ch" href="ch16.html"><i>16</i><span>Spring 集成测试</span></a></nav><div class="rail-group">总览</div><nav><a class="ch" href="index.html"><i>◆</i><span>目录与版本对照</span></a></nav></aside><main class="main">
+<div class="wrap"><aside class="rail"><a class="rail-brand" href="index.html"><b>Spring Start Here<br>学习手册</b><span>Spring Boot 4 · Spring 7 · Java 25</span></a><div class="rail-group">第一部分 · 基础</div><nav><a class="ch" href="ch01.html"><i>01</i><span>真实世界中的 Spring</span></a><a class="ch" href="ch02.html"><i>02</i><span>Spring 上下文：定义 bean</span></a><a class="ch" href="ch03.html"><i>03</i><span>Spring 上下文：装配 bean</span></a><a class="ch" href="ch04.html"><i>04</i><span>Spring 上下文：使用抽象</span></a><a class="ch" href="ch05.html"><i>05</i><span>Bean 作用域与生命周期</span></a><a class="ch" href="ch06.html"><i>06</i><span>用 Spring AOP 实现切面</span></a></nav><div class="rail-group">第二部分 · 实现</div><nav><a class="ch" href="ch07.html" aria-current="page"><i>07</i><span>理解 Spring Boot 与 Spring MVC</span></a><a class="ch" href="ch08.html"><i>08</i><span>用 Boot + MVC 实现 Web 应用</span></a><a class="ch" href="ch09.html"><i>09</i><span>使用 Spring Web 作用域</span></a><a class="ch" href="ch10.html"><i>10</i><span>实现 REST 服务</span></a><a class="ch" href="ch11.html"><i>11</i><span>消费 REST 端点</span></a><a class="ch" href="ch12.html"><i>12</i><span>在 Spring 应用中使用数据源</span></a><a class="ch" href="ch13.html"><i>13</i><span>在 Spring 应用中使用事务</span></a><a class="ch" href="ch14.html"><i>14</i><span>用 Spring Data 实现持久化</span></a><a class="ch" href="ch15.html"><i>15</i><span>单元测试</span></a><a class="ch" href="ch16.html"><i>16</i><span>Spring 集成测试</span></a></nav><div class="rail-group">附录</div><nav><a class="ch" href="appa.html"><i>A</i><span>HTTP 与 JSON 入门</span></a><a class="ch" href="appb.html"><i>B</i><span>架构风格与 XML 配置</span></a><a class="ch" href="appc.html"><i>C</i><span>速查：注解、报错、术语</span></a><a class="ch" href="appd.html"><i>D</i><span>环境、工具与进阶路线</span></a></nav><div class="rail-group">总览</div><nav><a class="ch" href="index.html"><i>◆</i><span>目录与版本对照</span></a></nav></aside><main class="main">
 <p class="eyebrow">第 7 章 · 第二部分 实现</p>
 <h1>理解 Spring Boot 与 Spring MVC</h1>
 <p class="lede">从这一章起进入第二部分。前六章的容器知识一条都不会作废——只是从现在开始，配置上下文这件事交给 Spring Boot 了。本章的目标是：<strong>把“魔法”拆成三件具体的事</strong>，然后跑起第一个网页。</p>
@@ -404,6 +404,80 @@ public String home() { ... }</code></pre></div>
 </div>
 <div class="why"><b>为什么变：</b><code>@GetMapping</code> 是 <code>@RequestMapping(method = GET)</code> 的快捷写法（Spring 4.3 引入）。仓库统一用了语义更明确的 <code>@GetMapping</code>/<code>@PostMapping</code>。<span class="path">ssh_ch8_ex5</span> 里作者还特意把旧写法用注释保留在旁边，方便对照。</div>
 
+<h2>7.4 外部化配置：application.properties</h2>
+
+<p>每个 Boot 工程的 <span class="path">src/main/resources/</span> 下都有一份 <span class="path">application.properties</span>。第 7 章这份里只有一行应用名，但从第 11 章起它开始承担真正的工作，这里先把规则讲清楚。书里没有单独讲这部分，是按用到的顺序零散出现的。</p>
+
+<h3>两类属性</h3>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th></th><th>Boot 认识的属性</th><th>你自己定义的属性</th></tr></thead>
+<tbody>
+<tr><td>谁来读</td><td>自动配置类</td><td>你的代码</td></tr>
+<tr><td>仓库里的例子</td><td><code>server.port=9090</code>（第 11 章）<br><code>spring.datasource.url=…</code>（第 12 章）<br><code>spring.sql.init.mode=always</code>（第 12 章）</td><td><code>payments.url</code>（第 11 章）<br><code>custom.datasource.url</code>（第 12 章）</td></tr>
+<tr><td>怎么生效</td><td>写上就生效</td><td>要用 <code>@Value</code> 或 <code>@ConfigurationProperties</code> 取出来</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>@Value：把一个属性注入进来</h3>
+
+<pre class="codehead"><b>ssh_ch11_ex1 · proxies/PaymentsProxy.java</b><span>第 11 章会见到</span></pre>
+<pre><code class="language-java">public PaymentsProxy(@Value("${payments.url:http://localhost:8080}") String paymentsUrl) {
+    this.restClient = RestClient.create(paymentsUrl);
+}</code></pre>
+
+<p><code>${payments.url:http://localhost:8080}</code> 读作：取属性 <code>payments.url</code> 的值；<strong>冒号后面是默认值</strong>，属性没配时用它。不写默认值而属性又不存在，应用会启动失败，这通常是你想要的（配置缺失应该尽早暴露）。第 12 章 <span class="path">ssh_ch12_ex3</span> 的 <code>@Value("${custom.datasource.url}")</code> 就是不带默认值的写法。</p>
+
+<h3>同一个属性可以从多处给，谁的优先级高</h3>
+
+<pre><code class="language-bash"># ① 写在 application.properties 里（优先级最低）
+server.port=9090
+
+# ② 环境变量：点和横线换成下划线，全大写
+SERVER_PORT=9091 ./mvnw spring-boot:run
+
+# ③ 命令行参数（优先级最高）
+./mvnw package -DskipTests
+java -jar target/ssh_ch7_ex1-0.0.1-SNAPSHOT.jar --server.port=9092</code></pre>
+
+<p>优先级从低到高：properties 文件 → 环境变量 → 命令行参数。这个设计的目的是<strong>同一个 jar 不改代码、不重新打包，就能部署到不同环境</strong>：开发机用文件里的默认值，服务器上用环境变量覆盖数据库地址和密码。</p>
+
+<div class="tip"><b>顺带学会了打包</b>
+上面第 ③ 种用到了 <code>./mvnw package</code>：它借助 <code>spring-boot-maven-plugin</code> 把应用、所有依赖和内嵌 Tomcat 打成<strong>一个可执行 jar</strong>，有 JDK 的机器上 <code>java -jar</code> 就能跑。这就是 Boot 应用最基本的部署方式。</div>
+
+<h3>Profile：给不同环境各备一份配置</h3>
+
+<pre><code class="language-properties"># application.properties —— 所有环境共用
+spring.application.name=demo
+
+# application-dev.properties —— 只在 dev profile 下加载
+spring.datasource.url=jdbc:h2:mem:devdb
+
+# application-prod.properties —— 只在 prod profile 下加载
+spring.datasource.url=jdbc:mysql://db.internal/app</code></pre>
+
+<p>用 <code>--spring.profiles.active=prod</code>（或环境变量 <code>SPRING_PROFILES_ACTIVE=prod</code>）选择激活哪一份。仓库的示例都很小，没有用到 profile；真实项目几乎都会用。</p>
+
+<h3>@ConfigurationProperties：属性一多就该用它</h3>
+
+<pre class="codehead"><b>仓库里没有对应工程</b><span>作为 @Value 的进阶写法了解</span></pre>
+<pre><code class="language-java">@ConfigurationProperties(prefix = "payments")
+public record PaymentsProperties(String url, Duration timeout) { }
+
+// 主类或任一配置类上：
+@EnableConfigurationProperties(PaymentsProperties.class)
+
+// application.properties：
+// payments.url=http://localhost:8080
+// payments.timeout=2s</code></pre>
+
+<p>它把同一前缀下的一组属性绑定成一个类型安全的对象，可以像普通 bean 一样构造器注入。相比到处散落的 <code>@Value</code> 字符串，好处是属性集中在一处、有类型转换（上面的 <code>2s</code> 直接变成 <code>Duration</code>）、IDE 能补全。经验法则：一两个属性用 <code>@Value</code>，三个以上或成组出现就用 <code>@ConfigurationProperties</code>。</p>
+
+<div class="note"><b>properties 还是 yml</b>
+<span class="path">application.yml</span> 和 <span class="path">application.properties</span> 功能等价，只是语法不同（yml 用缩进表达层级）。仓库统一用 properties，唯一的 yml 是第 10 章的 <span class="path">openapi.yml</span>，那是 API 契约，不是 Spring 配置。</div>
+
 <h2>跑起来</h2>
 
 <div class="lab">
@@ -449,7 +523,7 @@ class MainTests {
 <details><summary><code>spring-boot-starter-web</code> 和 <code>spring-boot-starter-webmvc</code> 能混用吗？</summary>
 <p>在 Boot 4 里两者都还能解析，但含义已经收敛：<code>-webmvc</code> 明确表示传统的 Servlet 阻塞式 Web 栈。仓库统一用 <code>-webmvc</code>，你自己新建工程时（比如从 start.spring.io 生成）也会拿到这个名字。书里的 <code>-web</code> 写法照抄到 Boot 4 工程里通常能跑，但不是现在的推荐写法。</p></details>
 
-<div class="pager"><a class="prev" href="ch06.html"><span>上一章</span>6. 用 Spring AOP 实现切面</a><a class="next" href="ch08.html"><span>下一章</span>8. 用 Boot + MVC 实现 Web 应用</a></div>
+<div class="pager"><a class="prev" href="ch06.html"><span>上一篇</span>6. 用 Spring AOP 实现切面</a><a class="next" href="ch08.html"><span>下一篇</span>8. 用 Boot + MVC 实现 Web 应用</a></div>
 </main></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/java.min.js"></script>

@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>附录 B 架构风格与 XML 配置 · Spring Start Here 学习手册</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+/* ── 令牌：浅色（默认，未标记状态也走这里） ───────────────── */
+:root{
+  --paper:#f4f7f3; --surface:#ffffff; --surface-2:#e9eee8;
+  --ink:#141f1a; --ink-2:#3c4a44; --ink-3:#6a7771;
+  --line:#d8e0d9; --line-strong:#b9c6bd;
+  --accent:#1b6b47; --accent-ink:#0f4a30; --accent-soft:#e0eee6;
+  --amber:#8a5712; --amber-soft:#f6ecd9;
+  --steel:#385a75; --steel-soft:#e2eaf1;
+  --code-bg:#eef2ec; --code-ink:#1d2b24;
+  --hl-key:#0f4a30; --hl-str:#8a5712; --hl-num:#385a75; --hl-com:#7d8a83; --hl-ann:#6b3a8a; --hl-type:#1d4f6b;
+  --shadow:0 1px 2px rgba(20,31,26,.05), 0 8px 24px -16px rgba(20,31,26,.28);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0d1411; --surface:#141d19; --surface-2:#1c2721;
+    --ink:#dde5df; --ink-2:#a9b5ae; --ink-3:#7f8d86;
+    --line:#26332c; --line-strong:#38483f;
+    --accent:#62b98d; --accent-ink:#8ed3ae; --accent-soft:#15291f;
+    --amber:#d9a44a; --amber-soft:#241d10;
+    --steel:#8fb6d4; --steel-soft:#14212b;
+    --code-bg:#101a15; --code-ink:#cfdad3;
+    --hl-key:#8ed3ae; --hl-str:#d9a44a; --hl-num:#8fb6d4; --hl-com:#6d7d75; --hl-ann:#c4a0dd; --hl-type:#7fc4d8;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -18px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0d1411; --surface:#141d19; --surface-2:#1c2721;
+  --ink:#dde5df; --ink-2:#a9b5ae; --ink-3:#7f8d86;
+  --line:#26332c; --line-strong:#38483f;
+  --accent:#62b98d; --accent-ink:#8ed3ae; --accent-soft:#15291f;
+  --amber:#d9a44a; --amber-soft:#241d10;
+  --steel:#8fb6d4; --steel-soft:#14212b;
+  --code-bg:#101a15; --code-ink:#cfdad3;
+  --hl-key:#8ed3ae; --hl-str:#d9a44a; --hl-num:#8fb6d4; --hl-com:#6d7d75; --hl-ann:#c4a0dd; --hl-type:#7fc4d8;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -18px rgba(0,0,0,.8);
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:"Noto Sans SC","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+  font-size:16.5px; line-height:1.78; font-feature-settings:"tnum" 0;
+}
+
+/* ── 版式骨架 ─────────────────────────────────────── */
+.wrap{max-width:1200px; margin:0 auto; padding:0 26px;
+      display:grid; grid-template-columns:236px minmax(0,1fr); gap:52px; align-items:start}
+.rail{position:sticky; top:0; max-height:100vh; overflow-y:auto; padding:34px 0 40px}
+.main{min-width:0; padding:34px 0 96px; max-width:78ch}
+@media (max-width:900px){
+  .wrap{grid-template-columns:minmax(0,1fr); gap:0}
+  .rail{position:static; max-height:none; padding:26px 0 0; border-bottom:1px solid var(--line); margin-bottom:26px}
+  .main{padding-top:14px}
+}
+
+/* ── 侧栏 ─────────────────────────────────────────── */
+.rail-brand{display:block; text-decoration:none; color:inherit; margin-bottom:22px}
+.rail-brand b{display:block; font-family:"Newsreader","Noto Serif SC",Georgia,serif;
+  font-size:21px; font-weight:600; line-height:1.25; letter-spacing:-.01em}
+.rail-brand span{display:block; font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); margin-top:5px}
+.rail-group{font-family:"JetBrains Mono",ui-monospace,monospace; font-size:10px; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--ink-3); margin:20px 0 8px; padding-left:2px}
+.rail nav{display:flex; flex-direction:column; gap:1px}
+.rail a.ch{display:grid; grid-template-columns:22px 1fr; gap:8px; align-items:baseline;
+  text-decoration:none; color:var(--ink-2); padding:4px 8px 4px 2px; border-radius:5px; font-size:13.5px; line-height:1.45}
+.rail a.ch i{font-style:normal; font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:11px; color:var(--ink-3); font-variant-numeric:tabular-nums}
+.rail a.ch:hover{background:var(--surface-2); color:var(--ink)}
+.rail a.ch[aria-current="page"]{background:var(--accent-soft); color:var(--accent-ink); font-weight:500}
+.rail a.ch[aria-current="page"] i{color:var(--accent)}
+a:focus-visible,summary:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:3px}
+
+/* ── 标题层级 ─────────────────────────────────────── */
+.eyebrow{font-family:"JetBrains Mono",ui-monospace,monospace; font-size:11px; letter-spacing:.18em;
+  text-transform:uppercase; color:var(--accent); margin:0 0 10px}
+h1{font-family:"Newsreader","Noto Serif SC",Georgia,serif; font-weight:600; font-size:clamp(30px,4.4vw,42px);
+  line-height:1.18; letter-spacing:-.015em; margin:0 0 14px; text-wrap:balance}
+h2{font-family:"Newsreader","Noto Serif SC",Georgia,serif; font-weight:600; font-size:26px; line-height:1.3;
+  margin:56px 0 16px; padding-top:20px; border-top:1px solid var(--line); text-wrap:balance; letter-spacing:-.01em}
+h3{font-size:18.5px; font-weight:700; margin:34px 0 10px; line-height:1.45; text-wrap:balance}
+h4{font-size:15px; font-weight:700; margin:22px 0 8px; color:var(--ink-2)}
+.lede{font-size:18px; line-height:1.72; color:var(--ink-2); margin:0 0 8px}
+p{margin:0 0 14px}
+ul,ol{margin:0 0 16px; padding-left:1.35em}
+li{margin:0 0 7px}
+li>ul,li>ol{margin-top:7px}
+strong{font-weight:700; color:var(--ink)}
+em{font-style:normal; background:linear-gradient(transparent 62%, var(--accent-soft) 62%); padding:0 1px}
+a{color:var(--accent-ink); text-underline-offset:2.5px; text-decoration-thickness:1px}
+hr{border:0; border-top:1px solid var(--line); margin:38px 0}
+
+/* ── 代码 ─────────────────────────────────────────── */
+code,kbd,.path{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+:not(pre)>code{font-size:.865em; background:var(--code-bg); color:var(--code-ink);
+  padding:.12em .38em; border-radius:4px; border:1px solid var(--line)}
+.path{font-size:.83em; background:var(--surface-2); color:var(--ink-2);
+  padding:.12em .42em; border-radius:4px; border:1px solid var(--line); white-space:nowrap}
+pre{margin:0 0 18px; background:var(--code-bg); border:1px solid var(--line); border-radius:9px;
+  padding:15px 17px; overflow-x:auto; line-height:1.62; box-shadow:var(--shadow)}
+pre code{font-size:13.2px; color:var(--code-ink); background:none; border:0; padding:0; white-space:pre}
+.codehead{display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;
+  font-family:"JetBrains Mono",ui-monospace,monospace; font-size:11px; color:var(--ink-3);
+  letter-spacing:.05em; margin:0 0 6px; padding:0 2px}
+.codehead b{color:var(--ink-2); font-weight:500}
+.hljs-keyword,.hljs-built_in,.hljs-literal{color:var(--hl-key)}
+.hljs-string,.hljs-attr{color:var(--hl-str)}
+.hljs-number{color:var(--hl-num)}
+.hljs-comment{color:var(--hl-com); font-style:italic}
+.hljs-meta{color:var(--hl-ann); font-weight:500}
+.hljs-title,.hljs-title.class_,.hljs-title.function_,.hljs-type{color:var(--hl-type)}
+.hljs-tag,.hljs-name{color:var(--hl-key)}
+
+/* ── 图 ───────────────────────────────────────────── */
+figure{margin:26px 0 28px; background:var(--surface); border:1px solid var(--line);
+  border-radius:11px; padding:20px 18px 14px; box-shadow:var(--shadow); overflow-x:auto}
+figure svg{display:block; width:100%; height:auto; max-width:100%; min-width:0}
+figcaption{margin-top:12px; font-size:13px; line-height:1.62; color:var(--ink-3); border-top:1px solid var(--line); padding-top:10px}
+figcaption b{color:var(--ink-2); font-weight:600}
+svg text{font-family:"Noto Sans SC","PingFang SC",system-ui,sans-serif}
+svg .mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+
+/* ── 对照卡：书里旧版 vs 仓库新版 ──────────────────── */
+.cmp{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:22px 0 24px}
+@media (max-width:660px){.cmp{grid-template-columns:1fr}}
+.cmp>div{border-radius:10px; padding:14px 15px; border:1px solid var(--line); background:var(--surface)}
+.cmp .old{border-left:3px solid var(--steel); background:var(--steel-soft)}
+.cmp .new{border-left:3px solid var(--accent); background:var(--accent-soft)}
+.cmp h5{margin:0 0 8px; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:10.5px;
+  letter-spacing:.14em; text-transform:uppercase; font-weight:500}
+.cmp .old h5{color:var(--steel)} .cmp .new h5{color:var(--accent)}
+.cmp p:last-child,.cmp ul:last-child,.cmp pre:last-child{margin-bottom:0}
+.cmp pre{background:transparent; border:0; padding:0; box-shadow:none; font-size:12.5px}
+.cmp code{background:transparent; border:0; padding:0}
+.why{margin:-8px 0 24px; padding:11px 15px; border-radius:9px; background:var(--surface-2);
+  border:1px solid var(--line); font-size:14.5px; line-height:1.7; color:var(--ink-2)}
+.why b{color:var(--ink)}
+
+/* ── 提示块 ───────────────────────────────────────── */
+.note,.warn,.tip{border-radius:9px; padding:13px 16px; margin:20px 0; font-size:15px; line-height:1.72;
+  border:1px solid var(--line); border-left-width:3px; background:var(--surface)}
+.note{border-left-color:var(--steel); background:var(--steel-soft)}
+.warn{border-left-color:var(--amber); background:var(--amber-soft)}
+.tip{border-left-color:var(--accent); background:var(--accent-soft)}
+.note>:last-child,.warn>:last-child,.tip>:last-child{margin-bottom:0}
+.note b:first-child,.warn b:first-child,.tip b:first-child{font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:11px; letter-spacing:.14em; text-transform:uppercase; display:block; margin-bottom:5px}
+.note b:first-child{color:var(--steel)} .warn b:first-child{color:var(--amber)} .tip b:first-child{color:var(--accent)}
+
+/* ── 表 ───────────────────────────────────────────── */
+.tablewrap{overflow-x:auto; margin:20px 0 24px; border:1px solid var(--line); border-radius:10px; background:var(--surface)}
+table{border-collapse:collapse; width:100%; font-size:14px; min-width:520px}
+th,td{text-align:left; padding:9px 13px; border-bottom:1px solid var(--line); vertical-align:top; line-height:1.6}
+thead th{font-family:"JetBrains Mono",ui-monospace,monospace; font-size:10.5px; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--ink-3); font-weight:500; background:var(--surface-2); white-space:nowrap}
+tbody tr:last-child td{border-bottom:0}
+td code{font-size:.84em; white-space:normal; overflow-wrap:break-word}
+th:last-child,td:last-child{padding-right:16px}
+.num{font-variant-numeric:tabular-nums}
+
+/* ── 实验 / 自测 ──────────────────────────────────── */
+.lab{border:1px solid var(--line); border-radius:11px; padding:16px 18px; margin:24px 0; background:var(--surface)}
+.lab>h4{margin-top:0; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:11px;
+  letter-spacing:.16em; text-transform:uppercase; color:var(--accent)}
+details{border:1px solid var(--line); border-radius:9px; padding:11px 15px; margin:0 0 9px; background:var(--surface)}
+details[open]{background:var(--surface-2)}
+summary{cursor:pointer; font-weight:600; font-size:15px; list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"?"; font-family:"JetBrains Mono",ui-monospace,monospace; color:var(--accent);
+  margin-right:9px; font-weight:700}
+details>*:not(summary){margin-top:10px}
+details>p:last-child{margin-bottom:0}
+
+/* ── 章节页脚导航 ─────────────────────────────────── */
+.pager{display:flex; justify-content:space-between; gap:14px; margin-top:60px; padding-top:22px; border-top:1px solid var(--line)}
+.pager a{display:block; text-decoration:none; color:var(--ink-2); font-size:14px; max-width:47%}
+.pager a span{display:block; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:10px;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); margin-bottom:3px}
+.pager a:hover{color:var(--accent-ink)}
+.pager .next{text-align:right; margin-left:auto}
+
+/* ── 首页卡片 ─────────────────────────────────────── */
+.cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(232px,1fr)); gap:13px; margin:22px 0 28px}
+.card{display:block; text-decoration:none; color:inherit; background:var(--surface); border:1px solid var(--line);
+  border-radius:11px; padding:14px 15px; box-shadow:var(--shadow); transition:border-color .15s, transform .15s}
+.card:hover{border-color:var(--accent); transform:translateY(-2px)}
+.card i{font-style:normal; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:11px;
+  letter-spacing:.1em; color:var(--accent); display:block; margin-bottom:5px}
+.card b{display:block; font-size:15.5px; line-height:1.4; margin-bottom:5px}
+.card p{margin:0; font-size:13px; color:var(--ink-3); line-height:1.6}
+@media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
+
+</style>
+</head>
+<body>
+<div class="wrap"><aside class="rail"><a class="rail-brand" href="index.html"><b>Spring Start Here<br>学习手册</b><span>Spring Boot 4 · Spring 7 · Java 25</span></a><div class="rail-group">第一部分 · 基础</div><nav><a class="ch" href="ch01.html"><i>01</i><span>真实世界中的 Spring</span></a><a class="ch" href="ch02.html"><i>02</i><span>Spring 上下文：定义 bean</span></a><a class="ch" href="ch03.html"><i>03</i><span>Spring 上下文：装配 bean</span></a><a class="ch" href="ch04.html"><i>04</i><span>Spring 上下文：使用抽象</span></a><a class="ch" href="ch05.html"><i>05</i><span>Bean 作用域与生命周期</span></a><a class="ch" href="ch06.html"><i>06</i><span>用 Spring AOP 实现切面</span></a></nav><div class="rail-group">第二部分 · 实现</div><nav><a class="ch" href="ch07.html"><i>07</i><span>理解 Spring Boot 与 Spring MVC</span></a><a class="ch" href="ch08.html"><i>08</i><span>用 Boot + MVC 实现 Web 应用</span></a><a class="ch" href="ch09.html"><i>09</i><span>使用 Spring Web 作用域</span></a><a class="ch" href="ch10.html"><i>10</i><span>实现 REST 服务</span></a><a class="ch" href="ch11.html"><i>11</i><span>消费 REST 端点</span></a><a class="ch" href="ch12.html"><i>12</i><span>在 Spring 应用中使用数据源</span></a><a class="ch" href="ch13.html"><i>13</i><span>在 Spring 应用中使用事务</span></a><a class="ch" href="ch14.html"><i>14</i><span>用 Spring Data 实现持久化</span></a><a class="ch" href="ch15.html"><i>15</i><span>单元测试</span></a><a class="ch" href="ch16.html"><i>16</i><span>Spring 集成测试</span></a></nav><div class="rail-group">附录</div><nav><a class="ch" href="appa.html"><i>A</i><span>HTTP 与 JSON 入门</span></a><a class="ch" href="appb.html" aria-current="page"><i>B</i><span>架构风格与 XML 配置</span></a><a class="ch" href="appc.html"><i>C</i><span>速查：注解、报错、术语</span></a><a class="ch" href="appd.html"><i>D</i><span>环境、工具与进阶路线</span></a></nav><div class="rail-group">总览</div><nav><a class="ch" href="index.html"><i>◆</i><span>目录与版本对照</span></a></nav></aside><main class="main">
+<p class="eyebrow">附录 B · 对应书中附录 A、B</p>
+<h1>架构风格与 XML 配置</h1>
+<p class="lede">两个书里放在附录、但工作中迟早会遇到的话题：你写的 Spring 应用在整个系统里处在什么位置，以及老项目里那些 <code>&lt;bean&gt;</code> 标签是怎么回事。</p>
+
+<h2>B.1 四种架构风格</h2>
+
+<p>本书每个示例都是一个独立的小应用。真实系统由多少个这样的应用组成、它们之间怎么分工，就是架构风格要回答的问题。书的附录 A 按演进顺序讲了下面几种。</p>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th>风格</th><th>一句话</th><th>好处</th><th>代价</th></tr></thead>
+<tbody>
+<tr><td><strong>单体</strong><br>Monolith</td><td>所有功能在一个应用里，一起打包、一起部署</td><td>开发、调试、部署都简单；方法调用就是普通 Java 调用；一个数据库事务能管住所有操作</td><td>应用变大后，任何小改动都要整体发布；只能整体扩容；团队多了容易互相踩</td></tr>
+<tr><td><strong>面向服务</strong><br>SOA</td><td>按业务能力拆成若干较大的服务，通过网络互相调用</td><td>服务可以独立部署和扩容</td><td>引入网络调用的全部问题；服务间常共享数据库或依赖一个中心化的总线，耦合仍然不低</td></tr>
+<tr><td><strong>微服务</strong><br>Microservices</td><td>拆得更细，每个服务有自己的数据库，由一个小团队独立负责</td><td>独立发布、独立扩容、技术栈可以不同；故障能被隔离</td><td>分布式系统的复杂度：调用会失败会超时、没有跨服务事务、要有服务发现、链路追踪、统一配置</td></tr>
+<tr><td><strong>无服务器</strong><br>Serverless</td><td>只写函数，由云平台在请求到来时拉起运行，按调用计费</td><td>不用管服务器；没流量时不花钱</td><td>冷启动延迟；被平台绑定；长时间运行和有状态的逻辑不适合</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="warn"><b>书里反复强调的一句话：不要因为流行就上微服务</b>
+微服务解决的是<strong>组织和规模</strong>的问题：几十个团队改同一个应用改不动了，或者某一块的流量是其他部分的一百倍。它不会让代码变简单，只会把复杂度从代码内部搬到网络上。一个团队、流量平平的系统，单体几乎总是更好的起点，等确实遇到单体的痛点再拆。</div>
+
+<h3>这和本书的章节有什么关系</h3>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th>章节</th><th>在单体里</th><th>在微服务里</th></tr></thead>
+<tbody>
+<tr><td>第 2–6 章 容器与 AOP</td><td colspan="2">完全一样。每个服务内部都是一个 Spring 上下文</td></tr>
+<tr><td>第 10 章 实现 REST</td><td>主要给前端用</td><td>也是服务之间互相调用的接口</td></tr>
+<tr><td>第 11 章 消费 REST</td><td>偶尔调第三方接口</td><td><strong>日常</strong>。<span class="path">ssh_ch11_ex1</span> 调 <span class="path">ssh_ch11_payments</span> 就是两个微服务的最小模型；OpenFeign 也正是 Spring Cloud 为这个场景准备的</td></tr>
+<tr><td>第 13 章 事务</td><td><code>@Transactional</code> 能管住一个用例里的全部写操作</td><td>只能管住<strong>一个服务自己的数据库</strong>。跨服务的一致性要靠补偿、消息、Saga 等模式，不在本书范围内</td></tr>
+<tr><td>第 9 章 会话</td><td>存在内存里就行</td><td>多实例部署后必须外置（Spring Session + Redis），或改用无状态的令牌</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2>B.2 用 XML 配置上下文</h2>
+
+<p>第 2–3 章讲了三种往上下文里加 bean 的方式，其实还有第四种，也是 Spring 最早的方式：XML。新项目已经不用它，但 2015 年以前启动的项目里大量存在，读得懂是必要的。书的附录 B 只用了两页，这里也只讲到“能读懂”为止。</p>
+
+<pre class="codehead"><b>src/main/resources/config.xml</b><span>仓库里没有对应工程</span></pre>
+<pre><code class="language-xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans.xsd"&gt;
+
+    &lt;bean id="parrot1" class="com.example.Parrot"&gt;
+        &lt;property name="name" value="Koko"/&gt;          &lt;!-- 调 setName("Koko") --&gt;
+    &lt;/bean&gt;
+
+    &lt;bean id="parrot2" class="com.example.Parrot" primary="true"&gt;
+        &lt;property name="name" value="Miki"/&gt;
+    &lt;/bean&gt;
+
+    &lt;bean id="person" class="com.example.Person"&gt;
+        &lt;property name="name" value="Ella"/&gt;
+        &lt;property name="parrot" ref="parrot1"/&gt;       &lt;!-- 注入另一个 bean --&gt;
+    &lt;/bean&gt;
+
+&lt;/beans&gt;</code></pre>
+
+<pre class="codehead"><b>Main.java</b><span>换一个上下文实现类，其余用法不变</span></pre>
+<pre><code class="language-java">var context = new ClassPathXmlApplicationContext("config.xml");
+Person person = context.getBean(Person.class);</code></pre>
+
+<h3>XML 和注解的对照</h3>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th>XML</th><th>注解 / Java 配置</th><th>章节</th></tr></thead>
+<tbody>
+<tr><td><code>&lt;bean id="x" class="…"/&gt;</code></td><td><code>@Bean</code> 方法，或类上的 <code>@Component</code></td><td>2</td></tr>
+<tr><td><code>&lt;property name="p" value="…"/&gt;</code></td><td>在 <code>@Bean</code> 方法里调 setter</td><td>2</td></tr>
+<tr><td><code>&lt;property name="p" ref="y"/&gt;</code></td><td>setter 注入，<code>@Autowired</code></td><td>3</td></tr>
+<tr><td><code>&lt;constructor-arg ref="y"/&gt;</code></td><td>构造器注入</td><td>3</td></tr>
+<tr><td><code>primary="true"</code></td><td><code>@Primary</code></td><td>2</td></tr>
+<tr><td><code>scope="prototype"</code></td><td><code>@Scope(BeanDefinition.SCOPE_PROTOTYPE)</code></td><td>5</td></tr>
+<tr><td><code>lazy-init="true"</code></td><td><code>@Lazy</code></td><td>5</td></tr>
+<tr><td><code>&lt;context:component-scan base-package="…"/&gt;</code></td><td><code>@ComponentScan</code></td><td>2</td></tr>
+<tr><td><code>&lt;aop:aspectj-autoproxy/&gt;</code></td><td><code>@EnableAspectJAutoProxy</code></td><td>6</td></tr>
+<tr><td><code>new ClassPathXmlApplicationContext(…)</code></td><td><code>new AnnotationConfigApplicationContext(…)</code></td><td>2</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="tip"><b>概念一个都没变</b>
+对照表说明了一件事：bean、依赖注入、作用域、切面这些概念从 Spring 1.0 起就是现在这样，变的只是写法。XML 被淘汰的原因很实际：类名和属性名都是字符串，写错了要到启动时才发现，重命名类时 IDE 也帮不上忙；而 Java 配置是能编译检查的代码。<br>
+遇到老项目，按上表把 XML 逐行读成你熟悉的注解就行。两种方式还可以混用：在配置类上加 <code>@ImportResource("classpath:config.xml")</code>，就能把一份 XML 里的 bean 并入注解配置的上下文，迁移老项目时通常这样逐步替换。</div>
+
+<h2>自测</h2>
+<details><summary>单体应用是不是就意味着代码乱、没有分层？</summary>
+<p>不是。单体说的是<strong>部署单元</strong>只有一个，和内部结构无关。本书第 4 章的 Service / Repository / Proxy 分层、面向接口编程，在单体里一样成立。一个模块边界清晰的单体，以后要拆也容易；一个没有边界的单体，拆成微服务只会得到一团互相调用的小服务。</p></details>
+<details><summary>把单体拆成两个服务后，原来一个 <code>@Transactional</code> 方法里的两次写操作会怎样？</summary>
+<p>如果两次写操作分到了两个服务、两个数据库里，它们就不再处于同一个数据库事务中。第一个服务提交之后第二个服务失败，第一个不会自动回滚。这是微服务最大的代价之一，也是为什么拆分边界要尽量让“必须同时成功”的数据留在同一个服务里。</p></details>
+<details><summary>XML 配置在 Spring 7 里还能用吗？</summary>
+<p>能。<code>ClassPathXmlApplicationContext</code> 和 <code>@ImportResource</code> 都还在，Spring 一直保持着对它的兼容。只是新功能的文档和示例都以注解和 Java 配置为准，Spring Boot 的自动配置也完全基于后者。</p></details>
+
+<div class="pager"><a class="prev" href="appa.html"><span>上一篇</span>附录 A. HTTP 与 JSON 入门</a><a class="next" href="appc.html"><span>下一篇</span>附录 C. 速查：注解、报错、术语</a></div>
+</main></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/java.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/sql.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/properties.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+<script>
+(function(){ if(!window.hljs) return;
+  document.querySelectorAll('pre code[class^="language-"]').forEach(function(el){
+    try{ hljs.highlightElement(el); }catch(e){}
+  });
+})();
+</script>
+</body>
+</html>

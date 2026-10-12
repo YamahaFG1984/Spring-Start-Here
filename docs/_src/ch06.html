@@ -52,6 +52,28 @@
 <figcaption><b>图 6-1</b>　Spring AOP 是<strong>运行时代理</strong>，不是编译期字节码织入。代理有两种实现：目标类实现了接口时用 JDK 动态代理，否则用 CGLIB 生成子类。<strong>推论：自调用（同一个类里 A 方法调 B 方法）不会经过代理，切面不生效</strong>——这个坑第 13 章讲事务时会再遇到。</figcaption>
 </figure>
 
+<h3>先把七个术语对上号</h3>
+
+<p>AOP 的文档和报错信息里全是术语。它们描述的就是图 6-1 里的几样东西，对着本章第一个工程 <span class="path">ssh_ch6_ex1</span> 认一遍：</p>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th>术语</th><th>一句话</th><th>在 ssh_ch6_ex1 里是谁</th></tr></thead>
+<tbody>
+<tr><td><strong>切面</strong> Aspect</td><td>“要插入的逻辑”和“插到哪里”打包在一起的那个类</td><td><code>LoggingAspect</code></td></tr>
+<tr><td><strong>通知</strong> Advice</td><td>要插入的逻辑本身，以及它相对目标方法的时机</td><td><code>log()</code> 方法；时机由 <code>@Around</code> 决定</td></tr>
+<tr><td><strong>切点</strong> Pointcut</td><td>一个筛选条件：哪些方法要被拦截</td><td><code>execution(* com.example.services.*.*(..))</code></td></tr>
+<tr><td><strong>连接点</strong> Join point</td><td>被切点选中、正在发生的那一次方法调用</td><td>某一次 <code>publishComment()</code> 调用；代码里就是参数 <code>ProceedingJoinPoint</code></td></tr>
+<tr><td><strong>目标对象</strong> Target</td><td>被拦截的那个 bean，你写的原始对象</td><td><code>CommentService</code> 的实例</td></tr>
+<tr><td><strong>代理</strong> Proxy</td><td>Spring 生成的、包在目标对象外面的对象。上下文里放的是它</td><td><code>getBean(CommentService.class)</code> 拿到的东西</td></tr>
+<tr><td><strong>织入</strong> Weaving</td><td>把通知接到连接点上的过程</td><td>Spring 在容器启动、创建 bean 时生成代理来完成</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="tip"><b>切点和连接点的区别</b>
+切点是<strong>规则</strong>，写在注解里，启动时就定了；连接点是<strong>事件</strong>，每次调用产生一个，运行时才有。所以通知方法的参数叫 <code>JoinPoint</code>：它代表“这一次调用”，能从里面取到这次的方法名和实参（<span class="path">ssh_ch6_ex2</span>）。Spring AOP 里连接点只有“方法执行”一种；AspectJ 还支持构造器调用、字段读写等。</div>
+
 <h2>6.2 写第一个切面</h2>
 
 <pre class="codehead"><b>ssh_ch6_ex1 · aspects/LoggingAspect.java</b></pre>
@@ -269,4 +291,4 @@ jakarta.* 生态</code></pre></div>
 <details><summary>为什么类内部的方法调用不会触发切面？</summary>
 <p>因为切面逻辑在<strong>代理对象</strong>上，而目标对象内部的 <code>this.xxx()</code> 是普通的 Java 方法调用，压根不经过代理（图 6-1 里那个最右边的框，它对代理一无所知）。绕过办法有几种：把方法拆到另一个 bean 里（最推荐）、注入自己的代理引用、或改用 AspectJ 编译期织入。第 13 章的 <code>@Transactional</code> 自调用失效是同一个原因。</p></details>
 <details><summary>Spring AOP 和 AspectJ 是一回事吗？</summary>
-<p>不是。Spring AOP 借用了 AspectJ 的<strong>注解和切点表达式语法</strong>，但运行机制完全不同：Spring AOP 是运行时动态代理，只能拦截 <strong>Spring 管理的 bean 的 public 方法</strong>；AspectJ 是编译期/类加载期字节码织入，能拦截任意类的任意方法（包括构造器、字段访问、private 方法）。绝大多数应用用 Spring AOP 足够。</p></details>
+<p>不是。Spring AOP 借用了 AspectJ 的<strong>注解和切点表达式语法</strong>，但运行机制完全不同：Spring AOP 是运行时动态代理，只能拦截 <strong>Spring 管理的 bean 上、从外部经过代理调进来的方法</strong>（private 方法和自调用都拦不到）；AspectJ 是编译期/类加载期字节码织入，能拦截任意类的任意方法（包括构造器、字段访问、private 方法）。绝大多数应用用 Spring AOP 足够。</p></details>

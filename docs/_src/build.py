@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""把 docs/_src/*.html 片段包成完整页面，并额外拼一个 all-in-one 单页版（用于发布 Artifact）。"""
+"""把 docs/_src/*.html 片段（16 章 + 4 个附录 + 首页）包成完整页面，并额外拼一个 all-in-one 单页版（用于发布 Artifact）。"""
 import os, re, sys
 
 SRC = os.path.dirname(os.path.abspath(__file__))
@@ -23,6 +23,21 @@ CHAPTERS = [
     ("ch15", "单元测试",                   "被测单元与依赖替身、Mockito、@Mock/@InjectMocks"),
     ("ch16", "Spring 集成测试",            "@SpringBootTest、MockMvc、@MockitoBean"),
 ]
+
+APPENDICES = [
+    ("appa", "HTTP 与 JSON 入门",       "请求与响应、状态码、请求头、JSON 语法、curl"),
+    ("appb", "架构风格与 XML 配置",      "单体、SOA、微服务、无服务器；读懂老项目的 XML"),
+    ("appc", "速查：注解、报错、术语",    "注解速查、常见报错速查、术语表"),
+    ("appd", "环境、工具与进阶路线",      "MySQL、推荐工具、学完之后学什么、延伸阅读"),
+]
+
+PAGES = CHAPTERS + APPENDICES          # 翻页顺序：第 16 章之后接附录
+LINK = r'((?:ch\d\d|app[a-d]))'      # 站内页面链接的文件名部分
+
+
+def label(cid):
+    """ch03 → '3'，appa → '附录 A'。"""
+    return str(int(cid[2:])) if cid.startswith("ch") else "附录 " + cid[3:].upper()
 
 FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com">'
          '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
@@ -59,6 +74,10 @@ def rail(active):
             rows.append('</nav><div class="rail-group">第二部分 · 实现</div><nav>')
         cur = ' aria-current="page"' if cid == active else ''
         rows.append(f'<a class="ch" href="{cid}.html"{cur}><i>{int(cid[2:]):02d}</i><span>{title}</span></a>')
+    rows.append('</nav><div class="rail-group">附录</div><nav>')
+    for cid, title, _ in APPENDICES:
+        cur = ' aria-current="page"' if cid == active else ''
+        rows.append(f'<a class="ch" href="{cid}.html"{cur}><i>{cid[3:].upper()}</i><span>{title}</span></a>')
     rows.append('</nav><div class="rail-group">总览</div><nav>')
     cur = ' aria-current="page"' if active == 'index' else ''
     rows.append(f'<a class="ch" href="index.html"{cur}><i>◆</i><span>目录与版本对照</span></a>')
@@ -69,11 +88,11 @@ def rail(active):
 def pager(idx):
     parts = []
     if idx > 0:
-        c = CHAPTERS[idx - 1]
-        parts.append(f'<a class="prev" href="{c[0]}.html"><span>上一章</span>{int(c[0][2:])}. {c[1]}</a>')
-    if 0 <= idx < len(CHAPTERS) - 1:
-        c = CHAPTERS[idx + 1]
-        parts.append(f'<a class="next" href="{c[0]}.html"><span>下一章</span>{int(c[0][2:])}. {c[1]}</a>')
+        c = PAGES[idx - 1]
+        parts.append(f'<a class="prev" href="{c[0]}.html"><span>上一篇</span>{label(c[0])}. {c[1]}</a>')
+    if 0 <= idx < len(PAGES) - 1:
+        c = PAGES[idx + 1]
+        parts.append(f'<a class="next" href="{c[0]}.html"><span>下一篇</span>{label(c[0])}. {c[1]}</a>')
     return '<div class="pager">' + "".join(parts) + '</div>' if parts else ''
 
 
@@ -87,17 +106,18 @@ def page(title, body, active, idx=None):
 
 def main():
     frags = {}
-    for cid, title, _ in CHAPTERS + [("index", "目录", "")]:
+    for cid, title, _ in PAGES + [("index", "目录", "")]:
         p = os.path.join(SRC, cid + ".html")
         frags[cid] = open(p, encoding="utf-8").read() if os.path.exists(p) else None
 
     n = 0
-    for i, (cid, title, _) in enumerate(CHAPTERS):
+    for i, (cid, title, _) in enumerate(PAGES):
         if frags[cid] is None:
             print("  跳过（缺片段）:", cid); continue
         out = os.path.join(OUT, cid + ".html")
+        head = f"第 {label(cid)} 章" if cid.startswith("ch") else label(cid)
         open(out, "w", encoding="utf-8").write(
-            page(f"第 {int(cid[2:])} 章 {title} · Spring Start Here 学习手册", frags[cid], cid, i))
+            page(f"{head} {title} · Spring Start Here 学习手册", frags[cid], cid, i))
         n += 1
     if frags["index"] is not None:
         open(os.path.join(OUT, "index.html"), "w", encoding="utf-8").write(
@@ -106,13 +126,13 @@ def main():
 
     # ── all-in-one 单页版（Artifact 用）：无 doctype/head/body，站内链接改成锚点 ──
     body = [frags["index"] or ""]
-    for i, (cid, title, _) in enumerate(CHAPTERS):
+    for i, (cid, title, _) in enumerate(PAGES):
         if frags[cid] is None: continue
         body.append(f'<section id="{cid}">' + frags[cid] + '</section>')
     one = "\n".join(body)
-    one = re.sub(r'href="(ch\d\d)\.html"', r'href="#\1"', one)
+    one = re.sub(r'href="' + LINK + r'\.html"', r'href="#\1"', one)
     one = re.sub(r'href="index\.html"', r'href="#top"', one)
-    railone = re.sub(r'href="(ch\d\d)\.html"', r'href="#\1"', rail("index"))
+    railone = re.sub(r'href="' + LINK + r'\.html"', r'href="#\1"', rail("index"))
     railone = re.sub(r'href="index\.html"', r'href="#top"', railone)
     railone = railone.replace(' aria-current="page"', '')
     one = '<div id="top"></div>' + one
@@ -120,7 +140,7 @@ def main():
         '<title>Spring Start Here 学习手册</title>\n' + FONTS + '\n<style>\n' + css +
         '\n.main section{scroll-margin-top:20px}\n.main section+section{margin-top:80px}\n</style>\n'
         '<div class="wrap">' + railone + '<main class="main">\n' + one + '\n</main></div>\n' + HLJS + '\n')
-    print(f"已生成 {n} 个章节页 + all-in-one.html → {OUT}")
+    print(f"已生成 {n} 个页面 + all-in-one.html → {OUT}")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>附录 A HTTP 与 JSON 入门 · Spring Start Here 学习手册</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+/* ── 令牌：浅色（默认，未标记状态也走这里） ───────────────── */
+:root{
+  --paper:#f4f7f3; --surface:#ffffff; --surface-2:#e9eee8;
+  --ink:#141f1a; --ink-2:#3c4a44; --ink-3:#6a7771;
+  --line:#d8e0d9; --line-strong:#b9c6bd;
+  --accent:#1b6b47; --accent-ink:#0f4a30; --accent-soft:#e0eee6;
+  --amber:#8a5712; --amber-soft:#f6ecd9;
+  --steel:#385a75; --steel-soft:#e2eaf1;
+  --code-bg:#eef2ec; --code-ink:#1d2b24;
+  --hl-key:#0f4a30; --hl-str:#8a5712; --hl-num:#385a75; --hl-com:#7d8a83; --hl-ann:#6b3a8a; --hl-type:#1d4f6b;
+  --shadow:0 1px 2px rgba(20,31,26,.05), 0 8px 24px -16px rgba(20,31,26,.28);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0d1411; --surface:#141d19; --surface-2:#1c2721;
+    --ink:#dde5df; --ink-2:#a9b5ae; --ink-3:#7f8d86;
+    --line:#26332c; --line-strong:#38483f;
+    --accent:#62b98d; --accent-ink:#8ed3ae; --accent-soft:#15291f;
+    --amber:#d9a44a; --amber-soft:#241d10;
+    --steel:#8fb6d4; --steel-soft:#14212b;
+    --code-bg:#101a15; --code-ink:#cfdad3;
+    --hl-key:#8ed3ae; --hl-str:#d9a44a; --hl-num:#8fb6d4; --hl-com:#6d7d75; --hl-ann:#c4a0dd; --hl-type:#7fc4d8;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -18px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0d1411; --surface:#141d19; --surface-2:#1c2721;
+  --ink:#dde5df; --ink-2:#a9b5ae; --ink-3:#7f8d86;
+  --line:#26332c; --line-strong:#38483f;
+  --accent:#62b98d; --accent-ink:#8ed3ae; --accent-soft:#15291f;
+  --amber:#d9a44a; --amber-soft:#241d10;
+  --steel:#8fb6d4; --steel-soft:#14212b;
+  --code-bg:#101a15; --code-ink:#cfdad3;
+  --hl-key:#8ed3ae; --hl-str:#d9a44a; --hl-num:#8fb6d4; --hl-com:#6d7d75; --hl-ann:#c4a0dd; --hl-type:#7fc4d8;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -18px rgba(0,0,0,.8);
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:"Noto Sans SC","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+  font-size:16.5px; line-height:1.78; font-feature-settings:"tnum" 0;
+}
+
+/* ── 版式骨架 ─────────────────────────────────────── */
+.wrap{max-width:1200px; margin:0 auto; padding:0 26px;
+      display:grid; grid-template-columns:236px minmax(0,1fr); gap:52px; align-items:start}
+.rail{position:sticky; top:0; max-height:100vh; overflow-y:auto; padding:34px 0 40px}
+.main{min-width:0; padding:34px 0 96px; max-width:78ch}
+@media (max-width:900px){
+  .wrap{grid-template-columns:minmax(0,1fr); gap:0}
+  .rail{position:static; max-height:none; padding:26px 0 0; border-bottom:1px solid var(--line); margin-bottom:26px}
+  .main{padding-top:14px}
+}
+
+/* ── 侧栏 ─────────────────────────────────────────── */
+.rail-brand{display:block; text-decoration:none; color:inherit; margin-bottom:22px}
+.rail-brand b{display:block; font-family:"Newsreader","Noto Serif SC",Georgia,serif;
+  font-size:21px; font-weight:600; line-height:1.25; letter-spacing:-.01em}
+.rail-brand span{display:block; font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); margin-top:5px}
+.rail-group{font-family:"JetBrains Mono",ui-monospace,monospace; font-size:10px; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--ink-3); margin:20px 0 8px; padding-left:2px}
+.rail nav{display:flex; flex-direction:column; gap:1px}
+.rail a.ch{display:grid; grid-template-columns:22px 1fr; gap:8px; align-items:baseline;
+  text-decoration:none; color:var(--ink-2); padding:4px 8px 4px 2px; border-radius:5px; font-size:13.5px; line-height:1.45}
+.rail a.ch i{font-style:normal; font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:11px; color:var(--ink-3); font-variant-numeric:tabular-nums}
+.rail a.ch:hover{background:var(--surface-2); color:var(--ink)}
+.rail a.ch[aria-current="page"]{background:var(--accent-soft); color:var(--accent-ink); font-weight:500}
+.rail a.ch[aria-current="page"] i{color:var(--accent)}
+a:focus-visible,summary:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:3px}
+
+/* ── 标题层级 ─────────────────────────────────────── */
+.eyebrow{font-family:"JetBrains Mono",ui-monospace,monospace; font-size:11px; letter-spacing:.18em;
+  text-transform:uppercase; color:var(--accent); margin:0 0 10px}
+h1{font-family:"Newsreader","Noto Serif SC",Georgia,serif; font-weight:600; font-size:clamp(30px,4.4vw,42px);
+  line-height:1.18; letter-spacing:-.015em; margin:0 0 14px; text-wrap:balance}
+h2{font-family:"Newsreader","Noto Serif SC",Georgia,serif; font-weight:600; font-size:26px; line-height:1.3;
+  margin:56px 0 16px; padding-top:20px; border-top:1px solid var(--line); text-wrap:balance; letter-spacing:-.01em}
+h3{font-size:18.5px; font-weight:700; margin:34px 0 10px; line-height:1.45; text-wrap:balance}
+h4{font-size:15px; font-weight:700; margin:22px 0 8px; color:var(--ink-2)}
+.lede{font-size:18px; line-height:1.72; color:var(--ink-2); margin:0 0 8px}
+p{margin:0 0 14px}
+ul,ol{margin:0 0 16px; padding-left:1.35em}
+li{margin:0 0 7px}
+li>ul,li>ol{margin-top:7px}
+strong{font-weight:700; color:var(--ink)}
+em{font-style:normal; background:linear-gradient(transparent 62%, var(--accent-soft) 62%); padding:0 1px}
+a{color:var(--accent-ink); text-underline-offset:2.5px; text-decoration-thickness:1px}
+hr{border:0; border-top:1px solid var(--line); margin:38px 0}
+
+/* ── 代码 ─────────────────────────────────────────── */
+code,kbd,.path{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+:not(pre)>code{font-size:.865em; background:var(--code-bg); color:var(--code-ink);
+  padding:.12em .38em; border-radius:4px; border:1px solid var(--line)}
+.path{font-size:.83em; background:var(--surface-2); color:var(--ink-2);
+  padding:.12em .42em; border-radius:4px; border:1px solid var(--line); white-space:nowrap}
+pre{margin:0 0 18px; background:var(--code-bg); border:1px solid var(--line); border-radius:9px;
+  padding:15px 17px; overflow-x:auto; line-height:1.62; box-shadow:var(--shadow)}
+pre code{font-size:13.2px; color:var(--code-ink); background:none; border:0; padding:0; white-space:pre}
+.codehead{display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;
+  font-family:"JetBrains Mono",ui-monospace,monospace; font-size:11px; color:var(--ink-3);
+  letter-spacing:.05em; margin:0 0 6px; padding:0 2px}
+.codehead b{color:var(--ink-2); font-weight:500}
+.hljs-keyword,.hljs-built_in,.hljs-literal{color:var(--hl-key)}
+.hljs-string,.hljs-attr{color:var(--hl-str)}
+.hljs-number{color:var(--hl-num)}
+.hljs-comment{color:var(--hl-com); font-style:italic}
+.hljs-meta{color:var(--hl-ann); font-weight:500}
+.hljs-title,.hljs-title.class_,.hljs-title.function_,.hljs-type{color:var(--hl-type)}
+.hljs-tag,.hljs-name{color:var(--hl-key)}
+
+/* ── 图 ───────────────────────────────────────────── */
+figure{margin:26px 0 28px; background:var(--surface); border:1px solid var(--line);
+  border-radius:11px; padding:20px 18px 14px; box-shadow:var(--shadow); overflow-x:auto}
+figure svg{display:block; width:100%; height:auto; max-width:100%; min-width:0}
+figcaption{margin-top:12px; font-size:13px; line-height:1.62; color:var(--ink-3); border-top:1px solid var(--line); padding-top:10px}
+figcaption b{color:var(--ink-2); font-weight:600}
+svg text{font-family:"Noto Sans SC","PingFang SC",system-ui,sans-serif}
+svg .mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+
+/* ── 对照卡：书里旧版 vs 仓库新版 ──────────────────── */
+.cmp{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:22px 0 24px}
+@media (max-width:660px){.cmp{grid-template-columns:1fr}}
+.cmp>div{border-radius:10px; padding:14px 15px; border:1px solid var(--line); background:var(--surface)}
+.cmp .old{border-left:3px solid var(--steel); background:var(--steel-soft)}
+.cmp .new{border-left:3px solid var(--accent); background:var(--accent-soft)}
+.cmp h5{margin:0 0 8px; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:10.5px;
+  letter-spacing:.14em; text-transform:uppercase; font-weight:500}
+.cmp .old h5{color:var(--steel)} .cmp .new h5{color:var(--accent)}
+.cmp p:last-child,.cmp ul:last-child,.cmp pre:last-child{margin-bottom:0}
+.cmp pre{background:transparent; border:0; padding:0; box-shadow:none; font-size:12.5px}
+.cmp code{background:transparent; border:0; padding:0}
+.why{margin:-8px 0 24px; padding:11px 15px; border-radius:9px; background:var(--surface-2);
+  border:1px solid var(--line); font-size:14.5px; line-height:1.7; color:var(--ink-2)}
+.why b{color:var(--ink)}
+
+/* ── 提示块 ───────────────────────────────────────── */
+.note,.warn,.tip{border-radius:9px; padding:13px 16px; margin:20px 0; font-size:15px; line-height:1.72;
+  border:1px solid var(--line); border-left-width:3px; background:var(--surface)}
+.note{border-left-color:var(--steel); background:var(--steel-soft)}
+.warn{border-left-color:var(--amber); background:var(--amber-soft)}
+.tip{border-left-color:var(--accent); background:var(--accent-soft)}
+.note>:last-child,.warn>:last-child,.tip>:last-child{margin-bottom:0}
+.note b:first-child,.warn b:first-child,.tip b:first-child{font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:11px; letter-spacing:.14em; text-transform:uppercase; display:block; margin-bottom:5px}
+.note b:first-child{color:var(--steel)} .warn b:first-child{color:var(--amber)} .tip b:first-child{color:var(--accent)}
+
+/* ── 表 ───────────────────────────────────────────── */
+.tablewrap{overflow-x:auto; margin:20px 0 24px; border:1px solid var(--line); border-radius:10px; background:var(--surface)}
+table{border-collapse:collapse; width:100%; font-size:14px; min-width:520px}
+th,td{text-align:left; padding:9px 13px; border-bottom:1px solid var(--line); vertical-align:top; line-height:1.6}
+thead th{font-family:"JetBrains Mono",ui-monospace,monospace; font-size:10.5px; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--ink-3); font-weight:500; background:var(--surface-2); white-space:nowrap}
+tbody tr:last-child td{border-bottom:0}
+td code{font-size:.84em; white-space:normal; overflow-wrap:break-word}
+th:last-child,td:last-child{padding-right:16px}
+.num{font-variant-numeric:tabular-nums}
+
+/* ── 实验 / 自测 ──────────────────────────────────── */
+.lab{border:1px solid var(--line); border-radius:11px; padding:16px 18px; margin:24px 0; background:var(--surface)}
+.lab>h4{margin-top:0; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:11px;
+  letter-spacing:.16em; text-transform:uppercase; color:var(--accent)}
+details{border:1px solid var(--line); border-radius:9px; padding:11px 15px; margin:0 0 9px; background:var(--surface)}
+details[open]{background:var(--surface-2)}
+summary{cursor:pointer; font-weight:600; font-size:15px; list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"?"; font-family:"JetBrains Mono",ui-monospace,monospace; color:var(--accent);
+  margin-right:9px; font-weight:700}
+details>*:not(summary){margin-top:10px}
+details>p:last-child{margin-bottom:0}
+
+/* ── 章节页脚导航 ─────────────────────────────────── */
+.pager{display:flex; justify-content:space-between; gap:14px; margin-top:60px; padding-top:22px; border-top:1px solid var(--line)}
+.pager a{display:block; text-decoration:none; color:var(--ink-2); font-size:14px; max-width:47%}
+.pager a span{display:block; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:10px;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); margin-bottom:3px}
+.pager a:hover{color:var(--accent-ink)}
+.pager .next{text-align:right; margin-left:auto}
+
+/* ── 首页卡片 ─────────────────────────────────────── */
+.cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(232px,1fr)); gap:13px; margin:22px 0 28px}
+.card{display:block; text-decoration:none; color:inherit; background:var(--surface); border:1px solid var(--line);
+  border-radius:11px; padding:14px 15px; box-shadow:var(--shadow); transition:border-color .15s, transform .15s}
+.card:hover{border-color:var(--accent); transform:translateY(-2px)}
+.card i{font-style:normal; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:11px;
+  letter-spacing:.1em; color:var(--accent); display:block; margin-bottom:5px}
+.card b{display:block; font-size:15.5px; line-height:1.4; margin-bottom:5px}
+.card p{margin:0; font-size:13px; color:var(--ink-3); line-height:1.6}
+@media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
+
+</style>
+</head>
+<body>
+<div class="wrap"><aside class="rail"><a class="rail-brand" href="index.html"><b>Spring Start Here<br>学习手册</b><span>Spring Boot 4 · Spring 7 · Java 25</span></a><div class="rail-group">第一部分 · 基础</div><nav><a class="ch" href="ch01.html"><i>01</i><span>真实世界中的 Spring</span></a><a class="ch" href="ch02.html"><i>02</i><span>Spring 上下文：定义 bean</span></a><a class="ch" href="ch03.html"><i>03</i><span>Spring 上下文：装配 bean</span></a><a class="ch" href="ch04.html"><i>04</i><span>Spring 上下文：使用抽象</span></a><a class="ch" href="ch05.html"><i>05</i><span>Bean 作用域与生命周期</span></a><a class="ch" href="ch06.html"><i>06</i><span>用 Spring AOP 实现切面</span></a></nav><div class="rail-group">第二部分 · 实现</div><nav><a class="ch" href="ch07.html"><i>07</i><span>理解 Spring Boot 与 Spring MVC</span></a><a class="ch" href="ch08.html"><i>08</i><span>用 Boot + MVC 实现 Web 应用</span></a><a class="ch" href="ch09.html"><i>09</i><span>使用 Spring Web 作用域</span></a><a class="ch" href="ch10.html"><i>10</i><span>实现 REST 服务</span></a><a class="ch" href="ch11.html"><i>11</i><span>消费 REST 端点</span></a><a class="ch" href="ch12.html"><i>12</i><span>在 Spring 应用中使用数据源</span></a><a class="ch" href="ch13.html"><i>13</i><span>在 Spring 应用中使用事务</span></a><a class="ch" href="ch14.html"><i>14</i><span>用 Spring Data 实现持久化</span></a><a class="ch" href="ch15.html"><i>15</i><span>单元测试</span></a><a class="ch" href="ch16.html"><i>16</i><span>Spring 集成测试</span></a></nav><div class="rail-group">附录</div><nav><a class="ch" href="appa.html" aria-current="page"><i>A</i><span>HTTP 与 JSON 入门</span></a><a class="ch" href="appb.html"><i>B</i><span>架构风格与 XML 配置</span></a><a class="ch" href="appc.html"><i>C</i><span>速查：注解、报错、术语</span></a><a class="ch" href="appd.html"><i>D</i><span>环境、工具与进阶路线</span></a></nav><div class="rail-group">总览</div><nav><a class="ch" href="index.html"><i>◆</i><span>目录与版本对照</span></a></nav></aside><main class="main">
+<p class="eyebrow">附录 A · 对应书中附录 C、D</p>
+<h1>HTTP 与 JSON 入门</h1>
+<p class="lede">第 7–11 章默认你已经知道 HTTP 请求长什么样、JSON 怎么写。如果这两样不熟，先花二十分钟读完这一页，后面的 <code>@GetMapping</code>、<code>ResponseEntity</code>、<code>@RequestBody</code> 就都有了着落。</p>
+
+<div class="note"><b>什么时候读</b>
+读第 7 章之前，或者在第 10 章被状态码、请求头绊住的时候。全部示例都可以对着仓库里的工程用 <code>curl -v</code> 复现。</div>
+
+<h2>A.1 HTTP 是什么</h2>
+
+<p>HTTP 是浏览器（或任何客户端）和服务器之间的对话规则。规则只有一条主线：<strong>客户端发一个请求，服务器回一个响应</strong>，一问一答，服务器从不主动开口。请求和响应都是纯文本，结构也一样：一行起始行、若干行头、一个空行、可选的正文。</p>
+
+<pre class="codehead"><b>一次完整的对话</b><span>启动 ssh_ch10_ex7 后执行 curl -v 看到的内容（有删节）</span></pre>
+<pre><code class="language-bash">$ curl -v -X POST http://localhost:8080/payment \
+       -H "Content-Type: application/json" -d '{"amount":1000.0}'
+
+&gt; POST /payment HTTP/1.1              ← 请求行：方法 + 路径 + 协议版本
+&gt; Host: localhost:8080                ← 请求头，每行一个“名字: 值”
+&gt; Content-Type: application/json
+&gt; Content-Length: 17
+&gt;                                     ← 空行，表示头结束
+&gt; {"amount":1000.0}                   ← 请求体
+
+&lt; HTTP/1.1 202                        ← 状态行：协议版本 + 状态码
+&lt; Content-Type: application/json      ← 响应头
+&lt;
+&lt; {"amount":1000.0}                   ← 响应体</code></pre>
+
+<h3>请求的五个组成部分，以及 Spring 用什么接</h3>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th>部分</th><th>例子</th><th>Spring 里怎么拿</th><th>章节</th></tr></thead>
+<tbody>
+<tr><td>方法</td><td><code>GET</code>、<code>POST</code></td><td><code>@GetMapping</code> / <code>@PostMapping</code> 决定方法匹配</td><td>7、8、10</td></tr>
+<tr><td>路径</td><td><code>/home/red</code></td><td>注解里的路径；可变部分用 <code>@PathVariable</code></td><td>8</td></tr>
+<tr><td>查询参数</td><td><code>?name=Katy&amp;color=blue</code></td><td><code>@RequestParam</code></td><td>8</td></tr>
+<tr><td>请求头</td><td><code>requestId: 123</code></td><td><code>@RequestHeader</code></td><td>11</td></tr>
+<tr><td>请求体</td><td><code>{"amount":1000.0}</code></td><td><code>@RequestBody</code>（JSON）；表单提交用 <code>@RequestParam</code> 或对象绑定</td><td>8、10</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>URL 怎么拆</h3>
+
+<pre><code class="language-bash">http://localhost:8080/accounts?name=Helen%20Down
+└─┬─┘  └───┬───┘ └┬─┘└───┬───┘ └───────┬───────┘
+ 协议     主机    端口   路径        查询参数（%20 是空格的编码）</code></pre>
+
+<p>端口不写时 http 默认 80、https 默认 443。Boot 内嵌的 Tomcat 默认监听 8080，用 <code>server.port</code> 改。</p>
+
+<h2>A.2 状态码：三位数说清结果</h2>
+
+<p>第一位数字决定大类，记住大类比记住具体数字重要。</p>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th>范围</th><th>含义</th><th>仓库里出现的</th><th>出现在哪</th></tr></thead>
+<tbody>
+<tr><td>2xx</td><td>成功</td><td>200 OK<br>202 Accepted</td><td>直接返回对象时的默认值<br><span class="path">ssh_ch10_ex4</span> 起用 <code>ResponseEntity.status(HttpStatus.ACCEPTED)</code></td></tr>
+<tr><td>3xx</td><td>去别处</td><td>302 Found</td><td><span class="path">ssh_ch9_ex2</span> 的 <code>return "redirect:/main"</code></td></tr>
+<tr><td>4xx</td><td><strong>客户端</strong>的请求有问题</td><td>400 Bad Request<br>404 Not Found<br>405 Method Not Allowed<br>415 Unsupported Media Type</td><td><span class="path">ssh_ch10_ex6</span> 余额不足；JSON 格式错<br>路径写错<br>对只有 <code>@PostMapping</code> 的路径发了 GET<br>POST JSON 时忘了 <code>Content-Type</code> 头</td></tr>
+<tr><td>5xx</td><td><strong>服务端</strong>出错了</td><td>500 Internal Server Error</td><td>控制器抛了没人处理的异常，如 <span class="path">ssh_ch13_ex2</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="tip"><b>4xx 还是 5xx，判断标准是“谁该去修”</b>
+客户端换个请求就能好的，用 4xx；客户端怎么改都没用、得服务端修的，用 5xx。第 10 章用 <code>@RestControllerAdvice</code> 把 <code>NotEnoughMoneyException</code> 映射成 400，就是在表达“这是你的请求有问题，不是我崩了”。</div>
+
+<h2>A.3 两个最常打交道的头</h2>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th>头</th><th>谁发的</th><th>意思</th><th>写错的后果</th></tr></thead>
+<tbody>
+<tr><td><code>Content-Type</code></td><td>有正文的一方</td><td>“我发的正文是这种格式”</td><td>POST JSON 时不带它，Spring 返回 415</td></tr>
+<tr><td><code>Accept</code></td><td>客户端</td><td>“我希望收到这种格式”</td><td>要了服务端给不出的格式，返回 406</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>头也可以自己定义，<span class="path">ssh_ch10_ex4</span> 往响应里塞的 <code>continent</code>、<code>capital</code>，第 11 章来回传递的 <code>requestId</code>，都是自定义头。</p>
+
+<h2>A.4 HTTP 是无状态的，那登录是怎么记住的</h2>
+
+<p>协议本身不记得上一次请求是谁发的，每个请求都是独立的。第 9 章的“登录后记住用户”靠的是在这之上加的一层约定：</p>
+
+<ol>
+<li>第一次请求时，服务器创建一个会话，并在响应里带一个头 <code>Set-Cookie: JSESSIONID=…</code>。</li>
+<li>浏览器记下这个 cookie，之后对同一网站的每个请求都自动带上 <code>Cookie: JSESSIONID=…</code>。</li>
+<li>服务器凭这个 ID 找到对应的会话，<code>@SessionScope</code> 的 bean 就存在里面。</li>
+</ol>
+
+<p>这也解释了第 9 章练习里“换一个浏览器就要重新登录”：另一个浏览器没有那个 cookie。用 curl 测第 9 章的工程时，要加 <code>-c cookies.txt -b cookies.txt</code> 让它像浏览器一样保存并回传 cookie。</p>
+
+<h2>A.5 JSON：十分钟学会</h2>
+
+<p>JSON 是一种表示数据的文本格式，REST 接口的请求体和响应体几乎都用它。语法只有两种结构和四种基本值：</p>
+
+<pre class="codehead"><b>一个覆盖全部语法的例子</b></pre>
+<pre><code class="language-json">{
+  "id": 1,
+  "name": "Helen Down",
+  "amount": 1000.50,
+  "active": true,
+  "nickname": null,
+  "tags": ["vip", "early-user"],
+  "address": { "city": "Paris", "zip": "75001" }
+}</code></pre>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th>JSON</th><th>写法</th><th>对应的 Java 类型</th></tr></thead>
+<tbody>
+<tr><td>对象</td><td><code>{ "键": 值, … }</code></td><td>一个有 getter/setter 的类，或 <code>Map</code></td></tr>
+<tr><td>数组</td><td><code>[ 值, 值, … ]</code></td><td><code>List</code>、数组</td></tr>
+<tr><td>字符串</td><td><code>"text"</code></td><td><code>String</code>，以及日期、枚举等</td></tr>
+<tr><td>数字</td><td><code>42</code>、<code>3.14</code></td><td><code>int</code>、<code>long</code>、<code>double</code>、<code>BigDecimal</code></td></tr>
+<tr><td>布尔</td><td><code>true</code> / <code>false</code></td><td><code>boolean</code></td></tr>
+<tr><td>空</td><td><code>null</code></td><td><code>null</code></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="warn"><b>手写 JSON 最常犯的四个错</b>
+① 键必须用<strong>双引号</strong>，<code>{name: "x"}</code> 和 <code>{'name': 'x'}</code> 都不合法。<br>
+② 最后一个元素后面<strong>不能有逗号</strong>。<br>
+③ 不支持注释。<br>
+④ 在 shell 里用 curl 发 JSON，整段要用<strong>单引号</strong>包起来，否则里面的双引号会被 shell 吃掉。<br>
+这四种错服务端都会回 400，日志里是 <code>HttpMessageNotReadableException</code>。</div>
+
+<h3>Java 对象和 JSON 是怎么互相变的</h3>
+
+<p>Spring 把这件事交给 Jackson。规则在第 10 章讲过，这里并排放一遍：</p>
+
+<div class="cmp">
+<div class="old"><h5>Java</h5><pre><code>public class Country {
+  private String name;
+  private int population;
+
+  public String getName() {…}
+  public int getPopulation() {…}
+  public void setName(…) {…}
+  public void setPopulation(…) {…}
+}</code></pre></div>
+<div class="new"><h5>JSON</h5><pre><code>{
+  "name": "France",
+  "population": 67
+}
+
+
+// 属性名来自 getter：
+// getName() → "name"</code></pre></div>
+</div>
+
+<p>对象里嵌对象就是 JSON 里嵌 <code>{}</code>，<code>List&lt;Country&gt;</code> 就是 <code>[ {…}, {…} ]</code>，<span class="path">ssh_ch10_ex3</span> 的 <code>/all</code> 端点返回的正是后者。</p>
+
+<h2>A.6 curl 速查</h2>
+
+<pre><code class="language-bash">curl http://localhost:8080/home                 # GET，只看响应体
+curl -i http://localhost:8080/france            # 加 -i：同时看状态码和响应头
+curl -v http://localhost:8080/france            # 加 -v：连发出去的请求也打印出来
+
+curl -X POST http://localhost:8080/payment \
+     -H "Content-Type: application/json" \
+     -d '{"amount":1000.0}'                     # POST 一段 JSON
+
+curl -X POST http://localhost:8080/products \
+     -d "name=Beer" -d "price=5.5"              # 模拟 HTML 表单提交（第 8 章）
+
+curl -H "requestId: 42" http://localhost:8080/…  # 带自定义请求头
+curl -c c.txt -b c.txt -L http://localhost:8080/ # 保存并回传 cookie，跟随重定向（第 9 章）</code></pre>
+
+<h2>自测</h2>
+<details><summary>为什么 POST JSON 时不写 <code>Content-Type</code> 会得到 415？</summary>
+<p>curl 的 <code>-d</code> 默认把 <code>Content-Type</code> 设成 <code>application/x-www-form-urlencoded</code>（表单格式）。Spring 看到 <code>@RequestBody</code> 要一个对象，去找“能把表单格式读成这个对象”的转换器，找不到，于是回答 415：你发的这种媒体类型我处理不了。</p></details>
+<details><summary>400 和 500 都是“出错了”，客户端该怎么区别对待？</summary>
+<p>收到 4xx 说明请求本身有问题，原样重试没有意义，应该修正请求或把错误提示给用户。收到 5xx 说明服务端出了故障，请求本身可能没错，可以稍后重试（前提是接口幂等，见第 10 章）。</p></details>
+<details><summary>JSON 里的数字 <code>1000.0</code> 到了 Java 里会不会丢精度？</summary>
+<p>取决于你用什么类型接。字段声明成 <code>double</code> 就按浮点数解析，有精度问题；声明成 <code>BigDecimal</code>，Jackson 会按十进制精确解析。这就是第 12–14 章金额字段都用 <code>BigDecimal</code> 的原因。</p></details>
+
+<div class="pager"><a class="prev" href="ch16.html"><span>上一篇</span>16. Spring 集成测试</a><a class="next" href="appb.html"><span>下一篇</span>附录 B. 架构风格与 XML 配置</a></div>
+</main></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/java.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/sql.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/properties.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+<script>
+(function(){ if(!window.hljs) return;
+  document.querySelectorAll('pre code[class^="language-"]').forEach(function(el){
+    try{ hljs.highlightElement(el); }catch(e){}
+  });
+})();
+</script>
+</body>
+</html>
